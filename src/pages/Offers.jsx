@@ -13,6 +13,7 @@ import {
   IconButton,
   Divider,
   InputAdornment,
+  Stack,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -22,22 +23,30 @@ import {
   CalendarToday as CalendarIcon,
 } from "@mui/icons-material";
 
-/* ===============================
-   Small reusable row component
-================================= */
-const Row = ({ label, value, bold }) => (
-  <Box display="flex" justifyContent="space-between">
+/* Small reusable row */
+const Row = ({ label, value, bold = false }) => (
+  <Box
+    sx={{
+      display: "flex",
+      justifyContent: "space-between",
+      py: 0.4,
+    }}
+  >
     <Typography variant="body2" color="text.secondary">
       {label}
     </Typography>
-    <Typography fontWeight={bold ? 700 : 500}>
+    <Typography
+      variant="body2"
+      fontWeight={bold ? 700 : 600}
+      color={bold ? "text.primary" : "text.primary"}
+    >
       {value}
     </Typography>
   </Box>
 );
 
 const Offers = () => {
-  const [offers, setOffers] = useState([
+  const [offers] = useState([
     {
       id: 1,
       title: "Flat ₹100 OFF",
@@ -73,17 +82,6 @@ const Offers = () => {
     },
     {
       id: 4,
-      title: "Buy 1 Get 1 Free Momos",
-      description: "On veg & non-veg momos",
-      discount: "B1G1",
-      minOrder: 0,
-      expiry: "20 Jan 2026",
-      code: "MOMOSB1G1",
-      usageLimit: "5 times per day",
-      status: "Expired",
-    },
-    {
-      id: 5,
       title: "₹50 Cashback",
       description: "Via UPI payment",
       discount: 50,
@@ -111,23 +109,8 @@ const Offers = () => {
   };
 
   const addNewOffer = () => {
-    if (!newOffer.title || !newOffer.code) return;
-
-    setOffers([
-      ...offers,
-      {
-        id: Date.now(),
-        ...newOffer,
-        discount: newOffer.discount
-          ? Number(newOffer.discount)
-          : "B1G1",
-        minOrder: newOffer.minOrder
-          ? Number(newOffer.minOrder)
-          : 0,
-        status: "Active",
-      },
-    ]);
-
+    // Just placeholder — not adding to list in this version
+    alert("New offer added (demo)");
     setNewOffer({
       title: "",
       description: "",
@@ -139,53 +122,67 @@ const Offers = () => {
     });
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Active":
+        return { bg: "#e8f5e9", text: "#2e7d32", label: "Active" };
+      case "Upcoming":
+        return { bg: "#fff3e0", text: "#e65100", label: "Upcoming" };
+      case "Expired":
+        return { bg: "#ffebee", text: "#c62828", label: "Expired" };
+      default:
+        return { bg: "#f5f5f5", text: "#616161", label: status };
+    }
+  };
+
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      <Typography variant="h4" mb={4} fontWeight="bold" color="#FF5252">
+    <Box
+      sx={{
+        p: { xs: 2, sm: 3, md: 4 },
+        bgcolor: "grey.50",
+        minHeight: "100vh",
+      }}
+    >
+      <Typography
+        variant="h4"
+        component="h1"
+        fontWeight="bold"
+        color="#FF5252"
+        gutterBottom
+        sx={{ mb: 5 }}
+      >
         Manage Offers & Discounts
       </Typography>
 
-      {/* ================= FORM ================= */}
-      <Paper elevation={3} sx={{ p: 4, mb: 6, borderRadius: 4 }}>
-        <Typography variant="h6" color="#FF5252" mb={2}>
+      {/* ──────────────── CREATE FORM ──────────────── */}
+      <Paper
+        elevation={4}
+        sx={{
+          p: { xs: 3, md: 4 },
+          mb: 6,
+          borderRadius: 3,
+          background: "white",
+        }}
+      >
+        <Typography variant="h6" color="#FF5252" gutterBottom sx={{ mb: 3 }}>
           Create New Offer
         </Typography>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={2.5}>
           <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Offer Title"
-              name="title"
-              size="small"
-              value={newOffer.title}
-              onChange={handleInputChange}
-            />
+            <TextField fullWidth label="Offer Title" size="small" />
           </Grid>
-
           <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Promo Code"
-              name="code"
-              size="small"
-              value={newOffer.code}
-              onChange={handleInputChange}
-            />
+            <TextField fullWidth label="Promo Code" size="small" />
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Discount"
-              name="discount"
               size="small"
-              value={newOffer.discount}
-              onChange={handleInputChange}
               InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">₹ / %</InputAdornment>
-                ),
+                startAdornment: <InputAdornment position="start">₹ / %</InputAdornment>,
               }}
             />
           </Grid>
@@ -194,14 +191,9 @@ const Offers = () => {
             <TextField
               fullWidth
               label="Minimum Order"
-              name="minOrder"
               size="small"
-              value={newOffer.minOrder}
-              onChange={handleInputChange}
               InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">₹</InputAdornment>
-                ),
+                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
               }}
             />
           </Grid>
@@ -209,11 +201,8 @@ const Offers = () => {
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Expiry"
-              name="expiry"
+              label="Expiry Date"
               size="small"
-              value={newOffer.expiry}
-              onChange={handleInputChange}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -225,25 +214,16 @@ const Offers = () => {
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Usage Limit"
-              name="usageLimit"
-              size="small"
-              value={newOffer.usageLimit}
-              onChange={handleInputChange}
-            />
+            <TextField fullWidth label="Usage Limit" size="small" defaultValue="Unlimited" />
           </Grid>
 
           <Grid item xs={12}>
             <TextField
               fullWidth
               label="Description"
-              name="description"
               multiline
               rows={2}
-              value={newOffer.description}
-              onChange={handleInputChange}
+              size="small"
             />
           </Grid>
 
@@ -254,151 +234,164 @@ const Offers = () => {
               onClick={addNewOffer}
               sx={{
                 bgcolor: "#FF5252",
-                px: 4,
-                "&:hover": { bgcolor: "#e04848" },
+                px: 5,
+                py: 1.2,
+                fontWeight: 600,
+                "&:hover": { bgcolor: "#e04545" },
               }}
             >
-              Add Offer
+              Add New Offer
             </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* ================= CARDS ================= */}
+      {/* ──────────────── CARDS ──────────────── */}
+      <Typography variant="h5" fontWeight={600} color="text.primary" gutterBottom sx={{ mb: 3 }}>
+        Active & Upcoming Offers
+      </Typography>
+
       <Grid container spacing={3}>
-        {offers.map((offer) => (
-          <Grid item xs={12} sm={6} md={4} key={offer.id}>
-            <Card
-              sx={{
-                height: "100%",
-                borderRadius: 4,
-                overflow: "hidden",
-                border: "1px solid #ffe2e2",
-                background:
-                  "linear-gradient(180deg, #ffffff 0%, #fff5f5 100%)",
-                transition: "0.35s",
-                "&:hover": {
-                  transform: "translateY(-8px)",
-                  boxShadow: "0 25px 45px rgba(255,82,82,0.25)",
-                },
-              }}
-            >
-              {/* Top strip */}
-              <Box height={6} bgcolor="#FF5252" />
+        {offers.slice(0, 4).map((offer) => {
+          const statusStyle = getStatusColor(offer.status);
 
-              <CardContent sx={{ p: 3 }}>
-                <Box display="flex" gap={1.5} mb={2}>
-                  <Box
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 3,
-                      background: "rgba(255,82,82,0.15)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <OfferIcon sx={{ color: "#FF5252" }} />
-                  </Box>
-
-                  <Box>
-                    <Typography fontWeight={700}>
-                      {offer.title}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                    >
-                      Promotional Offer
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  mb={2}
-                >
-                  {offer.description}
-                </Typography>
-
-                <Divider sx={{ mb: 2 }} />
-
-                <Box display="flex" flexDirection="column" gap={1.2}>
-                  <Row label="Code" value={offer.code} bold />
-                  <Row
-                    label="Discount"
-                    value={
-                      typeof offer.discount === "number"
-                        ? `₹${offer.discount}`
-                        : offer.discount
-                    }
-                  />
-                  <Row
-                    label="Min Order"
-                    value={
-                      offer.minOrder > 0
-                        ? `₹${offer.minOrder}`
-                        : "Any"
-                    }
-                  />
-                  <Row label="Expiry" value={offer.expiry} />
-                  <Row label="Usage" value={offer.usageLimit} />
-                </Box>
-
-                <Box mt={3}>
-                  <Chip
-                    label={offer.status}
-                    sx={{
-                      fontWeight: 600,
-                      background:
-                        offer.status === "Active"
-                          ? "rgba(76,175,80,0.2)"
-                          : offer.status === "Upcoming"
-                          ? "rgba(255,193,7,0.25)"
-                          : "rgba(244,67,54,0.25)",
-                      color:
-                        offer.status === "Active"
-                          ? "success.main"
-                          : offer.status === "Upcoming"
-                          ? "warning.main"
-                          : "error.main",
-                    }}
-                  />
-                </Box>
-              </CardContent>
-
-              <CardActions
+          return (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={offer.id}>
+              <Card
+                elevation={3}
                 sx={{
-                  px: 3,
-                  pb: 2,
-                  pt: 0,
-                  justifyContent: "flex-end",
+                  height: "100%",
+                  borderRadius: 3,
+                  overflow: "hidden",
+                  border: "1px solid #ffe6e6",
+                  transition: "all 0.28s ease",
+                  "&:hover": {
+                    transform: "translateY(-10px)",
+                    boxShadow: "0 20px 40px rgba(255,82,82,0.18)",
+                    borderColor: "#FF5252",
+                  },
                 }}
               >
-                <IconButton
+                {/* Top accent bar */}
+                <Box
                   sx={{
-                    bgcolor: "rgba(255,82,82,0.15)",
-                    mr: 1,
+                    height: 8,
+                    bgcolor:
+                      offer.status === "Active"
+                        ? "#4caf50"
+                        : offer.status === "Upcoming"
+                        ? "#ff9800"
+                        : "#f44336",
                   }}
-                >
-                  <EditIcon sx={{ color: "#FF5252" }} />
-                </IconButton>
+                />
 
-                <IconButton
+                <CardContent sx={{ p: 3 }}>
+                  <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+                    <Box
+                      sx={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: "12px",
+                        bgcolor: "rgba(255,82,82,0.12)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <OfferIcon sx={{ fontSize: 28, color: "#FF5252" }} />
+                    </Box>
+
+                    <Box>
+                      <Typography variant="h6" fontWeight={700} lineHeight={1.2}>
+                        {offer.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {offer.code}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2.5, minHeight: 44 }}
+                  >
+                    {offer.description}
+                  </Typography>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Stack spacing={1.1}>
+                    <Row label="Code" value={offer.code} bold />
+                    <Row
+                      label="Discount"
+                      value={
+                        typeof offer.discount === "number"
+                          ? offer.discount === 0
+                            ? "Free Delivery"
+                            : `₹${offer.discount}`
+                          : offer.discount
+                      }
+                      bold
+                    />
+                    <Row
+                      label="Min. Order"
+                      value={offer.minOrder > 0 ? `₹${offer.minOrder}` : "Any"}
+                    />
+                    <Row label="Expiry" value={offer.expiry} />
+                    <Row label="Usage" value={offer.usageLimit} />
+                  </Stack>
+
+                  <Box mt={3}>
+                    <Chip
+                      label={statusStyle.label}
+                      size="small"
+                      sx={{
+                        fontWeight: 700,
+                        px: 1.5,
+                        bgcolor: statusStyle.bg,
+                        color: statusStyle.text,
+                        borderRadius: "16px",
+                        minWidth: 90,
+                      }}
+                    />
+                  </Box>
+                </CardContent>
+
+                <CardActions
                   sx={{
-                    bgcolor: "rgba(244,67,54,0.15)",
+                    px: 3,
+                    pb: 2.5,
+                    pt: 0,
+                    justifyContent: "flex-end",
                   }}
                 >
-                  <DeleteIcon color="error" />
-                </IconButton>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
+                  <IconButton
+                    size="small"
+                    sx={{
+                      bgcolor: "rgba(255,82,82,0.08)",
+                      "&:hover": { bgcolor: "rgba(255,82,82,0.18)" },
+                    }}
+                  >
+                    <EditIcon fontSize="small" sx={{ color: "#FF5252" }} />
+                  </IconButton>
+
+                  <IconButton
+                    size="small"
+                    sx={{
+                      bgcolor: "rgba(244,67,54,0.08)",
+                      "&:hover": { bgcolor: "rgba(244,67,54,0.18)" },
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" color="error" />
+                  </IconButton>
+                </CardActions>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
-    </div>
+    </Box>
   );
 };
 

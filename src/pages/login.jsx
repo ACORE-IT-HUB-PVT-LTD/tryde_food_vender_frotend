@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,7 +8,7 @@ import {
   VisibilityOff,
 } from "@mui/icons-material";
 
-const Login = ({ setIsAuthenticated }) => {
+const Login = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -17,26 +18,31 @@ const Login = ({ setIsAuthenticated }) => {
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    // Clear error when user starts typing again
+    if (errors[e.target.name]) {
+      setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    }
   };
 
   const validate = () => {
     const err = {};
 
-    if (!form.email) {
+    if (!form.email.trim()) {
       err.email = "Email is required";
     } else if (
-      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email)
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email.trim())
     ) {
       err.email = "Invalid email address";
     }
 
-    if (!form.password) {
+    if (!form.password.trim()) {
       err.password = "Password is required";
-    } else if (form.password.length < 6) {
-      err.password = "Minimum 6 characters required";
+    } else if (form.password.trim().length < 6) {
+      err.password = "Password must be at least 6 characters";
     }
 
     setErrors(err);
@@ -45,82 +51,92 @@ const Login = ({ setIsAuthenticated }) => {
 
   const handleLogin = (e) => {
     e.preventDefault();
+
     if (!validate()) return;
 
-    localStorage.setItem("token", "mock-token");
-    setIsAuthenticated(true);
-    navigate("/dashboard");
+    setIsLoggingIn(true);
+
+    // Simulate a small delay (like real API call) → looks more professional
+    setTimeout(() => {
+      // This is what your RequireAuth checks
+      localStorage.setItem("token", "mock-token-xyz123");
+
+      // Optional: you can store more user info later
+      // localStorage.setItem("user", JSON.stringify({ name: "Demo Vendor", role: "vendor" }));
+
+      // Redirect to dashboard (replace: true prevents going back to login with browser back button)
+      navigate("/dashboard", { replace: true });
+
+      // Note: no need to setIsLoggingIn(false) → we are leaving the page
+    }, 1000); // 1 second delay – change to 300 or remove in production
   };
 
   return (
     <div className="min-h-screen flex">
-
-      {/* ================= LEFT IMAGE ================= */}
+      {/* LEFT IMAGE - visible on medium+ screens */}
       <div className="hidden md:flex w-1/2 relative">
         <img
           src="https://images.unsplash.com/photo-1504674900247-0877df9cc836"
-          alt="food"
+          alt="Delicious food background"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/40 flex flex-col justify-center px-14 text-white">
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">
             Restaurant Partner Panel
           </h1>
-          <p className="text-lg opacity-90 leading-relaxed">
-            Manage orders, menu, offers and earnings easily.
+          <p className="text-lg md:text-xl opacity-90 leading-relaxed max-w-lg">
+            Manage orders, update menu, create offers and track earnings — all in one place.
           </p>
         </div>
       </div>
 
-      {/* ================= LOGIN FORM ================= */}
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gradient-to-br from-[#fff5f5] to-[#ffecec] px-6">
+      {/* RIGHT SIDE - LOGIN FORM */}
+      <div className="w-full md:w-1/2 flex items-center justify-center bg-gradient-to-br from-[#fff5f5] to-[#ffecec] px-5 sm:px-6 py-8 md:py-0">
         <form
           onSubmit={handleLogin}
-          className="w-full max-w-md backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl px-10 py-12"
+          className="w-full max-w-md backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl px-8 sm:px-10 py-10 sm:py-12"
         >
           {/* TITLE */}
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-[#FF5252] mb-1">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#FF5252] mb-2">
               Vendor Login
             </h2>
-            <p className="text-gray-500">
-              Sign in to continue
+            <p className="text-gray-600 text-base sm:text-lg">
+              Sign in to manage your restaurant
             </p>
           </div>
 
-          {/* EMAIL */}
+          {/* EMAIL FIELD */}
           <div className="mb-6">
-            <label className="text-sm font-semibold text-gray-600">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Email Address
             </label>
-
-            <div className="relative mt-2">
-              <Email className="absolute left-4 top-3.5 text-[#FF5252]" />
+            <div className="relative">
+              <Email className="absolute left-4 top-1/2 -translate-y-1/2 text-[#FF5252]" />
               <input
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                placeholder="vendor@email.com"
-                className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252] outline-none transition"
+                placeholder="vendor@example.com"
+                autoComplete="email"
+                className={`w-full pl-12 pr-4 py-3.5 border ${
+                  errors.email ? "border-red-500" : "border-gray-200"
+                } rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252]/50 outline-none transition`}
               />
             </div>
-
             {errors.email && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.email}
-              </p>
+              <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>
             )}
           </div>
 
-          {/* PASSWORD */}
+          {/* PASSWORD FIELD */}
           <div className="mb-8">
-            <label className="text-sm font-semibold text-gray-600">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Password
             </label>
-
-            <div className="relative mt-2">
-              <Lock className="absolute left-4 top-3.5 text-[#FF5252]" />
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#FF5252]" />
 
               <input
                 type={showPassword ? "text" : "password"}
@@ -128,38 +144,46 @@ const Login = ({ setIsAuthenticated }) => {
                 value={form.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-12 py-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252] outline-none transition"
+                autoComplete="current-password"
+                className={`w-full pl-12 pr-12 py-3.5 border ${
+                  errors.password ? "border-red-500" : "border-gray-200"
+                } rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252]/50 outline-none transition`}
               />
 
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-3.5 text-gray-500 hover:text-[#FF5252]"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#FF5252] transition"
               >
                 {showPassword ? <VisibilityOff /> : <Visibility />}
               </button>
             </div>
-
             {errors.password && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.password}
-              </p>
+              <p className="text-red-500 text-xs mt-1.5">{errors.password}</p>
             )}
           </div>
 
-          {/* BUTTON */}
+          {/* SUBMIT BUTTON */}
           <button
             type="submit"
-            className="w-full bg-[#FF5252] hover:bg-[#e04646] text-white py-3.5 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition"
+            disabled={isLoggingIn}
+            className={`w-full bg-[#FF5252] text-white py-3.5 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 ${
+              isLoggingIn
+                ? "opacity-70 cursor-wait"
+                : "hover:bg-[#e03e3e] hover:shadow-xl active:scale-[0.98]"
+            }`}
           >
-            Login
+            {isLoggingIn ? "Logging in..." : "Login"}
           </button>
 
-          {/* FOOTER */}
-          <div className="text-center mt-8 text-gray-500 text-sm">
+          {/* LINK TO REGISTER */}
+          <div className="text-center mt-8 text-gray-600 text-sm">
             Don’t have an account?{" "}
-            <span className="text-[#FF5252] font-semibold cursor-pointer">
-              Register
+            <span
+              className="text-[#FF5252] font-semibold cursor-pointer hover:underline"
+              onClick={() => navigate("/register")}
+            >
+              Register here
             </span>
           </div>
         </form>
