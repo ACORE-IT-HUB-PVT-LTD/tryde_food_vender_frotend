@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function FAQ() {
   const [openFaq, setOpenFaq] = useState(0); // First one open by default
-
+   const navigate=useNavigate()
   const faqs = [
     {
       q: "How do I register my restaurant on Tryde?",
@@ -112,7 +113,7 @@ export default function FAQ() {
               <p className="mb-6 text-lg opacity-90">
                 Increase online orders and boost revenue.
               </p>
-              <button className="bg-[#FF5252] px-7 py-4 rounded-full font-semibold flex items-center gap-3 hover:bg-[#e04545] transition-colors shadow-lg">
+              <button className="bg-[#FF5252] px-7 py-4 rounded-full font-semibold flex items-center gap-3 hover:bg-[#e04545] transition-colors shadow-lg" onClick={()=>navigate("/register")}>
                 Start Partnering <ArrowRight size={18} />
               </button>
             </div>

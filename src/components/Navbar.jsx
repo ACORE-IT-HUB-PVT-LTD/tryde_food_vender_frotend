@@ -74,8 +74,7 @@ export default function Navbar({
                   after:content-[''] after:absolute after:left-0 after:-bottom-2
                   after:w-0 after:h-[3px] after:bg-[#FF5252] after:rounded
                   after:transition-all after:duration-500 after:ease-out
-                  hover:after:w-full
-                "
+                  hover:after:w-full"
               >
                 {label}
               </a>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Hero({ siteName = "Tryde" }) {
   const [currentSlide, setCurrentSlide] = useState(0);
-
+  const navigate = useNavigate()
   const slides = [
     {
       title: `Partner with ${siteName}`,
@@ -38,7 +39,7 @@ export default function Hero({ siteName = "Tryde" }) {
           muted
           playsInline
           preload="metadata"
-          // Optional: poster="/assets/poster.jpg"  ← add your poster image here if you have one
+        // Optional: poster="/assets/poster.jpg"  ← add your poster image here if you have one
         >
           <source src="./herovideo.mp4" type="video/mp4" />
           Sorry, your browser doesn't support embedded videos.
@@ -54,12 +55,12 @@ export default function Hero({ siteName = "Tryde" }) {
 
           <h1
             key={`title-${currentSlide}`}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight drop-shadow-2xl animate-fade-up"
+            className="text-2xl sm:text-5xl md:text-4xl lg:text-7xl font-extrabold leading-tight tracking-tight drop-shadow-2xl animate-fade-up"
             style={{ animationDelay: '0.4s' }}
           >
             {current.title}
             <br className="hidden sm:block" />
-            <span className="inline-block mt-3 md:mt-5 px-5 py-2 bg-black/40 backdrop-blur-sm rounded-xl text-[#FF3366]">
+            <span className="inline-block mt-4 md:mt-6 px-6 py-3 bg-black/40 backdrop-blur-sm rounded-xl text-[#FF5252] text-xl sm:text-2xl md:text-3xl">
               {current.subtitle}
             </span>
           </h1>
@@ -79,17 +80,17 @@ export default function Hero({ siteName = "Tryde" }) {
           >
             <button
               className="
-                group inline-flex items-center gap-3.5
-                bg-white hover:bg-gray-100 text-[#FF3366]
-                px-10 sm:px-14 py-5 sm:py-6
-                rounded-full text-lg sm:text-xl font-extrabold
-                shadow-xl hover:shadow-2xl hover:shadow-red-500/30
-                transition-all duration-300
-                hover:scale-[1.06] active:scale-95
-                relative overflow-hidden
-              "
+    group inline-flex items-center gap-4
+    bg-white hover:bg-[#FF5252] hover:text-white text-[#FF3366]
+    px-8 py-4
+    rounded-full text-sm font-bold
+    shadow-lg hover:shadow-xl hover:shadow-red-500/30
+    transition-all duration-300
+    hover:scale-105 active:scale-95
+    relative overflow-hidden
+  "
             >
-              <span className="relative z-10">Join as a Partner Now</span>
+              <span className="relative z-10" onClick={() => navigate("/register")}>Join as a Partner Now</span>
               <ArrowRight
                 size={30}
                 className="relative z-10 group-hover:translate-x-2 transition-transform"

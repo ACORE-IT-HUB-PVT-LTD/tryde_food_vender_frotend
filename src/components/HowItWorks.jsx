@@ -7,6 +7,7 @@ import {
   TrendingUp,
   ArrowRight,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function HowItWorks() {
   const steps = [
@@ -83,7 +84,7 @@ export default function HowItWorks() {
       },
     },
   };
-
+  const navigate=useNavigate()
   return (
     <section className="py-28 bg-white w-full overflow-hidden font-['Poppins']">
       {/* ================= TOP CONTENT ================= */}
@@ -117,8 +118,9 @@ export default function HowItWorks() {
             Tryde makes it easy for restaurants to go online. Register your restaurant, upload your menu, and start accepting online food orders in just a few steps. Increase your reach and grow your business today.
           </p>
 
-          <button className="group flex items-center gap-5 bg-[#FF5252] text-white px-10 py-5 rounded-full hover:scale-105 transition duration-300 shadow-lg hover:shadow-2xl">
-            Learn More
+          <button className="group flex items-center gap-3 bg-[#FF5252] text-white px-6 py-2 rounded-full hover:scale-80 transition duration-300 shadow-lg hover:shadow-2xl"  onClick={()=>navigate("/register")}>
+            Start Now
+
             <span className="w-12 h-12 rounded-full bg-white flex items-center justify-center transition-transform duration-300 group-hover:rotate-[-12deg]">
               <ArrowRight size={26} className="text-[#FF5252]" />
             </span>

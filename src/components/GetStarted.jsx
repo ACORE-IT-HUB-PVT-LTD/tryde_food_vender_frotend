@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function FoodpandaLanding() {
   const [currentSlide, setCurrentSlide] = useState(0);
-
+   const navigate=useNavigate()
   const slides = [
     {
       title: "Are you ready to reach more customers?",
       description: "Don't miss out on potential earnings! By joining our platform, you can reach a wider audience, attract new customers, and increase your revenue. Our tools help you showcase your menu, manage orders efficiently, and build a loyal customer base, so you can focus on what you do best — serving great food.",
-      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=1200",
+      image: "https://media.istockphoto.com/id/1576619032/photo/exquisite-indian-cuisine-flavorful-curries-to-colorful-thali-platters.jpg?s=612x612&w=0&k=20&c=Eb4l6RzZz3HG5haT18kP4VOl5h81WWNUwzTpGk5dixQ=",
     },
     {
       title: "Grow your restaurant faster",
@@ -58,7 +59,7 @@ function FoodpandaLanding() {
               </p>
 
               <div className="pt-4 md:pt-6">
-                <button className="bg-[#FF5252] hover:bg-[#ff3838] text-white font-bold text-lg px-10 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95">
+                <button className="bg-[#FF5252] hover:bg-[#ff3838] text-white font-bold text-lg px-10 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95" onClick={()=>navigate("/register")}>
                   Let's get started!
                 </button>
               </div>
