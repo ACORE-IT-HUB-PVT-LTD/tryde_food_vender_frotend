@@ -80,17 +80,6 @@ const Offers = () => {
       usageLimit: "Unlimited",
       status: "Upcoming",
     },
-    {
-      id: 4,
-      title: "₹50 Cashback",
-      description: "Via UPI payment",
-      discount: 50,
-      minOrder: 200,
-      expiry: "28 Feb 2026",
-      code: "UPI50",
-      usageLimit: "Once per user",
-      status: "Active",
-    },
   ]);
 
   const [newOffer, setNewOffer] = useState({
@@ -268,7 +257,7 @@ const Offers = () => {
                   "&:hover": {
                     transform: "translateY(-10px)",
                     boxShadow: "0 20px 40px rgba(255,82,82,0.18)",
-                    borderColor: "#FF5252",
+                    // borderColor: "#FF5252",
                   },
                 }}
               >

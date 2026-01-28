@@ -7,6 +7,7 @@ import {
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
+import { GrRestaurant } from "react-icons/gr";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -74,7 +75,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex">
       {/* LEFT IMAGE - visible on medium+ screens */}
-      <div className="hidden md:flex w-1/2 relative">
+      <div className="hidden md:flex w-1/2 relative hover:">
         <img
           src="https://images.unsplash.com/photo-1504674900247-0877df9cc836"
           alt="Delicious food background"
@@ -82,16 +83,22 @@ const Login = () => {
         />
         <div className="absolute inset-0 bg-black/40 flex flex-col justify-center px-14 text-white">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            Restaurant Partner Panel
+            Restaurant <span className="text-[#FF5252]">Partner</span> Panel
           </h1>
           <p className="text-lg md:text-xl opacity-90 leading-relaxed max-w-lg">
             Manage orders, update menu, create offers and track earnings — all in one place.
           </p>
         </div>
       </div>
+      
+
 
       {/* RIGHT SIDE - LOGIN FORM */}
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gradient-to-br from-[#fff5f5] to-[#ffecec] px-5 sm:px-6 py-8 md:py-0">
+      <div className="w-full md:w-1/2 flex items-center justify-center bg-gradient-to-br from-[#fff5f5] to-[#ffecec] px-5 sm:px-6 py-8 md:py-0 relative">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2  p-6 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform duration-300">
+    <GrRestaurant className="text-[#FF5252]" size={60} />
+  </div>
+
         <form
           onSubmit={handleLogin}
           className="w-full max-w-md backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl px-8 sm:px-10 py-10 sm:py-12"

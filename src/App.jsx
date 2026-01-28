@@ -32,6 +32,7 @@ import Support from "./pages/Support";
 // Menu sub pages
 import AddCategory from "./components/AddCategory";
 import AddFoodItem from "./components/AddFoodItem";
+import DaownloadPannel from "./components/DaownloadPannel";
 
 function PublicLayout() {
   return <Outlet />;
@@ -63,6 +64,7 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/download" element={<DaownloadPannel/>}/>
         <Route path="/success-stories" element={<SuccessStories />} />
         <Route path="/why-partner" element={<WhyPartner />} />
         <Route path="/finalcta" element={<FinalCTA />} />

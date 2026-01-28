@@ -18,6 +18,7 @@ import ChevronDownIcon from '@heroicons/react/24/outline/ChevronDownIcon';
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Automatically open "Menu" dropdown if user is on any menu-related page
   const [menuOpen, setMenuOpen] = useState(
@@ -40,14 +41,39 @@ const Sidebar = () => {
   };
 
   return (
-    <aside
-      className="
-        w-64 bg-white shadow-xl border-r border-gray-100
-        p-5 flex flex-col gap-1.5
-        hidden md:flex overflow-y-auto
-        font-['Poppins']
-      "
-    >
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg"
+      >
+        <Bars3Icon className="h-6 w-6" />
+      </button>
+
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`
+          w-64 bg-white shadow-xl border-r border-gray-100
+          p-5 flex flex-col gap-1.5 overflow-y-auto
+          font-['Poppins']
+          
+          /* Desktop: always visible */
+          md:flex
+          
+          /* Mobile: slide in from left */
+          ${isMobileOpen ? 'flex' : 'hidden'}
+          fixed md:relative top-0 left-0 h-full z-50
+          transform transition-transform duration-300 ease-in-out
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
       {/* Logo / Brand can go here */}
 
       <nav className="flex-1 flex flex-col gap-1">
@@ -139,10 +165,10 @@ const Sidebar = () => {
           Offers
         </NavLink>
 
-        <NavLink to="/dashboard/notifications" className={navClass}>
+        {/* <NavLink to="/dashboard/notifications" className={navClass}>
           <BellIcon className="h-5 w-5" />
           Notifications
-        </NavLink>
+        </NavLink> */}
 
         <NavLink to="/dashboard/support" className={navClass}>
           <LifebuoyIcon className="h-5 w-5" />
@@ -162,6 +188,7 @@ const Sidebar = () => {
         © 2025 YourApp
       </div>
     </aside>
+    </>
   );
 };
 

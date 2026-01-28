@@ -15,6 +15,12 @@ import {
   Beef,
   Coffee,
   IceCreamCone,
+  Soup,
+  Drumstick,
+  Popcorn,
+  ChefHat,
+  Sandwich,
+  Plus,
 } from 'lucide-react';
 
 // Chart.js + react-chartjs-2 imports
@@ -85,6 +91,18 @@ const Dashboard = () => {
     { id: 4, name: 'Burgers', icon: <Beef size={32} /> },
     { id: 5, name: 'Drinks', icon: <Coffee size={32} /> },
     { id: 6, name: 'Desserts', icon: <IceCreamCone size={32} /> },
+    { id: 7, name: 'Chinese', icon: <Soup size={32} /> },
+    { id: 9, name: 'North Indian', icon: <Drumstick size={32} /> },
+    { id: 10, name: 'Snacks', icon: <Popcorn size={32} /> },
+    { id: 11, name: 'Biryani', icon: <ChefHat size={32} /> },
+    { id: 12, name: 'Sandwiches', icon: <Sandwich size={32} /> },
+      { id: 13, name: 'Add', icon: <Plus size={32} /> },
+
+
+
+
+
+
   ];
 
   const items = [

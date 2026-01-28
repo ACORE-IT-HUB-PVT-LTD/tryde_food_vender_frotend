@@ -8,6 +8,7 @@ import GetStarted from "../components/GetStarted";
 import FinalCTA from "../components/FinalCTA";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import DaownloadPannel from "../components/DaownloadPannel";
 
 export default function Home() {
   const siteName = "Tryde";
@@ -15,17 +16,45 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
-      <Navbar siteName={siteName} primaryColor={primaryColor} />
-      <Hero siteName={siteName} primaryColor={primaryColor} />
 
-      <WhyPartner siteName={siteName} primaryColor={primaryColor} />
-      <SuccessStories />
-      <HowItWorks primaryColor={primaryColor} />
-      <FAQ />
-      <GetStarted />
-      <FinalCTA siteName={siteName} primaryColor={primaryColor} />
+      <Navbar siteName={siteName} primaryColor={primaryColor} />
+
+      <section id="home">
+        <Hero siteName={siteName} primaryColor={primaryColor} />
+      </section>
+
+      <section id="why">
+        <WhyPartner siteName={siteName} primaryColor={primaryColor} />
+      </section>
+
+      <section id="stories">
+        <SuccessStories />
+      </section>
+
+      <section id="how">
+        <HowItWorks primaryColor={primaryColor} />
+      </section>
+
+      <section id="faq">
+        <FAQ />
+      </section>
+
+    <section id="doawnload">
+        <DaownloadPannel siteName={siteName} primaryColor={primaryColor} />
+      </section>
+
+      
+      <section id="getstarted">
+        <GetStarted />
+      </section>
+
+      <section id="cta">
+        <FinalCTA siteName={siteName} primaryColor={primaryColor} />
+      </section>
 
       <Footer siteName={siteName} />
+
     </div>
   );
 }
+
