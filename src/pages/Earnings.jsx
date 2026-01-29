@@ -94,7 +94,7 @@ const StatCard = ({ icon, label, value, color }) => (
 const Earnings = () => {
   return (
     <Box 
-      className="font-['Poppins']"  // ← Same font jo Dashboard mein hai bhai!
+      className="font-['Poppins']"  
       sx={{ 
         p: { xs: 2, md: 4 }, 
         bgcolor: '#f7f8fa', 

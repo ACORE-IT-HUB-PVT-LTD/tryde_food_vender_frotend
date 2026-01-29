@@ -4,7 +4,7 @@ import { Button } from '@mui/material';
 
 const OrderCard = ({ order, onAccept, onReject }) => {
   return (
-    <div className="bg-white shadow-md rounded-lg p-4 mb-4">
+    <div className="bg-white shadow-md rounded-lg p-4 mb-4 font-['Poppins']">
       <div className="flex justify-between">
         <div>
           <h3 className="font-bold">Order #{order.id}</h3>

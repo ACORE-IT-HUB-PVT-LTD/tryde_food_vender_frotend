@@ -87,11 +87,12 @@ const AddFoodItem = () => {
   };
 
   return (
-    <div className="p-3 sm:p-6">
+    <div className="p-4 sm:p-6 font-['Poppins']">
       <Paper className="p-4 sm:p-6 rounded-xl shadow max-w-5xl mx-auto">
         <Typography
           variant="h6"
           className="mb-6 text-[#FF5252] text-center sm:text-left"
+          sx={{ fontWeight: 600 }}
         >
           Add Food Item
         </Typography>
@@ -187,18 +188,23 @@ const AddFoodItem = () => {
           </div>
         )}
 
+
+
+
         {/* Description */}
-        <TextField
-          label="Description"
-          multiline
-          rows={3}
-          value={form.description}
-          onChange={(e) =>
-            setForm({ ...form, description: e.target.value })
-          }
-          fullWidth
-          className="mt-4"
-        />
+        <div className="mt-6"> {/* add a top margin wrapper */}
+          <TextField
+            label="Description"
+            multiline
+            rows={3}
+            value={form.description}
+            onChange={(e) =>
+              setForm({ ...form, description: e.target.value })
+            }
+            fullWidth
+          />
+        </div>
+
 
         {/* Switch + Veg NonVeg */}
         <div className="flex flex-col sm:flex-row justify-between mt-4 gap-3">
@@ -255,11 +261,21 @@ const AddFoodItem = () => {
             backgroundColor: "#FF5252",
             height: "45px",
             fontSize: "16px",
+            fontWeight: 700,
+            boxShadow: "0px 4px 6px rgba(0,0,0,0.2)",
+            transition: "all 0.3s ease",
+            "&:hover": {
+              backgroundColor: "#FF3333",
+              boxShadow: "0px 6px 10px rgba(0,0,0,0.3)",
+              transform: "translateY(-2px)",
+            },
           }}
           onClick={addItem}
         >
           Save Food Item
         </Button>
+
+
       </Paper>
     </div>
   );

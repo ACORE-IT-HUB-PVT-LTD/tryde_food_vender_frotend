@@ -96,7 +96,7 @@ const Dashboard = () => {
     { id: 10, name: 'Snacks', icon: <Popcorn size={32} /> },
     { id: 11, name: 'Biryani', icon: <ChefHat size={32} /> },
     { id: 12, name: 'Sandwiches', icon: <Sandwich size={32} /> },
-      { id: 13, name: 'Add', icon: <Plus size={32} /> },
+    { id: 13, name: 'Add', icon: <Plus size={32} /> },
 
 
 
@@ -108,9 +108,29 @@ const Dashboard = () => {
   const items = [
     { id: 1, name: 'Margherita Pizza', price: '₹249', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
     { id: 2, name: 'Chicken Biryani', price: '₹299', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400' },
-    { id: 3, name: 'Paneer Butter Masala', price: '₹279', image: 'https://images.unsplash.com/photo-1630409351340-1f3a02f4e8b0?w=400' },
+    { id: 3, name: 'Paneer Butter Masala', price: '₹279', image: 'https://media.istockphoto.com/id/1354042949/photo/curd-paneer-masala.jpg?s=612x612&w=0&k=20&c=Q_93IPlKtX71VgeJQDcwWK8J0ut0gWg3H3akCTZqfPs=' },
     { id: 4, name: 'Veg Momos', price: '₹149', image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400' },
     { id: 5, name: 'Cold Coffee', price: '₹129', image: 'https://images.unsplash.com/photo-1572449043416-55f4685c9bb7?w=400' },
+    { id: 6, name: 'Rassole', price: '₹80', image: 'https://media.istockphoto.com/id/889615242/photo/pakora-bhaji-and-samosa-on-a-wooden-plate-north-indian-food.jpg?s=612x612&w=0&k=20&c=zgAW4FucFPZcoMZsaU8OFqXsm0-JFOsAK0qDNRTLZhY=' },
+    { id: 7, name: 'Butter Naan', price: '₹49', image: 'https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?w=400' },
+    { id: 8, name: 'Tandoori Chicken', price: '₹399', image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400' },
+    { id: 9, name: 'Chocolate Shake', price: '₹149', image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400' },
+    { id: 10, name: 'Rajma Chawal', price: '₹179', image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400' },
+    { id: 11, name: 'Chicken Burger', price: '₹149', image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400' },
+    { id: 12, name: 'Rajma Chawal', price: '₹179', image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400' },
+
+
+
+
+
+
+    
+
+
+
+
+
+
   ];
 
   return (
@@ -120,7 +140,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
         {stats.map((stat, idx) => (
           <Card key={idx} title={stat.title}>
-            <div className="flex flex-col items-center justify-center py-5 md:py-6">
+            <div className="flex flex-col items-center justify-center py-5 md:py-6 ">
               <div className={`w-16 h-16 md:w-18 md:h-18 rounded-full ${stat.color} flex items-center justify-center text-white shadow-md mb-3 md:mb-4`}>
                 {stat.icon}
               </div>
@@ -137,7 +157,7 @@ const Dashboard = () => {
 
         {/* Weekly Revenue - Bar Chart */}
         <Card title="Revenue This Week">
-          <div className="pt-4 pb-6 px-2 md:px-4">
+          <div className="pt-4 pb-6 px-2 md:px-4 ">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
               <div>
                 <p className="text-3xl md:text-4xl font-bold text-emerald-600">₹92,300</p>

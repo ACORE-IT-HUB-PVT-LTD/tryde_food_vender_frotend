@@ -3,7 +3,7 @@ import React from 'react';
 
 const Card = ({ title, children, className = '' }) => {
   return (
-    <div className={`bg-white shadow-md rounded-lg p-6 ${className}`}>
+    <div className={`bg-white shadow-md rounded-lg p-6 ${className} font-['Poppins']`}>
       <h2 className="text-xl font-semibold mb-4 text-[#FF5252]">{title}</h2>
       {children}
     </div>

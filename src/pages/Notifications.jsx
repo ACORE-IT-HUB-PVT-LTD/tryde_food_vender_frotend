@@ -6,7 +6,7 @@ const Notifications = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6 text-[#FF5252]">Notifications</h2>
+      <h2 className="text-2xl font-bold mb-6 text-[#FF5252] font-['Poppins']">Notifications</h2>
       <ul>
         {notifications.map((notif, idx) => <li key={idx} className="p-2 border-b">{notif}</li>)}
       </ul>

@@ -4,7 +4,7 @@ import React from 'react';
 const LiveTracking = () => {
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6 text-[#FF5252]">Live Tracking</h2>
+      <h2 className="text-2xl font-bold mb-6 text-[#FF5252] font-['Poppins']">Live Tracking</h2>
       <div className="bg-white p-6 rounded-lg shadow-md">
         {/* Mock map */}
         <div className="h-96 bg-gray-200 flex items-center justify-center">Map Placeholder</div>

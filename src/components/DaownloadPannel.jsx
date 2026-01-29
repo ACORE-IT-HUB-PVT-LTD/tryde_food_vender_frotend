@@ -98,7 +98,7 @@ function DownloadPanel() {
 
         {/* RIGHT MOBILE MOCKUP */}
         <motion.div
-          className="relative flex justify-center mt-12 lg:mt-0"
+          className="relative flex justify-center mt-12 lg:mt-0 hover:scale-102 transition-all duration-200"
           variants={mockupAnimation}
           initial="hidden"
           whileInView="visible"

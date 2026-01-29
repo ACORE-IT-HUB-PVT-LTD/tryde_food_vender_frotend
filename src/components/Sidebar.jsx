@@ -76,7 +76,7 @@ const Sidebar = () => {
       >
       {/* Logo / Brand can go here */}
 
-      <nav className="flex-1 flex flex-col gap-1">
+      <nav className="flex-1 flex flex-col gap-1 font-['Poppins']">
         {/* Dashboard */}
         <NavLink to="/dashboard" end className={navClass}>
           <HomeIcon className="h-5 w-5" />
@@ -185,7 +185,7 @@ const Sidebar = () => {
       </nav>
 
       <div className="pt-4 mt-auto border-t border-gray-100 text-xs text-gray-500">
-        © 2025 YourApp
+        © 2026 YourApp
       </div>
     </aside>
     </>

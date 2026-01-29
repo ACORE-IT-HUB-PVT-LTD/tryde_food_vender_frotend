@@ -73,7 +73,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex font-['Poppins']">
       {/* LEFT IMAGE - visible on medium+ screens */}
       <div className="hidden md:flex w-1/2 relative hover:">
         <img
@@ -160,7 +160,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#FF5252] transition"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#FF5252] transition  cursor-pointer"
               >
                 {showPassword ? <VisibilityOff /> : <Visibility />}
               </button>
@@ -174,7 +174,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={isLoggingIn}
-            className={`w-full bg-[#FF5252] text-white py-3.5 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 ${
+            className={`w-full bg-[#FF5252] text-white py-3.5 rounded-xl font-semibold text-lg shadow-lg  cursor-pointer transition-all duration-200 ${
               isLoggingIn
                 ? "opacity-70 cursor-wait"
                 : "hover:bg-[#e03e3e] hover:shadow-xl active:scale-[0.98]"

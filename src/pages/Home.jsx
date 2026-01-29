@@ -15,7 +15,7 @@ export default function Home() {
   const primaryColor = "#FF5252";
 
   return (
-    <div className="min-h-screen bg-white font-sans antialiased">
+    <div className="min-h-screen bg-white font-sans antialiased font-['Poppins']">
 
       <Navbar siteName={siteName} primaryColor={primaryColor} />
 
@@ -43,7 +43,7 @@ export default function Home() {
         <DaownloadPannel siteName={siteName} primaryColor={primaryColor} />
       </section>
 
-      
+
       <section id="getstarted">
         <GetStarted />
       </section>

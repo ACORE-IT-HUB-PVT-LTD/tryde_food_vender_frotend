@@ -49,28 +49,6 @@ const Offers = () => {
   const [offers] = useState([
     {
       id: 1,
-      title: "Flat ₹100 OFF",
-      description: "On orders above ₹499",
-      discount: 100,
-      minOrder: 499,
-      expiry: "31 Jan 2026",
-      code: "FLAT100",
-      usageLimit: "Unlimited",
-      status: "Active",
-    },
-    {
-      id: 2,
-      title: "20% OFF on Pizza",
-      description: "Valid on all pizzas",
-      discount: 20,
-      minOrder: 0,
-      expiry: "25 Jan 2026",
-      code: "PIZZA20",
-      usageLimit: "Once per user",
-      status: "Active",
-    },
-    {
-      id: 3,
       title: "Free Delivery",
       description: "No delivery charges on orders above ₹299",
       discount: 0,
@@ -80,6 +58,17 @@ const Offers = () => {
       usageLimit: "Unlimited",
       status: "Upcoming",
     },
+    {
+      id: 2,
+      title: "Free Delivery",
+      description: "No delivery charges on orders above ₹299",
+      discount: 0,
+      minOrder: 299,
+      expiry: "15 Feb 2026",
+      code: "FREEDLV",
+      usageLimit: "Unlimited",
+      status: "Upcoming",
+    }, 
   ]);
 
   const [newOffer, setNewOffer] = useState({
@@ -98,7 +87,6 @@ const Offers = () => {
   };
 
   const addNewOffer = () => {
-    // Just placeholder — not adding to list in this version
     alert("New offer added (demo)");
     setNewOffer({
       title: "",
@@ -126,6 +114,7 @@ const Offers = () => {
 
   return (
     <Box
+    className="font-['Poppins']"
       sx={{
         p: { xs: 2, sm: 3, md: 4 },
         bgcolor: "grey.50",
@@ -143,7 +132,7 @@ const Offers = () => {
         Manage Offers & Discounts
       </Typography>
 
-      {/* ──────────────── CREATE FORM ──────────────── */}
+      {/* CREATE FORM */}
       <Paper
         elevation={4}
         sx={{
@@ -153,7 +142,7 @@ const Offers = () => {
           background: "white",
         }}
       >
-        <Typography variant="h6" color="#FF5252" gutterBottom sx={{ mb: 3 }}>
+        <Typography variant="h6" color="#FF5252"  gutterBottom sx={{ mb: 3,fontWeight:600 }}>
           Create New Offer
         </Typography>
 
@@ -164,7 +153,6 @@ const Offers = () => {
           <Grid item xs={12} sm={6}>
             <TextField fullWidth label="Promo Code" size="small" />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -175,7 +163,6 @@ const Offers = () => {
               }}
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -186,7 +173,6 @@ const Offers = () => {
               }}
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -201,21 +187,12 @@ const Offers = () => {
               }}
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField fullWidth label="Usage Limit" size="small" defaultValue="Unlimited" />
           </Grid>
-
           <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Description"
-              multiline
-              rows={2}
-              size="small"
-            />
+            <TextField fullWidth label="Description" multiline rows={2} size="small" />
           </Grid>
-
           <Grid item xs={12}>
             <Button
               variant="contained"
@@ -235,8 +212,14 @@ const Offers = () => {
         </Grid>
       </Paper>
 
-      {/* ──────────────── CARDS ──────────────── */}
-      <Typography variant="h5" fontWeight={600} color="text.primary" gutterBottom sx={{ mb: 3 }}>
+      {/* CARDS */}
+      <Typography
+        variant="h5"
+        fontWeight={600}
+        color="text.primary"
+        gutterBottom
+        sx={{ mb: 3 }}
+      >
         Active & Upcoming Offers
       </Typography>
 
@@ -245,72 +228,114 @@ const Offers = () => {
           const statusStyle = getStatusColor(offer.status);
 
           return (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={offer.id}>
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              lg={3}
+              key={offer.id}
+              sx={{ display: "flex" }} // ensures Card stretches full height
+            >
               <Card
-                elevation={3}
+                elevation={0}
                 sx={{
-                  height: "100%",
+                  flex: "1 1 0", // full width & height in grid item
+                  display: "flex",
+                  flexDirection: "column",
                   borderRadius: 3,
                   overflow: "hidden",
-                  border: "1px solid #ffe6e6",
-                  transition: "all 0.28s ease",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: "background.paper",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                   "&:hover": {
-                    transform: "translateY(-10px)",
-                    boxShadow: "0 20px 40px rgba(255,82,82,0.18)",
-                    // borderColor: "#FF5252",
+                    transform: "translateY(-6px)",
+                    boxShadow: "0 14px 36px rgba(255,82,82,0.16)",
+                    // borderColor: "primary.light",
                   },
                 }}
               >
-                {/* Top accent bar */}
+                {/* Top gradient accent bar */}
                 <Box
                   sx={{
-                    height: 8,
-                    bgcolor:
+                    height: 6,
+                    background:
                       offer.status === "Active"
-                        ? "#4caf50"
+                        ? "linear-gradient(90deg, #4caf50, #81c784)"
                         : offer.status === "Upcoming"
-                        ? "#ff9800"
-                        : "#f44336",
+                          ? "linear-gradient(90deg, #ff9800, #ffb74d)"
+                          : "linear-gradient(90deg, #f44336, #e57373)",
                   }}
                 />
 
-                <CardContent sx={{ p: 3 }}>
+                {/* Card Content */}
+                <CardContent
+                  sx={{
+                    p: 3,
+                    pb: 2.5,
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  {/* Header: Icon + Title */}
                   <Stack direction="row" spacing={2} alignItems="center" mb={2}>
                     <Box
                       sx={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: "12px",
-                        bgcolor: "rgba(255,82,82,0.12)",
+                        width: 48,
+                        height: 48,
+                        borderRadius: 12,
+                        bgcolor: "rgba(255,82,82,0.08)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        flexShrink: 0,
                       }}
                     >
-                      <OfferIcon sx={{ fontSize: 28, color: "#FF5252" }} />
+                      <OfferIcon sx={{ fontSize: 26, color: "#FF5252" }} />
                     </Box>
 
-                    <Box>
-                      <Typography variant="h6" fontWeight={700} lineHeight={1.2}>
+                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                      <Typography
+                        variant="h6"
+                        fontWeight={700}
+                        lineHeight={1.2}
+                        noWrap
+                        sx={{ mb: 0.5 }}
+                      >
                         {offer.title}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" fontWeight={500}>
                         {offer.code}
                       </Typography>
                     </Box>
                   </Stack>
 
+                  {/* Description */}
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mb: 2.5, minHeight: 44 }}
+                    sx={{
+                      mb: 2.5,
+                      lineHeight: 1.45,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      minHeight: 60,
+                    }}
                   >
                     {offer.description}
                   </Typography>
 
-                  <Divider sx={{ my: 2 }} />
+                  <Divider sx={{ my: 2, opacity: 0.5 }} />
 
-                  <Stack spacing={1.1}>
+                  {/* Details */}
+                  <Stack spacing={1.1} sx={{ mt: "auto", mb: 2 }}>
                     <Row label="Code" value={offer.code} bold />
                     <Row
                       label="Discount"
@@ -325,54 +350,61 @@ const Offers = () => {
                     />
                     <Row
                       label="Min. Order"
-                      value={offer.minOrder > 0 ? `₹${offer.minOrder}` : "Any"}
+                      value={offer.minOrder > 0 ? `₹${offer.minOrder}` : "Any amount"}
                     />
                     <Row label="Expiry" value={offer.expiry} />
                     <Row label="Usage" value={offer.usageLimit} />
                   </Stack>
 
-                  <Box mt={3}>
+                  {/* Status chip */}
+                  <Box sx={{ mt: "auto" }}>
                     <Chip
                       label={statusStyle.label}
                       size="small"
                       sx={{
-                        fontWeight: 700,
-                        px: 1.5,
+                        fontWeight: 600,
+                        fontSize: "0.75rem",
+                        px: 1.8,
+                        height: 26,
                         bgcolor: statusStyle.bg,
                         color: statusStyle.text,
-                        borderRadius: "16px",
-                        minWidth: 90,
+                        borderRadius: "14px",
+                        border: `1px solid ${statusStyle.text}22`,
                       }}
                     />
                   </Box>
                 </CardContent>
 
+                {/* Card Actions */}
                 <CardActions
                   sx={{
                     px: 3,
-                    pb: 2.5,
+                    py: 1.5,
                     pt: 0,
                     justifyContent: "flex-end",
+                    borderTop: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "action.hover",
                   }}
                 >
                   <IconButton
                     size="small"
                     sx={{
-                      bgcolor: "rgba(255,82,82,0.08)",
-                      "&:hover": { bgcolor: "rgba(255,82,82,0.18)" },
+                      color: "primary.main",
+                      "&:hover": { bgcolor: "primary.50" },
                     }}
                   >
-                    <EditIcon fontSize="small" sx={{ color: "#FF5252" }} />
+                    <EditIcon fontSize="small" />
                   </IconButton>
 
                   <IconButton
                     size="small"
+                    color="error"
                     sx={{
-                      bgcolor: "rgba(244,67,54,0.08)",
-                      "&:hover": { bgcolor: "rgba(244,67,54,0.18)" },
+                      "&:hover": { bgcolor: "error.50" },
                     }}
                   >
-                    <DeleteIcon fontSize="small" color="error" />
+                    <DeleteIcon fontSize="small" />
                   </IconButton>
                 </CardActions>
               </Card>
@@ -380,6 +412,7 @@ const Offers = () => {
           );
         })}
       </Grid>
+
     </Box>
   );
 };
