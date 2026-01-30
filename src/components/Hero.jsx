@@ -87,7 +87,7 @@ export default function Hero({ siteName = "Tryde" }) {
     shadow-lg hover:shadow-xl hover:shadow-red-500/30
     transition-all duration-300
     hover:scale-105 active:scale-95
-    relative overflow-hidden
+    relative overflow-hidden cursor-pointer
   "
             >
               <span className="relative z-10" onClick={() => navigate("/register")}>Join as a Partner Now</span>

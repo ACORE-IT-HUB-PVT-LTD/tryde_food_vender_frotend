@@ -152,7 +152,7 @@ export default function FAQ() {
                     {/* Question */}
                     <button
                       onClick={() => setOpenFaq(isOpen ? null : i)}
-                      className="w-full flex justify-between items-center px-6 py-5 text-left focus:outline-none"
+                      className="w-full flex justify-between items-center px-6 py-5 text-left focus:outline-none cursor-pointer"
                     >
                       <span className={`text-lg md:text-xl font-semibold ${isOpen ? "text-white" : "text-gray-900"}`}>
                         {faq.q}

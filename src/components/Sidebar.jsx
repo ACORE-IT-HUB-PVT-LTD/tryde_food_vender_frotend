@@ -37,11 +37,12 @@ const Sidebar = () => {
     // Clear localStorage or any auth token
     localStorage.clear();
     // Redirect to login page
+    setIsMobileOpen(false);   // sidebar close
     navigate('/login');
   };
 
   return (
-    <>
+    <div>
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
@@ -59,6 +60,8 @@ const Sidebar = () => {
       )}
 
       <aside
+      style={{ scrollbarWidth: "none" }}
+
         className={`
           w-64 bg-white shadow-xl border-r border-gray-100
           p-5 flex flex-col gap-1.5 overflow-y-auto
@@ -78,13 +81,13 @@ const Sidebar = () => {
 
       <nav className="flex-1 flex flex-col gap-1 font-['Poppins']">
         {/* Dashboard */}
-        <NavLink to="/dashboard" end className={navClass}>
+        <NavLink to="/dashboard" end className={navClass}  onClick={() => setIsMobileOpen(false)}>
           <HomeIcon className="h-5 w-5" />
           Dashboard
         </NavLink>
 
         {/* Profile */}
-        <NavLink to="/dashboard/profile" className={navClass}>
+        <NavLink to="/dashboard/profile" className={navClass}   onClick={() => setIsMobileOpen(false)}>
           <UserIcon className="h-5 w-5" />
           Profile
         </NavLink>
@@ -115,6 +118,7 @@ const Sidebar = () => {
           <div className="ml-10 mt-1 flex flex-col gap-1">
             <NavLink
               to="/dashboard/menu/category"
+              onClick={()=>setIsMobileOpen(false)}
               className={({ isActive }) =>
                 `px-3 py-2 rounded-lg text-sm transition-colors
                 ${isActive
@@ -127,6 +131,7 @@ const Sidebar = () => {
 
             <NavLink
               to="/dashboard/menu/item"
+              onClick={()=>setIsMobileOpen(false)}
               className={({ isActive }) =>
                 `px-3 py-2 rounded-lg text-sm transition-colors
                 ${isActive
@@ -140,27 +145,27 @@ const Sidebar = () => {
         )}
 
         {/* Other main menu items */}
-        <NavLink to="/dashboard/orders" className={navClass}>
+        <NavLink to="/dashboard/orders" className={navClass}   onClick={() => setIsMobileOpen(false)}>
           <ShoppingBagIcon className="h-5 w-5" />
           Orders
         </NavLink>
 
-        <NavLink to="/dashboard/tracking" className={navClass}>
+        <NavLink to="/dashboard/tracking" className={navClass}   onClick={() => setIsMobileOpen(false)}>
           <MapIcon className="h-5 w-5" />
           Tracking
         </NavLink>
 
-        <NavLink to="/dashboard/earnings" className={navClass}>
+        <NavLink to="/dashboard/earnings" className={navClass}   onClick={() => setIsMobileOpen(false)}>
           <CurrencyDollarIcon className="h-5 w-5" />
           Earnings
         </NavLink>
 
-        <NavLink to="/dashboard/reviews" className={navClass}>
+        <NavLink to="/dashboard/reviews" className={navClass}   onClick={() => setIsMobileOpen(false)}>
           <StarIcon className="h-5 w-5" />
           Reviews
         </NavLink>
 
-        <NavLink to="/dashboard/offers" className={navClass}>
+        <NavLink to="/dashboard/offers" className={navClass}   onClick={() => setIsMobileOpen(false)}>
           <GiftIcon className="h-5 w-5" />
           Offers
         </NavLink>
@@ -170,7 +175,7 @@ const Sidebar = () => {
           Notifications
         </NavLink> */}
 
-        <NavLink to="/dashboard/support" className={navClass}>
+        <NavLink to="/dashboard/support" className={navClass}  onClick={() => setIsMobileOpen(false)}>
           <LifebuoyIcon className="h-5 w-5" />
           Support
         </NavLink>
@@ -188,7 +193,7 @@ const Sidebar = () => {
         © 2026 YourApp
       </div>
     </aside>
-    </>
+    </div>
   );
 };
 

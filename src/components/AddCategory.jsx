@@ -219,7 +219,7 @@ const Category = () => {
                   <div className="flex items-center gap-2">
                     {iconObj?.component}
                     <div>
-                      <p className="text-sm text-gray-500">#{index + 1}</p>
+                      <p className="text-sm text-gray-500">{index + 1}</p>
                       <p className="font-semibold">{cat.name}</p>
                     </div>
                   </div>

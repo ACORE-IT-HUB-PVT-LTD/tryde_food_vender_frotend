@@ -1,6 +1,7 @@
 import React from "react";
 import { FaApple, FaGooglePlay, FaCheck } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { FaStar } from "react-icons/fa";
 
 function DownloadPanel() {
   // Animation variants
@@ -32,8 +33,8 @@ function DownloadPanel() {
           viewport={{ once: true, amount: 0.3 }}
         >
           <h2 className="text-4xl md:text-5xl font-extrabold text-black leading-tight">
-            Download Our App &  
-            <span className="text-orange-600"> Turn Dreams Into Reality</span>
+            Download Our App &
+            <span className="text-[#FF5252]"> Turn Dreams Into Reality</span>
           </h2>
 
           <p className="text-gray-700 text-lg max-w-xl">
@@ -43,16 +44,16 @@ function DownloadPanel() {
           {/* Features */}
           <div className="mt-8 space-y-3 text-gray-700">
             <p className="flex items-center gap-3 text-lg">
-              <FaCheck className="text-green-500" /> Real-time Order Management
+              <FaCheck className="text-green-600" /> Real-time Order Management
             </p>
             <p className="flex items-center gap-3 text-lg">
-              <FaCheck className="text-green-500" /> Live Sales & Earnings Tracking
+              <FaCheck className="text-green-600" /> Live Sales & Earnings Tracking
             </p>
             <p className="flex items-center gap-3 text-lg">
-              <FaCheck className="text-green-500" /> Menu & Price Management
+              <FaCheck className="text-green-600" /> Menu & Price Management
             </p>
             <p className="flex items-center gap-3 text-lg">
-              <FaCheck className="text-green-500" /> Customer & Order Analytics Dashboard
+              <FaCheck className="text-green-600" /> Customer & Order Analytics Dashboard
             </p>
           </div>
 
@@ -86,11 +87,11 @@ function DownloadPanel() {
           {/* Stats */}
           <div className="mt-10 flex gap-8 text-black">
             <div>
-              <h3 className="text-3xl font-bold text-orange-600">50K+</h3>
+              <h3 className="text-3xl font-bold text-[#FF5252]">50K+</h3>
               <p className="text-gray-600">Active Vendors</p>
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-orange-600">120K+</h3>
+              <h3 className="text-3xl font-bold text-[#FF5252]">120K+</h3>
               <p className="text-gray-600">Orders Managed</p>
             </div>
           </div>
@@ -105,13 +106,14 @@ function DownloadPanel() {
           viewport={{ once: true, amount: 0.3 }}
         >
           {/* Phone Glow */}
-          <div className="absolute w-96 h-96 bg-orange-300/30 blur-3xl rounded-full"></div>
+          <div className="absolute w-75 h-75 bg-orange-300/30 blur-3xl rounded-full"></div>
 
           {/* Phone Mockup */}
-          <div className="relative bg-black rounded-[50px] p-4 shadow-3xl border border-gray-300 w-80 lg:w-96">
+          <div className="relative bg-black rounded-[50px] p-4 shadow-3xl border border-gray-300 w-80 lg:w-90">
             <div className="bg-white rounded-[35px] overflow-hidden">
               {/* App Header */}
-              <div className="bg-gradient-to-b from-orange-500 to-red-500 p-6 text-white">
+              <div className="bg-gradient-to-b bg-gradient-to-r bg-gradient-to-r from-[#FF5252] to-[#e23744]
+] p-6 text-white">
                 <h3 className="text-2xl font-bold">Food Vendor Pro</h3>
                 <p className="text-sm opacity-90">Manage your business efficiently</p>
               </div>
@@ -123,7 +125,7 @@ function DownloadPanel() {
                   <p className="font-bold text-black">Daily Orders</p>
                   <p className="text-sm text-gray-500">Completed: 75%</p>
                   <div className="w-full h-2 bg-gray-200 rounded mt-2">
-                    <div className="h-full bg-orange-500 w-[75%] rounded"></div>
+                    <div className="h-full bg-[#FF5252] w-[75%] rounded"></div>
                   </div>
                 </div>
 
@@ -136,10 +138,16 @@ function DownloadPanel() {
                   </div>
                 </div>
 
-                {/* Customer Rating */}
+                
+
                 <div className="bg-gray-100 p-4 rounded-xl shadow-sm">
                   <p className="font-bold text-black">Customer Rating</p>
-                  <p className="text-sm text-gray-500">⭐ 4.6 Average</p>
+
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                    <FaStar className="text-yellow-400 text-lg" />
+                    <span>4.6 Average</span>
+                  </div>
+
                   <div className="w-full h-2 bg-gray-200 rounded mt-2">
                     <div className="h-full bg-yellow-400 w-[90%] rounded"></div>
                   </div>
