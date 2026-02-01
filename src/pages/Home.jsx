@@ -9,6 +9,7 @@ import FinalCTA from "../components/FinalCTA";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import DaownloadPannel from "../components/DaownloadPannel";
+import Achievements from "../components/Achievements";
 
 export default function Home() {
   const siteName = "Tryde";
@@ -38,6 +39,11 @@ export default function Home() {
       <section id="faq">
         <FAQ />
       </section>
+
+      <section id="achievements">
+        <Achievements />
+      </section>
+
 
     <section id="doawnload">
         <DaownloadPannel siteName={siteName} primaryColor={primaryColor} />
