@@ -12,6 +12,7 @@ import SuccessStories from "./components/SuccessStories";
 import WhyPartner from "./components/WhyPartner";
 import FinalCTA from "./components/FinalCTA";
 import GetStarted from "./components/GetStarted";
+import Achievements from "./components/Achievements";
 
 // Auth
 import Login from "./pages/Login";
@@ -82,6 +83,7 @@ function App() {
         <Route path="/why-partner" element={<WhyPartner />} />
         <Route path="/finalcta" element={<FinalCTA />} />
         <Route path="/getstartedagin" element={<GetStarted />} />
+        <Route path="/achievements" element={<Achievements />} />
       </Route>
 
       {/* ==================== AUTH ROUTES ==================== */}
