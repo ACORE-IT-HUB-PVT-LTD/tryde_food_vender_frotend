@@ -4,11 +4,16 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'   // ← Import here
 import App from './App.jsx'
 import './index.css'
+import GetRestaurant from './context/getRestaurant.jsx'
+import GetAllCategories from './context/GetAllCategories.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>           {/* ← Wrap the whole app here */}
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
+  <BrowserRouter>
+    <GetRestaurant>
+      <GetAllCategories>
+            <App />
+      </GetAllCategories>
+    </GetRestaurant>           {/* ← Wrap the whole app here */}
+  </BrowserRouter>
+
 )

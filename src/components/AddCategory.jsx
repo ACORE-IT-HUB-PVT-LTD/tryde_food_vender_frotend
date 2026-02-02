@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Paper,
   TextField,
@@ -11,241 +11,353 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   Box,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-// Example icons
+import axiosInstance from "../api/axiosInstance";
+import { RestaurantContext } from "../context/getRestaurant";
+import { CategoriesContext } from "../context/GetAllCategories";
 
-import { CakeIcon, IceCreamIcon } from "lucide-react";
-
-// Icon list
-const iconList = [
-  { name: "Cake", component: <CakeIcon /> },
-  { name: "Icecream", component: <IceCreamIcon /> },
- 
-];
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
 const Category = () => {
+  const { restaurant } = useContext(RestaurantContext);
+  const { categories, loading: contextLoading, fetchCategories } = useContext(CategoriesContext);
+
   const [name, setName] = useState("");
-  const [icon, setIcon] = useState("");
-  const [categories, setCategories] = useState([]);
+  const [description, setDescription] = useState("");
+  const [categoryImage, setCategoryImage] = useState(null);
+  const [currentImage, setCurrentImage] = useState(""); // for preview & edit
   const [editId, setEditId] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
+  // Auto-hide messages
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("categories")) || [];
-    setCategories(stored);
-  }, []);
+    if (successMsg || errorMsg) {
+      const timer = setTimeout(() => {
+        setSuccessMsg("");
+        setErrorMsg("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg, errorMsg]);
 
-  const saveToStorage = (data) => {
-    localStorage.setItem("categories", JSON.stringify(data));
-    setCategories(data);
+  const validate = () => {
+    const err = {};
+    if (!name.trim()) {
+      err.name = "Category name is required";
+    }
+    if (categoryImage && categoryImage.size > MAX_IMAGE_SIZE) {
+      err.image = "Image size must be less than 2MB";
+    }
+    setErrors(err);
+    return Object.keys(err).length === 0;
   };
 
-  const handleSave = () => {
-    if (!name.trim() || !icon) {
-      alert("Please fill category name and select an icon!");
-      return;
-    }
-
-    if (editId) {
-      const updated = categories.map((cat) =>
-        cat.id === editId ? { ...cat, name, icon } : cat
-      );
-      saveToStorage(updated);
-      setEditId(null);
-    } else {
-      saveToStorage([...categories, { id: Date.now(), name, icon }]);
-    }
-
+  const clearForm = () => {
     setName("");
-    setIcon("");
+    setDescription("");
+    setCategoryImage(null);
+    setCurrentImage("");
+    setEditId(null);
+    setErrors({});
+  };
+
+  const handleAdd = async () => {
+    if (!validate()) return;
+    setIsSaving(true);
+
+    const formData = new FormData();
+    formData.append("name", name.trim());
+    formData.append("description", description.trim());
+    if (categoryImage) formData.append("categoryImage", categoryImage);
+
+    const token = localStorage.getItem("token");
+
+    try {
+      await axiosInstance.post(`/categories/${restaurant?.id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setSuccessMsg("Category created successfully!");
+      clearForm();
+      await fetchCategories(); // Refresh list
+    } catch (error) {
+      console.error("Add failed:", error);
+      setErrorMsg(error?.response?.data?.message || "Failed to create category");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!validate()) return;
+    setIsSaving(true);
+
+    const formData = new FormData();
+    formData.append("name", name.trim());
+    formData.append("description", description.trim());
+    if (categoryImage) formData.append("categoryImage", categoryImage);
+
+    const token = localStorage.getItem("token");
+
+    try {
+      await axiosInstance.put(`/categories/${editId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setSuccessMsg("Category updated successfully!");
+      clearForm();
+      await fetchCategories();
+    } catch (error) {
+      console.error("Update failed:", error);
+      setErrorMsg(error?.response?.data?.message || "Failed to update category");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axiosInstance.delete(`/categories/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setSuccessMsg("Category deleted successfully");
+      await fetchCategories();
+    } catch (error) {
+      console.error("Delete failed:", error);
+      setErrorMsg(error?.response?.data?.message || "Failed to delete category");
+    }
+  };
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    if (editId) handleUpdate();
+    else handleAdd();
   };
 
   const handleEdit = (cat) => {
     setName(cat.name);
-    setIcon(cat.icon);
+    setDescription(cat.description || "");
+    setCurrentImage(cat.categoryImage || ""); // ← FIXED HERE
+    setCategoryImage(null);
     setEditId(cat.id);
+    setErrors({});
   };
 
-  const handleDelete = (id) => {
-    if (!window.confirm("Delete this category?")) return;
-    saveToStorage(categories.filter((c) => c.id !== id));
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCategoryImage(file);
+    setCurrentImage(URL.createObjectURL(file));
   };
+
+  if (!restaurant?.id) {
+    return <Alert severity="warning">Please select/load a restaurant first</Alert>;
+  }
 
   return (
-    <div className="p-3 sm:p-6 space-y-6 font-['Poppins'] ">
-      {/* ================= Add Category ================= */}
-      <Paper className="p-4 sm:p-6 rounded-xl shadow">
-        <Typography
-          variant="h6"
-          className="mb-4 text-[#FF5252] text-center sm:text-left"
-          sx={{fontWeight:600}}
-        >
-          {editId ? "Edit Category" : "Add Category"}
+    <div className="p-4 sm:p-6 space-y-6 font-['Poppins'] bg-gray-50 min-h-screen">
+      {/* ─── FORM ─── */}
+      <Paper elevation={3} className="p-6 rounded-2xl shadow-lg">
+        <Typography variant="h5" className="mb-6 font-bold text-[#d32f2f]">
+          {editId ? "Edit Category" : "Add New Category"}
         </Typography>
 
+        {successMsg && <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMsg("")}>{successMsg}</Alert>}
+        {errorMsg && <Alert severity="error" sx={{ mb: 3 }} onClose={() => setErrorMsg("")}>{errorMsg}</Alert>}
+
         <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 2,
-          }}
+          component="form"
+          onSubmit={handleSave}
+          sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, alignItems: "flex-end" }}
         >
           <TextField
-            label="Category name"
+            label="Category Name *"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            fullWidth
+            error={!!errors.name}
+            helperText={errors.name}
+            size="small"
+          />
+
+          <TextField
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             fullWidth
             size="small"
           />
 
-          <FormControl fullWidth size="small">
-            <InputLabel id="icon-select-label">Icon</InputLabel>
-            <Select
-              labelId="icon-select-label"
-              id="icon-select"
-              value={icon}
-              label="Icon"
-              onChange={(e) => setIcon(e.target.value)}
-            >
-              {iconList.map((ic) => (
-                <MenuItem key={ic.name} value={ic.name}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    {ic.component} {ic.name}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Box sx={{ minWidth: { xs: "100%", sm: 240 } }}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              id="category-image-upload"
+              style={{ display: "none" }}
+            />
+            <label htmlFor="category-image-upload">
+              <Button variant="outlined" component="span" fullWidth>
+                {categoryImage ? "Change Image" : "Upload Image"}
+              </Button>
+            </label>
+
+            {errors.image && (
+              <Typography color="error" variant="caption" sx={{ mt: 0.5, display: "block" }}>
+                {errors.image}
+              </Typography>
+            )}
+
+            {currentImage && (
+              <Box mt={2}>
+                <img
+                  src={currentImage}
+                  alt="preview"
+                  className="h-28 w-auto object-cover rounded-lg border border-gray-300 shadow-md"
+                />
+              </Box>
+            )}
+          </Box>
 
           <Button
+            type="submit"
             variant="contained"
-            onClick={handleSave}
+            disabled={isSaving || contextLoading}
             sx={{
-              backgroundColor: "#FF5252",
-              minWidth: "140px",
-              width: { xs: "100%", sm: "auto" },
+              bgcolor: "#d32f2f",
+              "&:hover": { bgcolor: "#b71c1c" },
+              px: 6,
+              py: 1.5,
+              minWidth: 140,
             }}
           >
-            {editId ? "Update" : "Save"}
+            {isSaving ? <CircularProgress size={24} color="inherit" /> : editId ? "Update" : "Create"}
           </Button>
         </Box>
       </Paper>
 
-      {/* ================= Category List ================= */}
-      <Paper className="p-4 sm:p-6 rounded-xl shadow">
-        <Typography
-          variant="h6"
-          className="mb-4 text-[#FF5252] text-center sm:text-left "
-          sx={{fontWeight:600}}
-        >
-          Category List
+      {/* ─── CATEGORY LIST ─── */}
+      <Paper elevation={3} className="p-6 rounded-2xl shadow-lg">
+        <Typography variant="h5" className="mb-6 font-bold text-[#d32f2f]">
+          All Categories
         </Typography>
 
-        {/* Desktop Table */}
-        <div className="hidden md:block">
-          <TableContainer>
-            <Table>
-              <TableHead>
-  <TableRow className="bg-[#FF5252] shadow-md">
-    <TableCell className="!text-white font-bold text-sm uppercase">#</TableCell>
-    <TableCell className="!text-white font-bold text-sm uppercase">Category Name</TableCell>
-    <TableCell className="!text-white font-bold text-sm uppercase">Icon</TableCell>
-    <TableCell align="right" className="!text-white font-bold text-sm uppercase">
-      Actions
-    </TableCell>
-  </TableRow>
-</TableHead>
-
-
-
-              <TableBody>
-                {categories.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} align="center">
-                      No categories found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  categories.map((cat, index) => {
-                    const iconObj = iconList.find((i) => i.name === cat.icon);
-                    return (
-                      <TableRow key={cat.id}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{cat.name}</TableCell>
-                        <TableCell>{iconObj?.component}</TableCell>
+        {contextLoading ? (
+          <Box display="flex" justifyContent="center" py={10}>
+            <CircularProgress />
+          </Box>
+        ) : !categories?.length ? (
+          <Alert severity="info">No categories created yet</Alert>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: "#ef5350" }}>
+                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>S.No</TableCell>
+                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>Name</TableCell>
+                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>Description</TableCell>
+                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>Images</TableCell>
+                      <TableCell align="right" sx={{ color: "white", fontWeight: "bold" }}>
+                        Actions
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {categories.map((cat, i) => (
+                      <TableRow key={cat.id} hover>
+                        <TableCell>{i + 1}</TableCell>
+                        <TableCell className="font-medium">{cat.name}</TableCell>
+                        <TableCell>{cat.description || "—"}</TableCell>
+                        <TableCell>
+                          {cat.categoryImage ? ( // ← FIXED HERE
+                            <img
+                              src={cat.categoryImage}
+                              alt={cat.name}
+                              className="h-16 w-16 object-cover rounded-md shadow-md"
+                              onError={(e) => {
+                                e.target.src = "https://via.placeholder.com/64?text=No+Image";
+                              }}
+                            />
+                          ) : (
+                            <span className="text-gray-500 italic">No image</span>
+                          )}
+                        </TableCell>
                         <TableCell align="right">
-                          <IconButton
-                            color="primary"
-                            onClick={() => handleEdit(cat)}
-                          >
+                          <IconButton color="primary" onClick={() => handleEdit(cat)} size="small">
                             <EditIcon />
                           </IconButton>
-                          <IconButton
-                            color="error"
-                            onClick={() => handleDelete(cat.id)}
-                          >
+                          <IconButton color="error" onClick={() => handleDelete(cat.id)} size="small">
                             <DeleteIcon />
                           </IconButton>
                         </TableCell>
                       </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </div>
 
-        {/* Mobile Card View */}
-        <div className="md:hidden space-y-4">
-          {categories.length === 0 ? (
-            <Typography align="center">No categories found</Typography>
-          ) : (
-            categories.map((cat, index) => {
-              const iconObj = iconList.find((i) => i.name === cat.icon);
-              return (
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-4">
+              {categories.map((cat, i) => (
                 <div
                   key={cat.id}
-                  className="border rounded-lg p-4 flex justify-between items-center shadow-sm"
+                  className="border border-gray-200 rounded-xl p-4 bg-white shadow-md flex justify-between items-start gap-4"
                 >
-                  <div className="flex items-center gap-2">
-                    {iconObj?.component}
-                    <div>
-                      <p className="text-sm text-gray-500">{index + 1}</p>
-                      <p className="font-semibold">{cat.name}</p>
+                  <div className="flex-1">
+                    <div className="text-xs text-gray-500 mb-1">#{i + 1}</div>
+                    <div className="font-semibold text-lg">{cat.name}</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {cat.description || "No description"}
                     </div>
+                    {cat.categoryImage && (
+                      <img
+                        src={cat.categoryImage}
+                        alt={cat.name}
+                        className="mt-3 h-28 w-28 object-cover rounded-lg border border-gray-200 shadow"
+                        onError={(e) => {
+                          e.target.src = "https://via.placeholder.com/112?text=No+Image";
+                        }}
+                      />
+                    )}
                   </div>
-
                   <div className="flex gap-2">
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      onClick={() => handleEdit(cat)}
-                    >
+                    <IconButton color="primary" size="small" onClick={() => handleEdit(cat)}>
                       <EditIcon fontSize="small" />
                     </IconButton>
-
-                    <IconButton
-                      color="error"
-                      size="small"
-                      onClick={() => handleDelete(cat.id)}
-                    >
+                    <IconButton color="error" size="small" onClick={() => handleDelete(cat.id)}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </div>
                 </div>
-              );
-            })
-          )}
-        </div>
+              ))}
+            </div>
+          </>
+        )}
       </Paper>
     </div>
   );

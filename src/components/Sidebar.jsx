@@ -129,6 +129,21 @@ const Sidebar = () => {
               • Category
             </NavLink>
 
+
+
+            <NavLink
+              to="/dashboard/menu/sub-category"
+              onClick={()=>setIsMobileOpen(false)}
+              className={({ isActive }) =>
+                `px-3 py-2 rounded-lg text-sm transition-colors
+                ${isActive
+                  ? 'bg-red-50 text-[#FF5252] font-semibold'
+                  : 'text-gray-600 hover:bg-gray-100'}`
+              }
+            >
+              • SubCategory
+            </NavLink>
+
             <NavLink
               to="/dashboard/menu/item"
               onClick={()=>setIsMobileOpen(false)}
@@ -141,6 +156,10 @@ const Sidebar = () => {
             >
               • Item
             </NavLink>
+
+
+
+            
           </div>
         )}
 

@@ -1,31 +1,32 @@
-import React, { useState } from 'react';
-import { Star, MapPin, Clock, Phone, Globe, Save, Edit2, Upload, DollarSign, Utensils } from 'lucide-react';
+import React, { useContext, useState, useEffect } from 'react';
+import { Star, MapPin, Clock, Phone, Globe, Save, Edit2, Upload, Utensils } from 'lucide-react';
+import { RestaurantContext } from '../context/getRestaurant';
+import axios from 'axios';
+import axiosInstance from '../api/axiosInstance';
 
 function RestaurantProfile() {
-  const [restaurant, setRestaurant] = useState({
-    name: "Shreeji Pure Veg",
-    tagline: "Pure Vegetarian • Family Friendly • Home Delivery",
-    rating: 4.6,
-    reviewCount: 1248,
-    cuisine: "North Indian • Chinese • South Indian • Fast Food",
-    address: "Scheme No. 54, Vijay Nagar, Near Bombay Hospital, Indore, Madhya Pradesh 452010",
-    timing: "11:00 AM – 11:00 PM (All Days)",
-    phone: "+91 731-1234567",
-    alternatePhone: "+91 98260 12345",
-    website: "www.shreejirestaurant.in",
-    isOpen: true,
-    minOrder: 149,
-    deliveryTime: "25-35 mins",
-    packingCharges: 0,
-    avgCostForTwo: 400,
-    restaurantType: "Pure Veg • Delivery + Takeaway",
-    fssai: "12345678901234",
-    gst: "23ABCDE1234F1Z5",
-    bannerImage: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4", // placeholder
-    tags: ["Pure Veg", "Family Friendly", "AC Dining", "Best Seller: Paneer Tikka", "Party Orders"],
-  });
-
+  const { restaurant: contextRestaurant, loading, setRestaurant: updateContextRestaurant } = useContext(RestaurantContext);
+  const [restaurant, setRestaurant] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Initialize local state when context restaurant data is available
+  useEffect(() => {
+    if (contextRestaurant) {
+      setRestaurant(contextRestaurant);
+    }
+  }, [contextRestaurant]);
+
+  // Format time from 24-hour format to 12-hour format
+  const formatTime = (time) => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -35,19 +36,133 @@ function RestaurantProfile() {
     }));
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setRestaurant((prev) => ({ ...prev, bannerImage: previewUrl }));
+    if (!file) return;
+
+    // Show preview immediately
+    const previewUrl = URL.createObjectURL(file);
+    setRestaurant((prev) => ({ ...prev, restaurent_images: previewUrl }));
+    
+    // Upload to backend
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const token = localStorage.getItem("token");
+
+      // Note: You may need to adjust this endpoint based on your backend
+      // This assumes you have an endpoint to upload images\
+      const response = await axiosInstance.post(`/restaurants/${restaurant.id}`,formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`,
+
+          },
+        }
+      );
+      
+      // Update with the actual uploaded image URL
+      if (response.data && response.data.imageUrl) {
+        setRestaurant((prev) => ({ 
+          ...prev, 
+          restaurent_images: response.data.imageUrl 
+        }));
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+      // Revert to original image on error
+      setRestaurant((prev) => ({ 
+        ...prev, 
+        restaurent_images: contextRestaurant.restaurent_images 
+      }));
+    } finally {
+      setUploadingImage(false);
     }
   };
 
-  const handleSave = () => {
-    console.log("Saving updated restaurant profile:", restaurant);
-    setIsEditing(false);
-    alert("Profile updated successfully! (Connect to your API here)");
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Prepare the data for the PUT request
+      const updateData = {
+        restaurent_name: restaurant.restaurent_name,
+        description: restaurant.description,
+        food_type: restaurant.food_type,
+        restaurent_images: restaurant.restaurent_images,
+        address: restaurant.address,
+        city: restaurant.city,
+        state: restaurant.state,
+        pincode: restaurant.pincode,
+        latitude: restaurant.latitude,
+        longitude: restaurant.longitude,
+        opening_time: restaurant.opening_time,
+        closing_time: restaurant.closing_time,
+        is_open: restaurant.is_open,
+      };
+
+      const token=localStorage.getItem("token")
+      // Make PUT request to update restaurant
+      const response = await axiosInstance.put(
+        `/restaurants/${restaurant.id}`,
+        updateData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+        }
+      );
+
+      if (response.data && response.data.restaurant) {
+        // Update both local state and context with the response data
+        setRestaurant(response.data.restaurant);
+        if (updateContextRestaurant) {
+          updateContextRestaurant(response.data.restaurant);
+        }
+        
+        setIsEditing(false);
+        alert('Profile updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating restaurant:', error);
+      
+      // Show more detailed error message
+      if (error.response) {
+        alert(`Failed to update profile: ${error.response.data.message || error.response.statusText}`);
+      } else if (error.request) {
+        alert('Failed to update profile: No response from server');
+      } else {
+        alert('Failed to update profile: ' + error.message);
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handleCancel = () => {
+    // Reset to original context data
+    if (contextRestaurant) {
+      setRestaurant(contextRestaurant);
+    }
+    setIsEditing(false);
+  };
+
+  // Loading state
+  if (loading || !restaurant) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#FF5252] border-r-transparent"></div>
+          <p className="mt-4 text-gray-600">Loading restaurant profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-['Poppins']">
@@ -67,17 +182,28 @@ function RestaurantProfile() {
             {isEditing ? (
               <>
                 <button
-                  onClick={() => setIsEditing(false)}
-                  className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex items-center gap-2.5 rounded-xl bg-[#FF5252] px-7 py-3 text-sm font-medium text-white shadow-md hover:bg-[#e63939] transition-all duration-200"
+                  disabled={isSaving || uploadingImage}
+                  className="flex items-center gap-2.5 rounded-xl bg-[#FF5252] px-7 py-3 text-sm font-medium text-white shadow-md hover:bg-[#e63939] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save size={18} />
-                  Save Changes
+                  {isSaving ? (
+                    <>
+                      <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} />
+                      Save Changes
+                    </>
+                  )}
                 </button>
               </>
             ) : (
@@ -92,25 +218,56 @@ function RestaurantProfile() {
           </div>
         </div>
 
+        {/* Status Badge */}
+        {restaurant.status && (
+          <div className="mb-6">
+            <span className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${
+              restaurant.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+              restaurant.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+            }`}>
+              Status: {restaurant.status}
+            </span>
+            {restaurant.is_active && (
+              <span className="ml-3 inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-green-100 text-green-800">
+                Active
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Main Card */}
         <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-xl">
           {/* Hero Banner */}
           <div className="relative h-64 overflow-hidden bg-gradient-to-br from-[#FF5252] to-[#ff7a7a] md:h-72">
-            <img
-              src={restaurant.bannerImage}
-              alt="Restaurant Banner"
-              className="absolute inset-0 h-full w-full object-cover opacity-90"
-            />
-            <div className="absolute inset-0 bg-black/30" />
+            {restaurant.restaurent_images && (
+              <>
+                <img
+                  src={restaurant.restaurent_images}
+                  alt="Restaurant Banner"
+                  className="absolute inset-0 h-full w-full object-cover opacity-90"
+                />
+                <div className="absolute inset-0 bg-black/30" />
+              </>
+            )}
+            {uploadingImage && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                <div className="text-center text-white">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-white border-r-transparent mb-2"></div>
+                  <p>Uploading image...</p>
+                </div>
+              </div>
+            )}
             <div className="relative z-10 flex h-full flex-col justify-end p-6 md:p-10 text-white">
               {isEditing && (
-                <label className="mb-4 flex cursor-pointer items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm backdrop-blur-sm hover:bg-white/30 transition">
+                <label className="mb-4 flex cursor-pointer items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm backdrop-blur-sm hover:bg-white/30 transition w-fit">
                   <Upload size={18} />
-                  Change Banner Photo
+                  {uploadingImage ? 'Uploading...' : 'Change Banner Photo'}
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
+                    disabled={uploadingImage}
                     className="hidden"
                   />
                 </label>
@@ -118,15 +275,15 @@ function RestaurantProfile() {
               {isEditing ? (
                 <input
                   type="text"
-                  name="name"
-                  value={restaurant.name}
+                  name="restaurent_name"
+                  value={restaurant.restaurent_name}
                   onChange={handleChange}
                   className="w-full bg-transparent text-4xl font-bold tracking-tight outline-none placeholder:text-white/60 focus:border-b-2 focus:border-white/70"
                   placeholder="Restaurant Name"
                 />
               ) : (
                 <h2 className="text-4xl font-bold tracking-tight drop-shadow-lg md:text-5xl">
-                  {restaurant.name}
+                  {restaurant.restaurent_name}
                 </h2>
               )}
             </div>
@@ -136,293 +293,268 @@ function RestaurantProfile() {
           <div className="grid gap-8 p-6 md:grid-cols-2 md:p-10">
             {/* Left Column */}
             <div className="space-y-8">
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Tagline / Short Description</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="tagline"
-                    value={restaurant.tagline}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  <p className="mt-2 text-lg font-medium text-gray-800">{restaurant.tagline}</p>
-                )}
-              </div>
+              {/* Description */}
+              {(restaurant.description || isEditing) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Description</label>
+                  {isEditing ? (
+                    <textarea
+                      name="description"
+                      value={restaurant.description || ''}
+                      onChange={handleChange}
+                      rows={3}
+                      className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition resize-none"
+                      placeholder="Enter restaurant description"
+                    />
+                  ) : (
+                    <p className="mt-2 text-lg font-medium text-gray-800">{restaurant.description}</p>
+                  )}
+                </div>
+              )}
 
+              {/* Rating */}
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 rounded-xl bg-[#FF5252] px-4 py-2 text-white shadow-sm">
                   <Star size={18} fill="white" />
-                  <span className="font-semibold">{restaurant.rating}</span>
+                  <span className="font-semibold">{parseFloat(restaurant.rating || 0).toFixed(1)}</span>
                 </div>
                 <span className="text-sm text-gray-600">
-                  ({restaurant.reviewCount}+ ratings & reviews)
+                  ({restaurant.total_reviews || 0} reviews)
                 </span>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Cuisine Types</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="cuisine"
-                    value={restaurant.cuisine}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  <p className="mt-2 text-gray-700 leading-relaxed">{restaurant.cuisine}</p>
-                )}
-              </div>
+              {/* Food Type */}
+              {(restaurant.food_type || isEditing) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Food Type</label>
+                  {isEditing ? (
+                    <select
+                      name="food_type"
+                      value={restaurant.food_type || ''}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
+                    >
+                      <option value="">Select Food Type</option>
+                      <option value="VEG">VEG</option>
+                      <option value="NON_VEG">NON_VEG</option>
+                      <option value="BOTH">BOTH</option>
+                    </select>
+                  ) : (
+                    <div className="mt-2 flex items-center gap-2 text-gray-700">
+                      <Utensils size={18} className="text-[#FF5252]" />
+                      {restaurant.food_type}
+                    </div>
+                  )}
+                </div>
+              )}
 
+              {/* Full Address */}
               <div>
-                <label className="block text-sm font-medium text-gray-600">Restaurant Type</label>
+                <label className="block text-sm font-medium text-gray-600">Address</label>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    name="restaurantType"
-                    value={restaurant.restaurantType}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                    placeholder="e.g. Pure Veg • Delivery + Takeaway"
-                  />
-                ) : (
-                  <div className="mt-2 flex items-center gap-2 text-gray-700">
-                    <Utensils size={18} className="text-[#FF5252]" />
-                    {restaurant.restaurantType}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Full Address</label>
-                {isEditing ? (
-                  <textarea
-                    name="address"
-                    value={restaurant.address}
-                    onChange={handleChange}
-                    rows={3}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition resize-none"
-                  />
+                  <>
+                    <input
+                      type="text"
+                      name="address"
+                      value={restaurant.address || ''}
+                      onChange={handleChange}
+                      placeholder="Street Address"
+                      className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
+                    />
+                    <div className="grid grid-cols-3 gap-3 mt-3">
+                      <input
+                        type="text"
+                        name="city"
+                        value={restaurant.city || ''}
+                        onChange={handleChange}
+                        placeholder="City"
+                        className="w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
+                      />
+                      <input
+                        type="text"
+                        name="state"
+                        value={restaurant.state || ''}
+                        onChange={handleChange}
+                        placeholder="State"
+                        className="w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
+                      />
+                      <input
+                        type="text"
+                        name="pincode"
+                        value={restaurant.pincode || ''}
+                        onChange={handleChange}
+                        placeholder="Pincode"
+                        className="w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
+                      />
+                    </div>
+                  </>
                 ) : (
                   <div className="mt-2 flex items-start gap-3 text-gray-700">
                     <MapPin size={20} className="mt-1 flex-shrink-0 text-[#FF5252]" />
-                    <span>{restaurant.address}</span>
+                    <span>
+                      {restaurant.address}
+                      {restaurant.city && `, ${restaurant.city}`}
+                      {restaurant.state && `, ${restaurant.state}`}
+                      {restaurant.pincode && ` - ${restaurant.pincode}`}
+                    </span>
                   </div>
                 )}
               </div>
+
+              {/* Location Coordinates */}
+              {(restaurant.latitude || restaurant.longitude || isEditing) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Location Coordinates</label>
+                  {isEditing ? (
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      <input
+                        type="text"
+                        name="latitude"
+                        value={restaurant.latitude || ''}
+                        onChange={handleChange}
+                        placeholder="Latitude"
+                        className="w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
+                      />
+                      <input
+                        type="text"
+                        name="longitude"
+                        value={restaurant.longitude || ''}
+                        onChange={handleChange}
+                        placeholder="Longitude"
+                        className="w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-sm text-gray-700">
+                      <p>Latitude: {restaurant.latitude}</p>
+                      <p>Longitude: {restaurant.longitude}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right Column */}
             <div className="space-y-8">
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Operating Hours</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="timing"
-                    value={restaurant.timing}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  <div className="mt-2 flex items-center gap-3 text-gray-700">
-                    <Clock size={20} className="text-[#FF5252]" />
-                    <span className={restaurant.isOpen ? "font-medium text-green-600" : "font-medium text-red-600"}>
-                      {restaurant.isOpen ? "Open Now" : "Closed"}
-                    </span>
-                    <span>• {restaurant.timing}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Contact Numbers</label>
-                <div className="mt-2 space-y-2">
+              {/* Operating Hours */}
+              {(restaurant.opening_time || restaurant.closing_time || isEditing) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Operating Hours</label>
                   {isEditing ? (
                     <>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={restaurant.phone}
-                        onChange={handleChange}
-                        className="w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                        placeholder="Primary Phone"
-                      />
-                      <input
-                        type="tel"
-                        name="alternatePhone"
-                        value={restaurant.alternatePhone || ""}
-                        onChange={handleChange}
-                        className="w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                        placeholder="Alternate / WhatsApp"
-                      />
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        <input
+                          type="time"
+                          name="opening_time"
+                          value={restaurant.opening_time || ''}
+                          onChange={handleChange}
+                          className="w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
+                        />
+                        <input
+                          type="time"
+                          name="closing_time"
+                          value={restaurant.closing_time || ''}
+                          onChange={handleChange}
+                          className="w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
+                        />
+                      </div>
+                      <div className="mt-3">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="is_open"
+                            checked={restaurant.is_open || false}
+                            onChange={handleChange}
+                            className="rounded border-gray-300 text-[#FF5252] focus:ring-[#FF5252]/30"
+                          />
+                          <span className="text-sm text-gray-700">Currently Open</span>
+                        </label>
+                      </div>
                     </>
                   ) : (
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <Phone size={20} className="text-[#FF5252]" />
-                      <div>
-                        <div>{restaurant.phone}</div>
-                        {restaurant.alternatePhone && (
-                          <div className="text-sm text-gray-500">Alt: {restaurant.alternatePhone}</div>
-                        )}
-                      </div>
+                    <div className="mt-2 flex items-center gap-3 text-gray-700">
+                      <Clock size={20} className="text-[#FF5252]" />
+                      <span className={restaurant.is_open ? "font-medium text-green-600" : "font-medium text-red-600"}>
+                        {restaurant.is_open ? "Open Now" : "Closed"}
+                      </span>
+                      <span>• {formatTime(restaurant.opening_time)} – {formatTime(restaurant.closing_time)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Documents Section */}
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-3">Documents</label>
+                <div className="space-y-3">
+                  {restaurant.fssai_license && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">FSSAI License</p>
+                      <a 
+                        href={restaurant.fssai_license} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block text-sm text-[#FF5252] hover:underline break-all"
+                      >
+                        📄 View Document
+                      </a>
+                    </div>
+                  )}
+                  
+                  {restaurant.business_license && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Business License</p>
+                      <a 
+                        href={restaurant.business_license} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block text-sm text-[#FF5252] hover:underline break-all"
+                      >
+                        📄 View Document
+                      </a>
+                    </div>
+                  )}
+                  
+                  {restaurant.pan_card && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">PAN Card</p>
+                      <a 
+                        href={restaurant.pan_card} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block text-sm text-[#FF5252] hover:underline break-all"
+                      >
+                        📄 View Document
+                      </a>
+                    </div>
+                  )}
+                  
+                  {restaurant.aadhar_card && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Aadhar Card</p>
+                      <a 
+                        href={restaurant.aadhar_card} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block text-sm text-[#FF5252] hover:underline break-all"
+                      >
+                        📄 View Document
+                      </a>
                     </div>
                   )}
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Website / Online Ordering</label>
-                {isEditing ? (
-                  <input
-                    type="url"
-                    name="website"
-                    value={restaurant.website}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  restaurant.website && (
-                    <a
-                      href={`https://${restaurant.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center gap-2.5 text-[#FF5252] hover:text-[#e63939] hover:underline transition"
-                    >
-                      <Globe size={20} />
-                      Visit Website
-                    </a>
-                  )
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600">FSSAI License Number</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="fssai"
-                    value={restaurant.fssai}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  <p className="mt-2 font-mono text-gray-700 tracking-wide">{restaurant.fssai}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600">GST Number</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="gst"
-                    value={restaurant.gst}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  <p className="mt-2 font-mono text-gray-700 tracking-wide">{restaurant.gst}</p>
-                )}
-              </div>
             </div>
           </div>
 
-          {/* Bottom Quick Settings */}
-          <div className="border-t bg-gray-50/70 p-6 md:p-10">
-            <h3 className="mb-6 text-xl font-semibold text-gray-800">Quick Business Settings</h3>
-
-            <div className="grid gap-8 md:grid-cols-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Minimum Order Value</label>
-                {isEditing ? (
-                  <input
-                    type="number"
-                    name="minOrder"
-                    value={restaurant.minOrder}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  <p className="mt-2 text-xl font-semibold text-gray-900">₹{restaurant.minOrder}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Avg. Delivery Time</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="deliveryTime"
-                    value={restaurant.deliveryTime}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  <p className="mt-2 text-xl font-semibold text-gray-900">{restaurant.deliveryTime}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Avg Cost for Two</label>
-                {isEditing ? (
-                  <input
-                    type="number"
-                    name="avgCostForTwo"
-                    value={restaurant.avgCostForTwo}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  <p className="mt-2 text-xl font-semibold text-gray-900">₹{restaurant.avgCostForTwo}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Packing Charges</label>
-                {isEditing ? (
-                  <input
-                    type="number"
-                    name="packingCharges"
-                    value={restaurant.packingCharges}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-[#FF5252] focus:ring-[#FF5252]/30 transition"
-                  />
-                ) : (
-                  <p className="mt-2 text-xl font-semibold text-gray-900">
-                    {restaurant.packingCharges === 0 ? "Free" : `₹${restaurant.packingCharges}`}
-                  </p>
-                )}
-              </div>
+          {/* Rejection Reason (if any) */}
+          {restaurant.rejection_reason && (
+            <div className="border-t bg-red-50 p-6 md:p-10">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">Rejection Reason</h3>
+              <p className="text-red-700">{restaurant.rejection_reason}</p>
             </div>
-
-            {/* Tags */}
-            <div className="mt-10">
-              <label className="block text-sm font-medium text-gray-600 mb-4">Popular Tags / Highlights</label>
-              <div className="flex flex-wrap gap-3">
-                {restaurant.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="rounded-full bg-[#FF5252]/10 px-5 py-2 text-sm font-medium text-[#FF5252] border border-[#FF5252]/20"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              {isEditing && (
-                <p className="mt-4 text-xs text-gray-500 italic">
-                  (Add/remove tags feature coming soon – multi-input support)
-                </p>
-              )}
-            </div>
-          </div>
+          )}
         </div>
-
-        <p className="mt-10 text-center text-sm text-gray-500">
-          Next steps: Menu Management • Photo Gallery Upload • Analytics Dashboard • Bank/Payout Details
-        </p>
       </div>
     </div>
   );

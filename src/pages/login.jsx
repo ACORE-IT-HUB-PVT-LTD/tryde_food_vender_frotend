@@ -7,7 +7,7 @@ import {
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
-import { GrRestaurant } from "react-icons/gr";
+import axiosInstance from "../api/axiosInstance";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,10 +22,12 @@ const Login = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear error when user starts typing again
-    if (errors[e.target.name]) {
-      setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -42,40 +44,84 @@ const Login = () => {
 
     if (!form.password.trim()) {
       err.password = "Password is required";
-    } else if (form.password.trim().length < 6) {
-      err.password = "Password must be at least 6 characters";
+    } else if (form.password.trim().length < 5) {
+      err.password = "Password must be at least 5 characters";
     }
 
     setErrors(err);
     return Object.keys(err).length === 0;
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
+    // Validate form
     if (!validate()) return;
 
     setIsLoggingIn(true);
+    setErrors({});
 
-    // Simulate a small delay (like real API call) → looks more professional
-    setTimeout(() => {
-      // This is what your RequireAuth checks
-      localStorage.setItem("token", "mock-token-xyz123");
+    try {
+      // API Call
+      const response = await axiosInstance.post("/restaurants/login",
+        {
+          identifier: form.email.trim(),
+          password: form.password.trim(),
+        }
+      );
 
-      // Optional: you can store more user info later
-      // localStorage.setItem("user", JSON.stringify({ name: "Demo Vendor", role: "vendor" }));
+      console.log("Login Response:", response.data);
 
-      // Redirect to dashboard (replace: true prevents going back to login with browser back button)
-      navigate("/dashboard", { replace: true });
+      // Check if login was successful
+      if (response.data.token && response.data.vendor) {
+        // Store token in localStorage
+        localStorage.setItem("token", response.data.token);
 
-      // Note: no need to setIsLoggingIn(false) → we are leaving the page
-    }, 1000); // 1 second delay – change to 300 or remove in production
+        // Store vendor info in localStorage
+        localStorage.setItem("vendor", JSON.stringify(response.data.vendor));
+
+        // Show success message
+        alert(response.data.message || "Login successful!");
+
+        // Redirect to dashboard
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 500);
+      } else {
+        setErrors({ submit: "Login failed. Please try again." });
+      }
+    } catch (error) {
+      console.error("Login Error:", error);
+
+      // Handle backend validation errors
+      if (error.response?.data?.errors) {
+        // If backend returns field-specific errors
+        const backendErrors = {};
+        Object.keys(error.response.data.errors).forEach((key) => {
+          const errorValue = error.response.data.errors[key];
+          backendErrors[key] = Array.isArray(errorValue)
+            ? errorValue[0]
+            : errorValue;
+        });
+        setErrors(backendErrors);
+      } else if (error.response?.data?.message) {
+        // If backend returns a general message
+        setErrors({ submit: error.response.data.message });
+      } else if (error.message) {
+        // Network or other errors
+        setErrors({ submit: error.message });
+      } else {
+        setErrors({ submit: "Login failed. Please try again." });
+      }
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex font-['Poppins']">
       {/* LEFT IMAGE - visible on medium+ screens */}
-      <div className="hidden md:flex w-1/2 relative hover:">
+      <div className="hidden md:flex w-1/2 relative">
         <img
           src="https://images.unsplash.com/photo-1504674900247-0877df9cc836"
           alt="Delicious food background"
@@ -86,18 +132,15 @@ const Login = () => {
             Restaurant <span className="text-[#FF5252]">Partner</span> Panel
           </h1>
           <p className="text-lg md:text-xl opacity-90 leading-relaxed max-w-lg">
-            Manage orders, update menu, create offers and track earnings — all in one place.
+            Manage orders, update menu, create offers and track earnings — all
+            in one place.
           </p>
         </div>
       </div>
-      
-
 
       {/* RIGHT SIDE - LOGIN FORM */}
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gradient-to-br from-[#fff5f5] to-[#ffecec] px-5 sm:px-6 py-8 md:py-0 relative">
-            <div className="absolute top-4 left-1/2 -translate-x-1/2  p-6 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform duration-300">
-    <GrRestaurant className="text-[#FF5252]" size={60} />
-  </div>
+      <div className="w-full bg-black z-50 md:w-1/2 flex items-center justify-center bg-gradient-to-br from-[#fff5f5] to-[#ffecec] px-5 sm:px-6 py-8 md:py-0 relative">
+
 
         <form
           onSubmit={handleLogin}
@@ -112,6 +155,15 @@ const Login = () => {
               Sign in to manage your restaurant
             </p>
           </div>
+
+          {/* General Error Message */}
+          {errors.submit && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-sm text-red-700 text-center">
+                {errors.submit}
+              </p>
+            </div>
+          )}
 
           {/* EMAIL FIELD */}
           <div className="mb-6">
@@ -129,7 +181,7 @@ const Login = () => {
                 autoComplete="email"
                 className={`w-full pl-12 pr-4 py-3.5 border ${
                   errors.email ? "border-red-500" : "border-gray-200"
-                } rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252]/50 outline-none transition`}
+                } rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252]/50 focus:border-[#FF5252] outline-none transition`}
               />
             </div>
             {errors.email && (
@@ -154,13 +206,13 @@ const Login = () => {
                 autoComplete="current-password"
                 className={`w-full pl-12 pr-12 py-3.5 border ${
                   errors.password ? "border-red-500" : "border-gray-200"
-                } rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252]/50 outline-none transition`}
+                } rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252]/50 focus:border-[#FF5252] outline-none transition`}
               />
 
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#FF5252] transition  cursor-pointer"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#FF5252] transition cursor-pointer"
               >
                 {showPassword ? <VisibilityOff /> : <Visibility />}
               </button>
@@ -170,22 +222,42 @@ const Login = () => {
             )}
           </div>
 
+
+
           {/* SUBMIT BUTTON */}
           <button
             type="submit"
             disabled={isLoggingIn}
-            className={`w-full bg-[#FF5252] text-white py-3.5 rounded-xl font-semibold text-lg shadow-lg  cursor-pointer transition-all duration-200 ${
+            className={`w-full bg-[#FF5252] text-white py-3.5 rounded-xl font-semibold text-lg shadow-lg cursor-pointer transition-all duration-200 ${
               isLoggingIn
                 ? "opacity-70 cursor-wait"
                 : "hover:bg-[#e03e3e] hover:shadow-xl active:scale-[0.98]"
             }`}
           >
-            {isLoggingIn ? "Logging in..." : "Login"}
+            {isLoggingIn ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                Logging in...
+              </span>
+            ) : (
+              "Login"
+            )}
           </button>
 
+<div className="mt-1.5 pr-1 text-right ">
+  <button
+    type="button"
+    onClick={() => navigate("/forgot-password")}
+    className="text-sm text-[#FF5252] hover:text-[#c62828] 
+               font-medium hover:underline transition cursor-pointer"
+  >
+    Forgot password?
+  </button>
+</div>
+        
           {/* LINK TO REGISTER */}
           <div className="text-center mt-8 text-gray-600 text-sm">
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <span
               className="text-[#FF5252] font-semibold cursor-pointer hover:underline"
               onClick={() => navigate("/register")}

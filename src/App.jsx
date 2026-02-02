@@ -32,12 +32,17 @@ import Support from "./pages/Support";
 // Menu sub pages
 import AddCategory from "./components/AddCategory";
 import AddFoodItem from "./components/AddFoodItem";
-import DaownloadPannel from "./components/DaownloadPannel";
+import DownloadPanel from "./components/DaownloadPannel";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import SubCategory from "./components/SubCategory";
 
+// Public Layout - Simple wrapper for public pages
 function PublicLayout() {
   return <Outlet />;
 }
 
+// Auth Layout - Wrapper for login/register pages
 function AuthLayout() {
   return (
     <main className="min-h-screen">
@@ -46,60 +51,114 @@ function AuthLayout() {
   );
 }
 
+// Check if user is authenticated
 const isAuthenticated = () => {
   return !!localStorage.getItem("token");
 };
 
+// Protected Route - Redirect to login if not authenticated
 function RequireAuth() {
   return isAuthenticated() ? <Outlet /> : <Navigate to="/login" replace />;
+}
+
+// Redirect if already logged in (for login/register pages)
+function RedirectIfAuthenticated() {
+  return isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Outlet />;
 }
 
 function App() {
   return (
     <Routes>
+      {/* Root redirect to home */}
       <Route path="/" element={<Navigate to="/home" replace />} />
 
-      {/* Public */}
+      {/* ==================== PUBLIC ROUTES ==================== */}
       <Route element={<PublicLayout />}>
         <Route path="/home" element={<Home />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/download" element={<DaownloadPannel/>}/>
+        <Route path="/download" element={<DownloadPanel />} />
         <Route path="/success-stories" element={<SuccessStories />} />
         <Route path="/why-partner" element={<WhyPartner />} />
         <Route path="/finalcta" element={<FinalCTA />} />
         <Route path="/getstartedagin" element={<GetStarted />} />
       </Route>
 
-      {/* Auth */}
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+      {/* ==================== AUTH ROUTES ==================== */}
+      {/* Redirect to dashboard if already logged in */}
+      <Route element={<RedirectIfAuthenticated />}>
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        </Route>
       </Route>
 
-      {/* Dashboard */}
+
+      {/* ==================== RESET PASSWORD (PUBLIC) ==================== */}
+<Route element={<AuthLayout />}>
+  <Route path="/reset-password/:token" element={<ResetPassword />} />
+</Route>
+
+      {/* ==================== PROTECTED DASHBOARD ROUTES ==================== */}
       <Route element={<RequireAuth />}>
         <Route path="/dashboard" element={<VendorLayout />}>
+          {/* Dashboard Home */}
           <Route index element={<Dashboard />} />
+          
+          {/* Restaurant Profile */}
           <Route path="profile" element={<RestaurantProfile />} />
 
-          {/* ✅ MENU ROUTES */}
-          <Route path="menu" element={<MenuManagement />}>
+          {/* Menu Management with nested routes */}
+          <Route path="menu">
+            <Route index element={<MenuManagement />} />
             <Route path="category" element={<AddCategory />} />
+              <Route path="sub-category" element={<SubCategory />} />
             <Route path="item" element={<AddFoodItem />} />
           </Route>
 
+          {/* Orders Management */}
           <Route path="orders" element={<Orders />} />
+          
+          {/* Live Tracking */}
           <Route path="tracking" element={<LiveTracking />} />
+          
+          {/* Earnings & Analytics */}
           <Route path="earnings" element={<Earnings />} />
+          
+          {/* Customer Reviews */}
           <Route path="reviews" element={<Reviews />} />
+          
+          {/* Offers & Promotions */}
           <Route path="offers" element={<Offers />} />
+          
+          {/* Notifications */}
           <Route path="notifications" element={<Notifications />} />
+          
+          {/* Support & Help */}
           <Route path="support" element={<Support />} />
         </Route>
       </Route>
 
-      <Route path="*" element={<div className="p-10 text-center">404 Not Found</div>} />
+      {/* ==================== 404 NOT FOUND ==================== */}
+      <Route 
+        path="*" 
+        element={
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <h1 className="text-6xl font-bold text-gray-800 mb-4">404</h1>
+              <p className="text-xl text-gray-600 mb-6">Page Not Found</p>
+              <button
+                onClick={() => window.location.href = '/home'}
+                className="px-6 py-3 bg-[#FF5252] text-white rounded-lg font-semibold hover:bg-[#e03e3e] transition"
+              >
+                Go to Home
+              </button>
+            </div>
+          </div>
+        } 
+      />
     </Routes>
   );
 }
