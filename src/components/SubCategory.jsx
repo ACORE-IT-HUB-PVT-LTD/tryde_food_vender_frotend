@@ -19,14 +19,18 @@ import {
   FormControl,
   InputLabel,
   Chip,
+  Grid,
 } from "@mui/material";
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CategoryIcon from "@mui/icons-material/Category";
+import SubdirectoryArrowRightIcon from "@mui/icons-material/SubdirectoryArrowRight";
 
 import axiosInstance from "../api/axiosInstance";
 import { RestaurantContext } from "../context/getRestaurant";
 import { CategoriesContext } from "../context/GetAllCategories";
+import { IoMdCamera } from "react-icons/io";
 
 const SubCategory = () => {
   const { restaurant } = useContext(RestaurantContext);
@@ -39,7 +43,7 @@ const SubCategory = () => {
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [image, setImage] = useState(null);
-  const [currentImage, setCurrentImage] = useState(""); // for preview & edit
+  const [currentImage, setCurrentImage] = useState("");
   const [editId, setEditId] = useState(null);
 
   const [errors, setErrors] = useState({});
@@ -131,7 +135,7 @@ const SubCategory = () => {
 
       setSuccessMsg("Sub-category created successfully!");
       clearForm();
-      await fetchSubCategories(selectedCategory); // Refresh list
+      await fetchSubCategories(selectedCategory);
     } catch (error) {
       console.error("Add failed:", error);
       setErrorMsg(error?.response?.data?.message || "Failed to create sub-category");
@@ -197,7 +201,6 @@ const SubCategory = () => {
     try {
       setEditId(sc.id);
       
-      // Fetch full sub-category details by ID
       const token = localStorage.getItem("token");
       const response = await axiosInstance.get(`/subcategories/${sc.id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -211,6 +214,9 @@ const SubCategory = () => {
       setCurrentImage(subCategoryData.image || "");
       setImage(null);
       setErrors({});
+      
+      // Scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error("Failed to fetch sub-category details:", error);
       setErrorMsg("Failed to load sub-category details");
@@ -229,7 +235,6 @@ const SubCategory = () => {
     const newCategoryId = e.target.value;
     setSelectedCategory(newCategoryId);
     
-    // Clear form when changing category (unless editing)
     if (!editId) {
       setName("");
       setDescription("");
@@ -239,378 +244,521 @@ const SubCategory = () => {
     }
   };
 
-  // Get category name by ID
   const getCategoryName = (categoryId) => {
     const category = categories?.find((c) => c.id === categoryId);
     return category?.name || "Unknown";
   };
 
   if (!restaurant?.id) {
-    return <Alert severity="warning">Please select/load a restaurant first</Alert>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#fff5f5] to-[#ffecec]">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-md">
+          <div className="text-center">
+            <SubdirectoryArrowRightIcon sx={{ fontSize: 64, color: "#FF5252", mb: 2 }} />
+            <Typography variant="h5" className="font-bold text-gray-800 mb-2">
+              Restaurant Required
+            </Typography>
+            <Typography variant="body1" className="text-gray-600">
+              Please select or load a restaurant first to manage sub-categories.
+            </Typography>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 font-['Poppins'] bg-gray-50 min-h-screen">
-      {/* ─── FORM ─── */}
-      <Paper elevation={3} className="p-6 rounded-2xl shadow-lg">
-        <Typography variant="h5" className="mb-6 font-bold text-[#d32f2f]">
-          {editId ? "Edit Sub-Category" : "Add New Sub-Category"}
-        </Typography>
-
-        {successMsg && (
-          <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMsg("")}>
-            {successMsg}
-          </Alert>
-        )}
-        {errorMsg && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setErrorMsg("")}>
-            {errorMsg}
-          </Alert>
-        )}
-
-        <Box
-          component="form"
-          onSubmit={handleSave}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 3,
-          }}
-        >
-          {/* Category Selection - Full Width */}
-          <FormControl fullWidth size="small" error={!!errors.category}>
-            <InputLabel>Select Category *</InputLabel>
-            <Select
-              value={selectedCategory}
-              label="Select Category *"
-              onChange={handleCategoryChange}
-            >
-              {categories?.map((cat) => (
-                <MenuItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.category && (
-              <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                {errors.category}
-              </Typography>
-            )}
-          </FormControl>
-
-          {/* Name and Description Row */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: 3,
-            }}
-          >
-            <TextField
-              label="Sub-Category Name *"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              fullWidth
-              error={!!errors.name}
-              helperText={errors.name}
-              size="small"
-            />
-
-            <TextField
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              fullWidth
-              multiline
-              rows={3}
-              size="small"
-            />
-          </Box>
-
-          {/* Image Upload and Submit Row */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: 3,
-              alignItems: { md: "flex-start" },
-            }}
-          >
-            {/* Image Upload Section */}
-            <Box sx={{ flex: 1 }}>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                id="subcategory-image-upload"
-                style={{ display: "none" }}
-              />
-              <label htmlFor="subcategory-image-upload">
-                <Button 
-                  variant="outlined" 
-                  component="span" 
-                  fullWidth
-                  sx={{
-                    borderColor: "#d32f2f",
-                    color: "#d32f2f",
-                    "&:hover": {
-                      borderColor: "#b71c1c",
-                      bgcolor: "rgba(211, 47, 47, 0.04)",
-                    },
-                  }}
-                >
-                  {image ? "Change Image" : currentImage ? "Update Image" : "Upload Image"}
-                </Button>
-              </label>
-
-              {currentImage && (
-                <Box mt={2} className="flex justify-center">
-                  <img
-                    src={currentImage}
-                    alt="preview"
-                    className="h-32 w-auto max-w-full object-cover rounded-lg border-2 border-gray-300 shadow-md"
-                  />
-                </Box>
-              )}
-            </Box>
-
-            {/* Submit Button */}
-            <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
-              {editId && (
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    clearForm();
-                    if (selectedCategory) {
-                      fetchSubCategories(selectedCategory);
-                    }
-                  }}
-                  sx={{
-                    borderColor: "#d32f2f",
-                    color: "#d32f2f",
-                    px: 4,
-                    py: 1.5,
-                    minWidth: 120,
-                    "&:hover": {
-                      borderColor: "#b71c1c",
-                      bgcolor: "rgba(211, 47, 47, 0.04)",
-                    },
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-              
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isSaving || loading}
-                sx={{
-                  bgcolor: "#d32f2f",
-                  "&:hover": { bgcolor: "#b71c1c" },
-                  px: 6,
-                  py: 1.5,
-                  minWidth: 160,
-                  height: "fit-content",
-                }}
-              >
-                {isSaving ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : editId ? (
-                  "Update"
-                ) : (
-                  "Create"
-                )}
-              </Button>
-            </Box>
-          </Box>
-        </Box>
-      </Paper>
-
-      {/* ─── SUB-CATEGORY LIST ─── */}
-      <Paper elevation={3} className="p-6 rounded-2xl shadow-lg">
-        <Box className="mb-6 flex flex-wrap items-center gap-3">
-          <Typography variant="h5" className="font-bold text-[#d32f2f]">
-            All Sub-Categories
-          </Typography>
-          {selectedCategory && (
-            <Chip
-              label={`Category: ${getCategoryName(selectedCategory)}`}
-              size="small"
-              sx={{
-                bgcolor: "#ef5350",
-                color: "white",
-                fontWeight: 500,
-                fontSize: "0.875rem",
-              }}
-            />
-          )}
-        </Box>
-
-        {!selectedCategory ? (
-          <Alert severity="info">Please select a category to view sub-categories</Alert>
-        ) : loading ? (
-          <Box display="flex" justifyContent="center" py={10}>
-            <CircularProgress />
-          </Box>
-        ) : !subCategories?.length ? (
-          <Alert severity="info">No sub-categories created yet for this category</Alert>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: "#ef5350" }}>
-                      <TableCell sx={{ color: "white", fontWeight: "bold", width: "60px" }}>S.No</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold", minWidth: "150px" }}>Name</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold", minWidth: "200px" }}>Description</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold", minWidth: "120px" }}>Category</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold", width: "100px" }}>Image</TableCell>
-                      <TableCell align="right" sx={{ color: "white", fontWeight: "bold", width: "120px" }}>
-                        Actions
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {subCategories.map((sc, i) => (
-                      <TableRow key={sc.id} hover sx={{ "&:hover": { bgcolor: "#fef2f2" } }}>
-                        <TableCell>{i + 1}</TableCell>
-                        <TableCell className="font-medium" sx={{ color: "#d32f2f" }}>
-                          {sc.name}
-                        </TableCell>
-                        <TableCell>
-                          {sc.description ? (
-                            <div className="max-w-xs">
-                              <div className="text-sm text-gray-700 line-clamp-2">
-                                {sc.description}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 italic text-sm">No description</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={getCategoryName(sc.category_id)} 
-                            size="small"
-                            sx={{
-                              bgcolor: "#ef5350",
-                              color: "white",
-                              fontWeight: 500,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {sc.image ? (
-                            <img
-                              src={sc.image}
-                              alt={sc.name}
-                              className="h-16 w-16 object-cover rounded-md shadow-md border-2 border-gray-200"
-                              onError={(e) => {
-                                e.target.src = "https://via.placeholder.com/64?text=No+Image";
-                              }}
-                            />
-                          ) : (
-                            <span className="text-gray-400 italic text-sm">No image</span>
-                          )}
-                        </TableCell>
-                        <TableCell align="right">
-                          <IconButton 
-                            onClick={() => handleEdit(sc)} 
-                            size="small"
-                            sx={{ 
-                              color: "#d32f2f",
-                              "&:hover": { bgcolor: "#fef2f2" }
-                            }}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton 
-                            color="error" 
-                            onClick={() => handleDelete(sc.id)} 
-                            size="small"
-                            sx={{
-                              "&:hover": { bgcolor: "#fef2f2" }
-                            }}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+    <div className="min-h-screen bg-gradient-to-br from-[#fff5f5] to-[#ffecec] font-['Poppins'] p-4 sm:p-6 lg:p-8">
+      {/* ─── FORM SECTION ─── */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#FF5252] to-[#e03e3e] px-6 sm:px-8 py-6">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-3 rounded-2xl">
+                <SubdirectoryArrowRightIcon sx={{ fontSize: 36, color: "white" }} />
+              </div>
+              <div>
+                <Typography variant="h4" className="font-bold text-white">
+                  {editId ? "Edit Sub-Category" : "Add New Sub-Category"}
+                </Typography>
+                <Typography variant="body2" className="text-white/90 mt-1">
+                  Create sub-categories under main categories
+                </Typography>
+              </div>
             </div>
+          </div>
 
-            {/* Mobile Cards */}
-            <div className="md:hidden space-y-4">
-              {subCategories.map((sc, i) => (
-                <div
-                  key={sc.id}
-                  className="border border-gray-200 rounded-xl p-4 bg-white shadow-md"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <div className="text-xs text-gray-500 mb-1">#{i + 1}</div>
-                      <div className="font-semibold text-lg text-[#d32f2f]">{sc.name}</div>
-                      <Chip
-                        label={getCategoryName(sc.category_id)}
-                        size="small"
-                        sx={{
-                          mt: 1,
-                          bgcolor: "#ef5350",
-                          color: "white",
-                          fontSize: "0.75rem",
-                        }}
+          {/* Form Content */}
+          <div className="p-6 sm:p-8">
+            {successMsg && (
+              <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-green-800 flex-1">{successMsg}</p>
+                <button onClick={() => setSuccessMsg("")} className="text-green-600 hover:text-green-800 transition">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {errorMsg && (
+              <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-red-800 flex-1">{errorMsg}</p>
+                <button onClick={() => setErrorMsg("")} className="text-red-600 hover:text-red-800 transition">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            <Box component="form" onSubmit={handleSave} className="space-y-6">
+              {/* Category Selection */}
+              <div className="bg-gradient-to-br from-gray-50 to-red-50/30 rounded-2xl p-6 border border-gray-200">
+                <Typography variant="subtitle1" className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="w-1.5 h-6 bg-[#FF5252] rounded-full"></span>
+                  Category
+                </Typography>
+                <FormControl fullWidth size="small" error={!!errors.category}>
+                  <InputLabel
+                    sx={{
+                      '&.Mui-focused': {
+                        color: '#FF5252',
+                      },
+                    }}
+                  >
+                    Select Category *
+                  </InputLabel>
+                  <Select
+                    value={selectedCategory}
+                    label="Select Category *"
+                    onChange={handleCategoryChange}
+                    className="bg-white rounded-xl]"
+                    sx={{
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: errors.category ? '#ef4444' : '#e5e7eb',
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#FF5252',
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#FF5252',
+                        borderWidth: '2px',
+                      },
+                    }}
+                  >
+                    {categories?.map((cat) => (
+                      <MenuItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.category && (
+                    <Typography variant="caption" className="text-red-500 mt-1 ml-1">
+                      {errors.category}
+                    </Typography>
+                  )}
+                </FormControl>
+              </div>
+
+              {/* Basic Information */}
+              <div className="bg-gradient-to-br from-gray-50 to-red-50/30 rounded-2xl p-6 border border-gray-200">
+                <Typography variant="subtitle1" className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="w-1.5 h-6 bg-[#FF5252] rounded-full"></span>
+                  Sub-Category Information
+                </Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Sub-Category Name *"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      fullWidth
+                      error={!!errors.name}
+                      helperText={errors.name}
+                      size="small"
+                      className="bg-white rounded-xl"
+                      sx={{
+                        '& label.Mui-focused': {
+                          color: '#FF5252',
+                        },
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#e5e7eb',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#FF5252',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#FF5252',
+                            borderWidth: '2px',
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      fullWidth
+                      size="small"
+                      multiline
+                      rows={3}
+                      className="bg-white rounded-xl"
+                      placeholder="Brief description of the sub-category"
+                      sx={{
+                        '& label.Mui-focused': {
+                          color: '#FF5252',
+                        },
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#e5e7eb',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#FF5252',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#FF5252',
+                            borderWidth: '2px',
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </div>
+
+              {/* Image Upload */}
+              <div className="bg-gradient-to-br from-gray-50 to-red-50/30 rounded-2xl p-6 border border-gray-200">
+                <Typography variant="subtitle1" className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="w-1.5 h-6 bg-[#FF5252] rounded-full"></span>
+                  Sub-Category Image
+                </Typography>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  id="subcategory-image-upload"
+                  className="hidden"
+                />
+                <label htmlFor="subcategory-image-upload" className="cursor-pointer">
+                  <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-[#FF5252] transition-all bg-white group">
+                    <IoMdCamera className="text-6xl text-gray-400 group-hover:text-[#FF5252] mx-auto mb-3 transition-colors" />
+                    <p className="text-gray-600 font-medium mb-1">
+                      {image ? "Change Image" : currentImage ? "Update Image" : "Click to Upload Sub-Category Image"}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Upload a clear sub-category image (PNG, JPG, WEBP)
+                    </p>
+                  </div>
+                </label>
+
+                {currentImage && (
+                  <div className="mt-6 flex justify-center">
+                    <div className="relative group">
+                      <img
+                        src={currentImage}
+                        alt="preview"
+                        className="h-64 w-auto max-w-full object-cover rounded-2xl border-4 border-[#FF5252] shadow-2xl transition-transform group-hover:scale-105"
                       />
-                    </div>
-                    <div className="flex gap-1">
-                      <IconButton 
-                        color="primary" 
-                        size="small" 
-                        onClick={() => handleEdit(sc)}
-                        sx={{ color: "#d32f2f" }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton 
-                        color="error" 
-                        size="small" 
-                        onClick={() => handleDelete(sc.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-2xl transition-all"></div>
                     </div>
                   </div>
-                  
-                  {sc.description && (
-                    <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg mb-3 border border-gray-200">
-                      <span className="font-medium text-gray-800">Description: </span>
-                      {sc.description}
-                    </div>
+                )}
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex gap-3 flex-col sm:flex-row">
+                {editId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearForm();
+                      if (selectedCategory) {
+                        fetchSubCategories(selectedCategory);
+                      }
+                    }}
+                    className="px-8 py-3.5 border-2 border-[#FF5252] text-[#FF5252] rounded-xl font-semibold text-base hover:bg-[#FF5252] hover:text-white transition-all duration-200 active:scale-95"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSaving || loading}
+                  className={`flex-1 px-8 py-3.5 bg-[#FF5252] text-white rounded-xl font-semibold text-base shadow-lg transition-all duration-200 ${
+                    isSaving || loading
+                      ? "opacity-70 cursor-not-allowed"
+                      : "hover:bg-[#e03e3e] hover:shadow-xl active:scale-95"
+                  }`}
+                >
+                  {isSaving ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <CircularProgress size={20} sx={{ color: 'white' }} />
+                      {editId ? "Updating..." : "Creating..."}
+                    </span>
+                  ) : editId ? (
+                    "✓ Update Sub-Category"
+                  ) : (
+                    "✓ Create Sub-Category"
                   )}
-                  
-                  {sc.image && (
-                    <div className="flex justify-center mt-3">
-                      <img
-                        src={sc.image}
-                        alt={sc.name}
-                        className="h-32 w-auto max-w-full object-cover rounded-lg border-2 border-gray-200 shadow-md"
-                        onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/128?text=No+Image";
-                        }}
-                      />
-                    </div>
-                  )}
+                </button>
+              </div>
+            </Box>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── SUB-CATEGORY LIST ─── */}
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
+          {/* List Header */}
+          <div className="bg-gradient-to-r from-[#FF5252] to-[#e03e3e] px-6 sm:px-8 py-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Typography variant="h5" className="flex items-center gap-2 font-bold text-white">
+                  <SubdirectoryArrowRightIcon className="text-xl" />
+                  <span>All Sub-Categories</span>
+                </Typography>
+                {selectedCategory && (
+                  <Chip
+                    label={`${getCategoryName(selectedCategory)}`}
+                    size="small"
+                    sx={{
+                      bgcolor: "rgba(255, 255, 255, 0.2)",
+                      color: "white",
+                      fontWeight: 600,
+                      backdropFilter: 'blur(10px)',
+                    }}
+                  />
+                )}
+              </div>
+              {subCategories.length > 0 && (
+                <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl">
+                  <Typography variant="body2" className="font-semibold text-white">
+                    {subCategories.length} {subCategories.length === 1 ? 'Sub-Category' : 'Sub-Categories'}
+                  </Typography>
                 </div>
-              ))}
+              )}
             </div>
-          </>
-        )}
-      </Paper>
+          </div>
+
+          {/* List Content */}
+          <div className="p-6 sm:p-8">
+            {!selectedCategory ? (
+              <div className="text-center py-16">
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 max-w-md mx-auto">
+                  <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <Typography variant="h6" className="font-bold text-gray-800 mb-2">
+                    Select a Category
+                  </Typography>
+                  <Typography variant="body2" className="text-gray-600">
+                    Please select a category above to view and manage its sub-categories
+                  </Typography>
+                </div>
+              </div>
+            ) : loading ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <CircularProgress sx={{ color: '#FF5252', mb: 2 }} size={48} />
+                <Typography variant="body1" className="text-gray-600">
+                  Loading sub-categories...
+                </Typography>
+              </div>
+            ) : !subCategories?.length ? (
+              <div className="text-center py-16">
+                <div className="bg-orange-50 border border-orange-200 rounded-2xl p-8 max-w-md mx-auto">
+                  <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <Typography variant="h6" className="font-bold text-gray-800 mb-2">
+                    No Sub-Categories Yet
+                  </Typography>
+                  <Typography variant="body2" className="text-gray-600">
+                    Start by adding your first sub-category for this category!
+                  </Typography>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <TableContainer className="rounded-2xl border border-gray-200">
+                    <Table>
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: "#FF5252" }}>
+                          <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.95rem' }}>S.No</TableCell>
+                          <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.95rem' }}>Image</TableCell>
+                          <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.95rem' }}>Sub-Category Name</TableCell>
+                          <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.95rem' }}>Description</TableCell>
+                          <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: '0.95rem' }}> Category</TableCell>
+                          <TableCell align="right" sx={{ color: "white", fontWeight: "bold", fontSize: '0.95rem' }}>
+                            Actions
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {subCategories.map((sc, i) => (
+                          <TableRow
+                            key={sc.id}
+                            hover
+                            sx={{
+                              "&:hover": { bgcolor: "#fff5f5" },
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            <TableCell>
+                              <div className="font-semibold text-gray-700">{i + 1}</div>
+                            </TableCell>
+                            <TableCell>
+                              {sc.image ? (
+                                <img
+                                  src={sc.image}
+                                  alt={sc.name}
+                                  className="h-20 w-20 object-cover rounded-xl shadow-md border-2 border-red-100 transition-transform hover:scale-110"
+                                  onError={(e) => {
+                                    e.target.src = "https://via.placeholder.com/80?text=No+Image";
+                                  }}
+                                />
+                              ) : (
+                                <div className="h-20 w-20 flex items-center justify-center bg-gray-100 rounded-xl border-2 border-gray-200">
+                                  <span className="text-gray-400 text-xs">No image</span>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-semibold text-[#FF5252] text-base">{sc.name}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm text-gray-600 max-w-xs">
+                                {sc.description || <span className="italic text-gray-400">No description</span>}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={getCategoryName(sc.category_id)}
+                                size="small"
+                                sx={{
+                                  bgcolor: "#fb923c",
+                                  color: "white",
+                                  fontWeight: 600,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell align="right">
+                              <IconButton
+                                onClick={() => handleEdit(sc)}
+                                size="small"
+                                sx={{
+                                  color: "#FF5252",
+                                  bgcolor: '#fff5f5',
+                                  "&:hover": { bgcolor: "#ffe5e5" },
+                                  mr: 1
+                                }}
+                              >
+                                <EditIcon />
+                              </IconButton>
+                              <IconButton
+                                color="error"
+                                onClick={() => handleDelete(sc.id)}
+                                size="small"
+                                sx={{
+                                  bgcolor: '#fff5f5',
+                                  "&:hover": { bgcolor: "#ffe5e5" },
+                                }}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="lg:hidden space-y-4">
+                  {subCategories.map((sc, i) => (
+                    <div
+                      key={sc.id}
+                      className="border-2 border-red-100 rounded-2xl p-5 bg-white shadow-lg hover:shadow-xl transition-all"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <div className="text-xs font-semibold text-gray-500 mb-1">#{i + 1}</div>
+                          <div className="font-bold text-xl text-[#FF5252] mb-2">{sc.name}</div>
+                          <Chip
+                            label={getCategoryName(sc.category_id)}
+                            size="small"
+                            sx={{
+                              bgcolor: "#fb923c",
+                              color: "white",
+                              fontWeight: 600,
+                              fontSize: "0.75rem",
+                            }}
+                          />
+                        </div>
+                        <div className="flex gap-2 ml-3">
+                          <button
+                            onClick={() => handleEdit(sc)}
+                            className="p-2 bg-[#fff5f5] text-[#FF5252] rounded-xl hover:bg-[#ffe5e5] transition-colors"
+                          >
+                            <EditIcon fontSize="small" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(sc.id)}
+                            className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {sc.description && (
+                        <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl mb-3 border border-gray-100">
+                          {sc.description}
+                        </div>
+                      )}
+
+                      {sc.image && (
+                        <div className="flex justify-center">
+                          <img
+                            src={sc.image}
+                            alt={sc.name}
+                            className="h-52 w-auto max-w-full object-cover rounded-2xl border-4 border-red-100 shadow-lg"
+                            onError={(e) => {
+                              e.target.src = "https://via.placeholder.com/200?text=No+Image";
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

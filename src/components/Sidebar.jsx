@@ -14,7 +14,7 @@ import GiftIcon from '@heroicons/react/24/outline/GiftIcon';
 import BellIcon from '@heroicons/react/24/outline/BellIcon';
 import LifebuoyIcon from '@heroicons/react/24/outline/LifebuoyIcon';
 import ChevronDownIcon from '@heroicons/react/24/outline/ChevronDownIcon';
-
+import { LuLogOut } from "react-icons/lu";
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -204,7 +204,7 @@ const Sidebar = () => {
           onClick={handleLogout}
           className="w-full py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors text-left flex items-center gap-3 px-4"
         >
-          Logout
+         <LuLogOut size={20}/> Logout
         </button>
       </nav>
 
