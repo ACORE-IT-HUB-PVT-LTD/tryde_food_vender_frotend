@@ -11,13 +11,18 @@ function GetAllCategories({ children }) {
 
 
   const fetchCategories = async () => {
+    const token = localStorage.getItem("token");
+
       try {
         setLoading(true);
         const res = await axiosInstance.get(
-          `/categories/${restaurant.id}`
-        );
-        setCategories(res.data|| []);
-        console.log(res.data)
+          `/categories/${restaurant.id}`,{
+            headers:{
+              Authorization: `Bearer ${token}`,
+            }
+          });
+        // console.log( "here is the categories " , res.data)
+        setCategories(res.data)
       } catch (error) {
         console.error(error);
       } finally {
@@ -25,9 +30,9 @@ function GetAllCategories({ children }) {
       }
     }
   useEffect(() => {
+      if (!restaurant?.id) return;
     fetchCategories();
   }, [restaurant]);
-
   return (
     <CategoriesContext.Provider value={{ categories, loading ,setCategories,fetchCategories}}>
       {children}

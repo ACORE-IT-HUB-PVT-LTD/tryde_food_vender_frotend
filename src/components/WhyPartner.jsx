@@ -132,7 +132,7 @@ function WhyPartnerWithTryde() {
         </div>
 
         {/* Animation Keyframes */}
-        <style jsx>{`
+        <style>{`
           @keyframes fadeInUp {
             from {
               opacity: 0;

@@ -29,6 +29,7 @@ import { IoMdCamera } from "react-icons/io";
 const Category = () => {
   const { restaurant } = useContext(RestaurantContext);
   const { categories, loading: contextLoading, fetchCategories } = useContext(CategoriesContext);
+  // console.log(categories , "categories")
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -56,6 +57,11 @@ const Category = () => {
     if (!name.trim()) {
       err.name = "Category name is required";
     }
+
+    //image required ONLY when creating
+  if (!editId && !categoryImage) {
+    err.categoryImage = "Category image is required";
+  }
     setErrors(err);
     return Object.keys(err).length === 0;
   };
@@ -285,7 +291,7 @@ const Category = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
+                  <Grid item size={{ xs: 12 ,md:6}} >
                     <TextField
                       label="Description"
                       value={description}
@@ -539,7 +545,7 @@ const Category = () => {
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
-                          <div className="text-xs font-semibold text-gray-500 mb-1">#{i + 1}</div>
+                          <div className="text-xs font-semibold text-gray-500 mb-1">{i + 1}</div>
                           <div className="font-bold text-xl text-[#FF5252] mb-2">{cat.name}</div>
                           {cat.description && (
                             <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl mb-3 border border-gray-100">

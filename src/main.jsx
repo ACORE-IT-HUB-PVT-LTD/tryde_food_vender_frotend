@@ -1,19 +1,18 @@
 // src/main.jsx
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'   // ← Import here
+import { BrowserRouter } from 'react-router-dom'   
 import App from './App.jsx'
 import './index.css'
 import GetRestaurant from './context/getRestaurant.jsx'
 import GetAllCategories from './context/GetAllCategories.jsx'
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <GetRestaurant>
       <GetAllCategories>
-            <App />
+            <App/>
       </GetAllCategories>
-    </GetRestaurant>           {/* ← Wrap the whole app here */}
+    </GetRestaurant>           
   </BrowserRouter>
 
 )

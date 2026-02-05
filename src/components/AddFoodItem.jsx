@@ -123,7 +123,7 @@ const AddFoodItem = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (res.data && res.data.data) {
+      if (res.data && res.data.data){
         setMenuItems(res.data.data);
       } else {
         setMenuItems([]);
@@ -1257,14 +1257,14 @@ const AddFoodItem = () => {
                               <Box className="flex flex-wrap gap-1">
                                 {item.is_bestseller && (
                                   <Chip
-                                    label="⭐ Best"
+                                    label="Best"
                                     size="small"
                                     sx={{ bgcolor: "#fbbf24", color: "white", fontSize: "0.7rem", fontWeight: 600 }}
                                   />
                                 )}
                                 {item.is_spicy && (
                                   <Chip
-                                    label="🌶️ Spicy"
+                                    label="Spicy"
                                     size="small"
                                     color="error"
                                     sx={{ fontSize: "0.7rem", fontWeight: 600 }}
@@ -1321,7 +1321,7 @@ const AddFoodItem = () => {
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
-                          <div className="text-xs font-semibold text-gray-500 mb-1">#{i + 1}</div>
+                          <div className="text-xs font-semibold text-gray-500 mb-1">{i + 1}</div>
                           <div className="font-bold text-xl text-[#FF5252] mb-2">{item.name}</div>
                           <div className="flex flex-wrap gap-2 mt-2">
                             <Chip

@@ -1585,7 +1585,7 @@ export default function Register() {
 //         </p>
 //       </div>
 
-//       <style jsx>{`
+//       <style>{`
 //         .animate-fadeIn {
 //           animation: fadeIn 0.4s ease-out;
 //         }

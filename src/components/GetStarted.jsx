@@ -138,7 +138,7 @@ export default function PartnerHero() {
       </div>
 
       {/* Fade-in animation for images */}
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
           to   { opacity: 1; }

@@ -230,7 +230,7 @@ function ResetPassword() {
       </div>
 
       {/* Fade-in animation */}
-      <style jsx>{`
+      <style>{`
         .animate-fadeIn {
           animation: fadeIn 0.5s ease-out;
         }

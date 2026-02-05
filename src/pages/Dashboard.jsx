@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import Card from '../components/Card';
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 
@@ -75,7 +75,12 @@ const customerBreakdownData = {
   ],
 };
 
+
+
+
+
 const Dashboard = () => {
+  // const {Dashboarddata, loading,error,fetchDashboard}=useContext(DashboarddataContext);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -103,6 +108,7 @@ const Dashboard = () => {
     { id: 12, name: 'Sandwiches', icon: <Sandwich size={32} /> },
     { id: 13, name: 'Add New', icon: <Plus size={32} /> },
   ];
+
 
   const items = [
     { id: 1, name: 'Margherita Pizza', price: '₹249', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
