@@ -74,7 +74,7 @@ const AddFoodItem = () => {
   // Auto-hide messages
   useEffect(() => {
     if (successMsg || errorMsg) {
-      const timer = setTimeout(() => {
+      const timer = setTimeout(() =>{
         setSuccessMsg("");
         setErrorMsg("");
       }, 5000);
@@ -122,7 +122,6 @@ const AddFoodItem = () => {
         `/menuitems/${restaurant.id}/sub-category/${subCategoryId}/menu-items`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       if (res.data && res.data.data){
         setMenuItems(res.data.data);
       } else {
@@ -1291,7 +1290,7 @@ const AddFoodItem = () => {
                                   mr: 1
                                 }}
                               >
-                                <EditIcon />
+                                <EditIcon className="text-blue-500"/>
                               </IconButton>
                               <IconButton
                                 color="error"
@@ -1302,7 +1301,7 @@ const AddFoodItem = () => {
                                   "&:hover": { bgcolor: "#ffe5e5" },
                                 }}
                               >
-                                <DeleteIcon />
+                                <DeleteIcon className="text-green-500" />
                               </IconButton>
                             </TableCell>
                           </TableRow>
