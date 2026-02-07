@@ -1138,7 +1138,7 @@ const Category = () => {
         onClose={closeModal}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { borderRadius: "16px" } }}
+        PaperProps={{ sx: { borderRadius: "16px" ,overflow:"hidden"} }}
       >
         <DialogTitle sx={{ bgcolor: "#FF5252", color: "white", pb: 1 }}>
           <div className="flex items-center gap-3">
@@ -1202,7 +1202,7 @@ const Category = () => {
                     {categoryImage ? "Change image" : currentImage ? "Update image" : "Click to upload image"}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    PNG, JPG, WEBP • Max 5MB
+                    PNG, JPG, WEBP 
                   </Typography>
                 </Box>
               </label>

@@ -1339,51 +1339,79 @@ function RestaurantProfile() {
       </div>
 
       {/* Document Preview Modal */}
-      {showDocument && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 scale-100 border border-gray-100">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 sm:px-6 py-4 bg-[#FF5252] text-white">
-              <div className="flex items-center gap-3">
-                <VscPreview className="text-2xl opacity-90" />
-                <h3 className="text-lg sm:text-xl font-bold tracking-tight">
-                  Document Preview
-                </h3>
-              </div>
-
-              <button
-                onClick={closeDocument}
-                className="p-2.5 rounded-full hover:bg-white/20 active:bg-white/30 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/40"
-                aria-label="Close preview"
-              >
-                <RxCross1 className="text-xl" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 sm:p-8 md:p-10 bg-gray-50/50 flex items-center justify-center min-h-[50vh] max-h-[70vh] overflow-auto">
-              <div className="w-full">
-                <img
-                  src={documentUrl}
-                  alt="Document Preview"
-                  className="w-full max-h-[65vh] object-contain rounded-xl shadow-lg border border-gray-200/80 bg-white mx-auto"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 bg-white border-t border-gray-100 flex justify-end">
-              <button
-                onClick={closeDocument}
-                className="px-6 py-2.5 bg-[#FF5252] hover:bg-[#e63939] active:bg-[#cc2929] text-white font-medium rounded-xl transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FF5252]/40 focus:ring-offset-2"
-              >
-                Close
-              </button>
-            </div>
-          </div>
+       {showDocument && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#FF5252] to-[#FF6B6B] text-white">
+        <div className="flex items-center gap-3">
+          <VscPreview className="text-2xl opacity-90" />
+          <h3 className="text-lg font-bold">Document Preview</h3>
         </div>
-      )}
+        <button
+          onClick={closeDocument}
+          className="p-2 rounded-full hover:bg-white/20 transition-colors"
+          aria-label="Close preview"
+        >
+          <RxCross1 className="text-xl" />
+        </button>
+      </div>
+
+      {/* Content - no scrollbar visible */}
+      <div 
+        className="
+          p-6 md:p-8 
+          bg-gray-50 
+          flex items-center justify-center 
+          min-h-[50vh] max-h-[75vh]
+          overflow-hidden
+        "
+      >
+        <div className="w-full h-full overflow-y-auto no-scrollbar">
+          <img
+            src={documentUrl}
+            alt="Document Preview"
+            className="
+              w-full max-h-[65vh] 
+              object-contain 
+              rounded-xl 
+              shadow-lg 
+              border border-gray-200 
+              bg-white 
+              mx-auto
+            "
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = "/fallback-image.jpg"; // optional fallback
+              e.currentTarget.alt = "Failed to load document";
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-6 py-4 bg-white border-t flex justify-end gap-3">
+        <button
+          onClick={closeDocument}
+          className="
+            px-6 py-2.5 
+            bg-gray-200 text-gray-800 
+            hover:bg-gray-300 
+            rounded-xl 
+            transition-colors
+            font-medium
+          "
+        >
+          Close
+        </button>
+        {/* Optional: Add download button if you have functionality */}
+        {/* <button className="px-6 py-2.5 bg-[#FF5252] text-white rounded-xl hover:bg-[#e04545] transition-colors font-medium">
+          Download
+        </button> */}
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

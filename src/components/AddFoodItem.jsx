@@ -291,7 +291,6 @@ const AddFoodItem = () => {
   const handleEdit = async (menuItem) => {
     try {
       setEditId(menuItem.id);
-
       const token = localStorage.getItem("token");
       const response = await axiosInstance.get(`/menuitems/viewsingle/${menuItem.id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -335,7 +334,7 @@ const AddFoodItem = () => {
     setCurrentImage(URL.createObjectURL(file));
   };
 
-  const handleCategoryChange = (e) => {
+  const handleCategoryChange =(e) => {
     const newCategoryId = e.target.value;
     setSelectedCategory(newCategoryId);
 
@@ -344,7 +343,7 @@ const AddFoodItem = () => {
     }
   };
 
-  const getCategoryName = (categoryId) => {
+  const getCategoryName =(categoryId) => {
     const category = categories?.find((c) => c.id === categoryId);
     return category?.name || "Unknown";
   };

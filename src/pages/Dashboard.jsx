@@ -110,7 +110,7 @@ const Dashboard = () => {
   ];
 
 
-  const items = [
+const items= [
     { id: 1, name: 'Margherita Pizza', price: '₹249', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
     { id: 2, name: 'Chicken Biryani', price: '₹299', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400' },
     { id: 3, name: 'Paneer Butter Masala', price: '₹279', image: 'https://media.istockphoto.com/id/1354042949/photo/curd-paneer-masala.jpg?s=612x612&w=0&k=20&c=Q_93IPlKtX71VgeJQDcwWK8J0ut0gWg3H3akCTZqfPs=' },
@@ -124,6 +124,7 @@ const Dashboard = () => {
     { id: 11, name: 'Chicken Burger', price: '₹149', image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400' },
     { id: 12, name: 'Grilled Paneer', price: '₹199', image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400' },
   ];
+
 
   // Check scroll position and update arrow visibility
   const checkScrollPosition = () => {
@@ -332,7 +333,7 @@ const Dashboard = () => {
           Popular Items
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6">
-          {items.map((item) => (
+          {items.map((item) =>(
             <div
               key={item.id}
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer group"
@@ -351,9 +352,6 @@ const Dashboard = () => {
                 </h3>
                 <div className="flex items-center justify-between mt-2">
                   <p className="text-[#FF5252] font-bold text-lg">{item.price}</p>
-                  <button className="bg-[#FF5252] text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-[#e04848] transition-colors opacity-0 group-hover:opacity-100 duration-300">
-                    Add
-                  </button>
                 </div>
               </div>
             </div>
