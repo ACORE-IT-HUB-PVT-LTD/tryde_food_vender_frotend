@@ -53,7 +53,7 @@
 
 //   const validate = () => {
 //     const err = {};
-    
+
 //     // Name validation
 //     if (!name.trim()) {
 //       err.name = "Category name is required";
@@ -95,7 +95,7 @@
 //       setErrorMsg("Please fix the errors before submitting");
 //       return;
 //     }
-    
+
 //     setIsSaving(true);
 //     setErrorMsg("");
 //     setSuccessMsg("");
@@ -122,7 +122,7 @@
 //       await fetchCategories();
 //     } catch (error) {
 //       console.error("Add failed:", error);
-      
+
 //       // Handle different types of backend errors
 //       if (error?.response?.data?.message) {
 //         setErrorMsg(error.response.data.message);
@@ -151,7 +151,7 @@
 //       setErrorMsg("Please fix the errors before submitting");
 //       return;
 //     }
-    
+
 //     setIsSaving(true);
 //     setErrorMsg("");
 //     setSuccessMsg("");
@@ -178,7 +178,7 @@
 //       await fetchCategories();
 //     } catch (error) {
 //       console.error("Update failed:", error);
-      
+
 //       // Handle different types of backend errors
 //       if (error?.response?.data?.message) {
 //         setErrorMsg(error.response.data.message);
@@ -216,7 +216,7 @@
 //       await fetchCategories();
 //     } catch (error) {
 //       console.error("Delete failed:", error);
-      
+
 //       // Handle different types of backend errors
 //       if (error?.response?.data?.message) {
 //         setErrorMsg(error.response.data.message);
@@ -254,7 +254,7 @@
 //     setErrors({});
 //     setErrorMsg("");
 //     setSuccessMsg("");
-    
+
 //     // Scroll to top smoothly
 //     window.scrollTo({ top: 0, behavior: 'smooth' });
 //   };
@@ -1077,10 +1077,10 @@ const Category = () => {
                         </TableCell>
                         <TableCell align="right">
                           <IconButton onClick={() => handleEdit(cat)} size="small" color="primary">
-                            <EditIcon className="text-blue-500"/>
+                            <EditIcon className="text-blue-500" />
                           </IconButton>
                           <IconButton onClick={() => handleDelete(cat.id)} size="small" color="error">
-                            <DeleteIcon className="text-green-500"/>
+                            <DeleteIcon className="text-green-500" />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -1097,7 +1097,7 @@ const Category = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <Typography variant="caption" color="text.secondary">
-                        #{i + 1}
+                        {i + 1}
                       </Typography>
                       <Typography variant="h6" color="#FF5252">
                         {cat.name}
@@ -1133,133 +1133,185 @@ const Category = () => {
       </div>
 
       {/* ─── ADD / EDIT MODAL ─── */}
-      <Dialog
-        open={openModal}
-        onClose={closeModal}
-        maxWidth="sm"
+<Dialog
+  open={openModal}
+  onClose={closeModal}
+  maxWidth="sm"
+  fullWidth
+  scroll="paper"   // ✅ correct scroll behavior
+  PaperProps={{
+    sx: {
+      borderRadius: "16px",
+      overflow: "hidden",
+    },
+  }}
+>
+  {/* HEADER */}
+  <DialogTitle sx={{ bgcolor: "#FF5252", color: "white", pb: 1 }}>
+    <div className="flex items-center gap-3">
+      <CategoryIcon />
+      <span>{mode === "add" ? "Add New Category" : "Edit Category"}</span>
+    </div>
+  </DialogTitle>
+
+  {/* CONTENT */}
+  <DialogContent
+    dividers
+    sx={{
+      pt: 3,
+      maxHeight: "60vh",
+      overflowY: "auto",
+
+      /* 🔥 HIDE SCROLLBAR */
+      scrollbarWidth: "none",            // Firefox
+      "&::-webkit-scrollbar": {
+        display: "none",                 // Chrome, Safari
+      },
+    }}
+  >
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+      }}
+    >
+      <TextField
+        label="Category Name *"
+        value={name}
+        onChange={(e) => {
+          setName(e.target.value);
+          if (errors.name) {
+            setErrors((prev) => ({ ...prev, name: "" }));
+          }
+        }}
+        error={!!errors.name}
+        helperText={errors.name}
         fullWidth
-        PaperProps={{ sx: { borderRadius: "16px" ,overflow:"hidden"} }}
-      >
-        <DialogTitle sx={{ bgcolor: "#FF5252", color: "white", pb: 1 }}>
-          <div className="flex items-center gap-3">
-            <CategoryIcon />
-            <span>{mode === "add" ? "Add New Category" : "Edit Category"}</span>
-          </div>
-        </DialogTitle>
+      />
 
-        <DialogContent dividers sx={{ pt: 3 }}>
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <TextField
-              label="Category Name *"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
-              }}
-              error={!!errors.name}
-              helperText={errors.name}
-              fullWidth
-              variant="outlined"
-            />
+      <TextField
+        label="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        multiline
+        rows={3}
+        fullWidth
+        placeholder="Optional brief description..."
+      />
 
-            <TextField
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              multiline
-              rows={3}
-              fullWidth
-              variant="outlined"
-              placeholder="Optional brief description..."
-            />
+      <div>
+        <Typography variant="subtitle2" gutterBottom>
+          Category Image {mode === "add" && <span style={{ color: "red" }}>*</span>}
+        </Typography>
 
-            <div>
-              <Typography variant="subtitle2" gutterBottom>
-                Category Image {mode === "add" && <span style={{ color: "red" }}>*</span>}
-              </Typography>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          id="category-image"
+          hidden
+        />
 
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                id="category-image"
-                style={{ display: "none" }}
-              />
-              <label htmlFor="category-image">
-                <Box
-                  sx={{
-                    border: `2px dashed ${errors.categoryImage ? "#ef4444" : "#d1d5db"}`,
-                    borderRadius: "12px",
-                    p: 4,
-                    textAlign: "center",
-                    cursor: "pointer",
-                    bgcolor: "grey.50",
-                    "&:hover": { bgcolor: "grey.100", borderColor: "#FF5252" },
-                  }}
-                >
-                  <IoMdCamera size={48} className="mx-auto mb-2 text-gray-400" />
-                  <Typography variant="body1" fontWeight="medium">
-                    {categoryImage ? "Change image" : currentImage ? "Update image" : "Click to upload image"}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    PNG, JPG, WEBP 
-                  </Typography>
-                </Box>
-              </label>
-
-              {errors.categoryImage && (
-                <Typography color="error" variant="caption" sx={{ mt: 1, display: "block" }}>
-                  {errors.categoryImage}
-                </Typography>
-              )}
-
-              {currentImage && (
-                <Box sx={{ mt: 3, position: "relative", display: "inline-block" }}>
-                  <img
-                    src={currentImage}
-                    alt="preview"
-                    style={{ maxHeight: "180px", borderRadius: "12px", boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}
-                  />
-                  <Button
-                    size="small"
-                    color="error"
-                    variant="contained"
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      minWidth: "auto",
-                      p: 0.5,
-                      borderRadius: "50%",
-                    }}
-                    onClick={() => {
-                      setCategoryImage(null);
-                      setCurrentImage("");
-                    }}
-                  >
-                    ×
-                  </Button>
-                </Box>
-              )}
-            </div>
-          </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={closeModal} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={isSaving}
-            sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" } }}
-            startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : null}
+        <label htmlFor="category-image">
+          <Box
+            sx={{
+              border: `2px dashed ${errors.categoryImage ? "#ef4444" : "#d1d5db"}`,
+              borderRadius: "12px",
+              p: 4,
+              textAlign: "center",
+              cursor: "pointer",
+              bgcolor: "grey.50",
+              "&:hover": { bgcolor: "grey.100", borderColor: "#FF5252" },
+            }}
           >
-            {isSaving ? (mode === "add" ? "Creating..." : "Updating...") : mode === "add" ? "Create" : "Update"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <IoMdCamera size={48} className="mx-auto mb-2 text-gray-400" />
+            <Typography variant="body1" fontWeight="medium">
+              {categoryImage
+                ? "Change image"
+                : currentImage
+                ? "Update image"
+                : "Click to upload image"}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              PNG, JPG, WEBP
+            </Typography>
+          </Box>
+        </label>
+
+        {errors.categoryImage && (
+          <Typography
+            color="error"
+            variant="caption"
+            sx={{ mt: 1, display: "block" }}
+          >
+            {errors.categoryImage}
+          </Typography>
+        )}
+
+        {currentImage && (
+          <Box sx={{ mt: 3, position: "relative", display: "inline-block" }}>
+            <img
+              src={currentImage}
+              alt="preview"
+              style={{
+                maxHeight: "180px",
+                borderRadius: "12px",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+              }}
+            />
+            <Button
+              size="small"
+              color="error"
+              variant="contained"
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                minWidth: "auto",
+                p: 0.5,
+                borderRadius: "50%",
+              }}
+              onClick={() => {
+                setCategoryImage(null);
+                setCurrentImage("");
+              }}
+            >
+              ×
+            </Button>
+          </Box>
+        )}
+      </div>
+    </Box>
+  </DialogContent>
+
+  {/* FOOTER */}
+  <DialogActions sx={{ px: 3, py: 2 }}>
+    <Button onClick={closeModal} disabled={isSaving}>
+      Cancel
+    </Button>
+
+    <Button
+      variant="contained"
+      onClick={handleSubmit}
+      disabled={isSaving}
+      sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" } }}
+      startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : null}
+    >
+      {isSaving
+        ? mode === "add"
+          ? "Creating..."
+          : "Updating..."
+        : mode === "add"
+        ? "Create"
+        : "Update"}
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
     </div>
   );
 };

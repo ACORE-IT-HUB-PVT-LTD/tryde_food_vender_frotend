@@ -37,6 +37,8 @@ import DownloadPanel from "./components/DaownloadPannel";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import SubCategory from "./components/SubCategory";
+import GetDashboardData from "./hooks/useDashboardData";
+import useDashboardData from "./hooks/useDashboardData";
 
 // Public Layout - Simple wrapper for public pages
 function PublicLayout() {
@@ -67,7 +69,9 @@ function RedirectIfAuthenticated() {
   return isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Outlet />;
 }
 
+
 function App() {
+  useDashboardData();
   return (
     <Routes>
       {/* Root redirect to home */}
