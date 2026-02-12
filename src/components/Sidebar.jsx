@@ -68,14 +68,14 @@
 //           font-['Poppins']
 //           transition-all duration-300 ease-in-out
 //           overflow-hidden
-          
+
 //           /* Desktop: Collapsed by default, expand on hover - positioned below header with gap */
 //           hidden md:flex
 //           top-20
 //           h-[calc(100vh-5rem)]
 //           w-20 hover:w-60
 //           group
-          
+
 //           /* Mobile: Full sidebar without hover dependency */
 //           ${isMobileOpen ? "!flex !w-72 !top-0 !h-full" : ""}
 //         `}
@@ -310,6 +310,8 @@ const Sidebar = ({ onHoverChange }) => {
   const navigate = useNavigate();
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
   const [menuOpen, setMenuOpen] = useState(
     location.pathname.startsWith("/dashboard/menu")
   );
@@ -322,11 +324,10 @@ const Sidebar = ({ onHoverChange }) => {
 
   const navClass = ({ isActive }) =>
     `group/item relative flex items-center gap-4 px-4 py-3 mx-2 rounded-xl text-[15px] font-medium transition-all duration-200
-     ${
-       isActive
-         ? "bg-gradient-to-r from-[#FF5252] to-[#FF6B6B] text-white shadow-lg shadow-red-500/30"
-         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-     }`;
+     ${isActive
+      ? "bg-gradient-to-r from-[#FF5252] to-[#FF6B6B] text-white shadow-lg shadow-red-500/30"
+      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+    }`;
 
   return (
     <>
@@ -411,10 +412,9 @@ const Sidebar = ({ onHoverChange }) => {
                 setMenuOpen(!menuOpen);
               }}
               className={`group relative flex items-center gap-4 px-4 py-3 mx-2 rounded-xl text-[15px] font-medium transition-all duration-200
-                ${
-                  location.pathname.startsWith("/dashboard/menu")
-                    ? "bg-gradient-to-r from-[#FF5252] to-[#FF6B6B] text-white shadow-lg shadow-red-500/30"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                ${location.pathname.startsWith("/dashboard/menu")
+                  ? "bg-gradient-to-r from-[#FF5252] to-[#FF6B6B] text-white shadow-lg shadow-red-500/30"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}
             >
               <Bars3Icon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
@@ -435,9 +435,8 @@ const Sidebar = ({ onHoverChange }) => {
 
             {/* Submenu */}
             <div
-              className={`overflow-hidden transition-all duration-300 ${
-                menuOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
-              }`}
+              className={`overflow-hidden transition-all duration-300 ${menuOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+                }`}
             >
               <div
                 className={`ml-8 mr-2 mt-1 flex flex-col gap-1 transition-opacity duration-300
@@ -446,10 +445,9 @@ const Sidebar = ({ onHoverChange }) => {
                 <NavLink
                   to="/dashboard/menu/category"
                   className={({ isActive }) =>
-                    `px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      isActive
-                        ? "bg-red-50 text-[#FF5252]"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    `px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
+                      ? "bg-red-50 text-[#FF5252]"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`
                   }
                 >
@@ -459,10 +457,9 @@ const Sidebar = ({ onHoverChange }) => {
                 <NavLink
                   to="/dashboard/menu/sub-category"
                   className={({ isActive }) =>
-                    `px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      isActive
-                        ? "bg-red-50 text-[#FF5252]"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    `px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
+                      ? "bg-red-50 text-[#FF5252]"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`
                   }
                 >
@@ -472,10 +469,9 @@ const Sidebar = ({ onHoverChange }) => {
                 <NavLink
                   to="/dashboard/menu/item"
                   className={({ isActive }) =>
-                    `px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      isActive
-                        ? "bg-red-50 text-[#FF5252]"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    `px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
+                      ? "bg-red-50 text-[#FF5252]"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`
                   }
                 >
@@ -537,13 +533,13 @@ const Sidebar = ({ onHoverChange }) => {
         {/* Logout Button */}
         <div className="border-t border-gray-200 p-3">
           <button
-            onClick={handleLogout}
+            onClick={() => setShowLogoutConfirm(true)}
             className="
               w-full flex items-center gap-4
               px-4 py-3 rounded-xl
               transition-all duration-200
-              text-red-600 hover:bg-red-50
-              font-medium
+              text-red-600 hover:bg-red-500 hover:text-white
+              font-medium cursor-pointer
             "
           >
             <LuLogOut size={20} className="min-w-[20px] flex-shrink-0" />
@@ -552,6 +548,65 @@ const Sidebar = ({ onHoverChange }) => {
               Logout
             </span>
           </button>
+
+
+
+          {showLogoutConfirm && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] animate-fadeIn"
+                onClick={() => setShowLogoutConfirm(false)}
+              ></div>
+
+              {/* Modal */}
+              <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] w-[90%] max-w-md">
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden animate-scaleIn">
+
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-[#FF5252] to-[#e03e3e] p-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-3 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <LuLogOut className="text-white w-8 h-8" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white">
+                      Confirm Logout
+                    </h3>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-6 text-center">
+                    <p className="text-gray-700 text-lg mb-6">
+                      Are you sure you want to logout?
+                    </p>
+
+                    <div className="flex gap-3">
+                      {/* Cancel */}
+                      <button
+                        onClick={() => setShowLogoutConfirm(false)}
+                        className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 hover:shadow-md"
+                      >
+                        Cancel
+                      </button>
+
+                      {/* Confirm Logout */}
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem("token");
+                          localStorage.removeItem("vendor");
+                          window.location.href = "/login";
+                        }}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-[#FF5252] to-[#e03e3e] hover:from-[#e03e3e] hover:to-[#c62828] text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-105"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+
 
           {/* Footer */}
           <div className={`text-xs text-gray-400 text-center mt-3 transition-opacity duration-300

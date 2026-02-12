@@ -20,9 +20,9 @@ export default function Register() {
     confirmPassword: '',
     description: '',
     vendor_profile: null,
-    
+
     // Restaurant Details
-    rejection_reason:'',
+    rejection_reason: '',
     restaurant_name: '',
     restaurant_description: '',
     food_type: '',
@@ -34,10 +34,10 @@ export default function Register() {
     restaurant_longitude: '',
     opening_time: '',
     closing_time: '',
-    
+
     // Images - Multiple restaurant images
     restaurant_images: [],
-    
+
     // Legal Documents Images
     fssai_license: null,
     pan_card: null,
@@ -62,14 +62,43 @@ export default function Register() {
     { id: 4, title: 'Operating Hours', icon: Clock }
   ];
 
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData({ ...formData, [name]: value });
+  //   // Clear error for this field when user types
+  //   if (errors[name]) {
+  //     setErrors({ ...errors, [name]: '' });
+  //   }
+  // };
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    // Clear error for this field when user types
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: '' });
+
+    const updatedFormData = { ...formData, [name]: value };
+    setFormData(updatedFormData);
+
+    let newErrors = { ...errors };
+
+    // Real-time Password Match Validation
+    if (name === "password" || name === "confirmPassword") {
+      if (updatedFormData.confirmPassword) {
+        if (updatedFormData.password !== updatedFormData.confirmPassword) {
+          newErrors.confirmPassword = "Passwords do not match";
+        } else {
+          newErrors.confirmPassword = "";
+        }
+      }
     }
+
+    // Clear other field errors when typing
+    if (newErrors[name]) {
+      newErrors[name] = "";
+    }
+
+    setErrors(newErrors);
   };
+
 
   // Handle single image upload
   const handleImageChange = (e, fieldName) => {
@@ -89,7 +118,7 @@ export default function Register() {
 
       setFormData({ ...formData, [fieldName]: file });
       setErrors({ ...errors, [fieldName]: '' });
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -102,7 +131,7 @@ export default function Register() {
   // Handle multiple restaurant images
   const handleMultipleImages = (e) => {
     const files = Array.from(e.target.files);
-    
+
     // Limit to 5 images
     if (files.length > 5) {
       setErrors({ ...errors, restaurant_images: 'You can upload maximum 5 images' });
@@ -253,7 +282,7 @@ export default function Register() {
       formDataToSend.append('alternate_phone', formData.alternate_phone || '');
       formDataToSend.append('password', formData.password);
       formDataToSend.append('description', formData.description || '');
-      
+
       // Append vendor profile image
       if (formData.vendor_profile) {
         formDataToSend.append('vendor_profile', formData.vendor_profile);
@@ -303,15 +332,15 @@ export default function Register() {
       });
 
       console.log("Registration Response:", result.data);
-      
+
       alert('Registration Successful! Redirecting to login...');
-      
+
       setTimeout(() => {
         navigate('/login');
       }, 1200);
     } catch (error) {
       console.error("Registration Error:", error);
-      
+
       // Handle backend validation errors
       if (error.response?.data?.errors) {
         // If backend returns field-specific errors object
@@ -342,7 +371,7 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 py-8 px-4 sm:px-6 lg:px-8 font-['Poppins']">
       <div className="max-w-4xl mx-auto">
-        
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF5252] rounded-full mb-4">
@@ -359,29 +388,26 @@ export default function Register() {
               const Icon = step.icon;
               const isActive = currentStep === step.id;
               const isCompleted = currentStep > step.id;
-              
+
               return (
                 <React.Fragment key={step.id}>
                   <div className="flex flex-col items-center flex-1">
-                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all ${
-                      isCompleted ? 'bg-green-500' : isActive ? 'bg-[#FF5252]' : 'bg-gray-200'
-                    }`}>
+                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all ${isCompleted ? 'bg-green-500' : isActive ? 'bg-[#FF5252]' : 'bg-gray-200'
+                      }`}>
                       {isCompleted ? (
                         <Check className="text-white" size={24} />
                       ) : (
                         <Icon className={isActive ? 'text-white' : 'text-gray-400'} size={24} />
                       )}
                     </div>
-                    <span className={`text-xs sm:text-sm mt-2 font-medium text-center ${
-                      isActive ? 'text-[#FF5252]' : isCompleted ? 'text-green-500' : 'text-gray-400'
-                    }`}>
+                    <span className={`text-xs sm:text-sm mt-2 font-medium text-center ${isActive ? 'text-[#FF5252]' : isCompleted ? 'text-green-500' : 'text-gray-400'
+                      }`}>
                       {step.title}
                     </span>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`flex-1 h-1 mx-2 transition-all ${
-                      currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'
-                    }`} />
+                    <div className={`flex-1 h-1 mx-2 transition-all ${currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'
+                      }`} />
                   )}
                 </React.Fragment>
               );
@@ -392,12 +418,12 @@ export default function Register() {
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
           <form onSubmit={handleRegister}>
-            
+
             {/* Step 1: Owner/Vendor Details */}
             {currentStep === 1 && (
               <div className="space-y-4 animate-fadeIn">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Owner Details</h2>
-                
+
                 {/* Rejection Reason - Show if exists */}
                 {formData.rejection_reason && (
                   <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
@@ -503,6 +529,13 @@ export default function Register() {
                       required
                     />
                     {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+                    {formData.confirmPassword &&
+                      formData.password === formData.confirmPassword && (
+                        <p className="text-green-500 text-xs mt-1">
+                          Passwords match ✓
+                        </p>
+                      )}
+
                   </div>
                 </div>
 
@@ -554,7 +587,7 @@ export default function Register() {
             {currentStep === 2 && (
               <div className="space-y-4 animate-fadeIn">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Restaurant Information</h2>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Restaurant Name *</label>
                   <input
@@ -759,7 +792,7 @@ export default function Register() {
             {currentStep === 3 && (
               <div className="space-y-6 animate-fadeIn">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Legal Documents</h2>
-                
+
                 {/* FSSAI License */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">FSSAI License</label>
@@ -885,7 +918,7 @@ export default function Register() {
             {currentStep === 4 && (
               <div className="space-y-4 animate-fadeIn">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Operating Hours & Review</h2>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Opening Time *</label>
@@ -939,7 +972,7 @@ export default function Register() {
                     <p><strong>Timings:</strong> {formData.opening_time || 'Not set'} - {formData.closing_time || 'Not set'}</p>
                     <p><strong>Profile Image:</strong> {formData.vendor_profile ? '✓ Uploaded' : '✗ Not uploaded'}</p>
                     <p><strong>Restaurant Images:</strong> {formData.restaurant_images.length} image(s)</p>
-                    <p><strong>Documents:</strong> 
+                    <p><strong>Documents:</strong>
                       {formData.fssai_license && ' FSSAI ✓'}
                       {formData.pan_card && ' PAN ✓'}
                       {formData.aadhar_card && ' Aadhar ✓'}
@@ -955,11 +988,10 @@ export default function Register() {
               <button
                 type="button"
                 onClick={handlePrev}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
-                  currentStep === 1
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${currentStep === 1
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+                  }`}
                 disabled={currentStep === 1}
               >
                 <ArrowLeft size={20} />

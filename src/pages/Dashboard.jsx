@@ -969,6 +969,9 @@ import {
 import { Bar, Doughnut, Pie } from 'react-chartjs-2';
 import useDashboardData from "../hooks/useDashboardData";
 import { CategoriesContext } from "../context/GetAllCategories";
+import axiosInstance from "../api/axiosInstance";
+import { RestaurantContext } from "../context/getRestaurant";
+import { FaStar } from "react-icons/fa6";
 
 // Register Chart.js components
 ChartJS.register(
@@ -1012,43 +1015,40 @@ const customerBreakdownData = {
 const Dashboard = () => {
   const { dashboardData, loading } = useDashboardData();
   const { categories, loading: contextLoading, fetchCategories } = useContext(CategoriesContext);
-
+  const { restaurant, getCurrentRestaurant } = useContext(RestaurantContext)
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [items, setItems] = useState([])
   const scrollContainerRef = useRef(null);
 
-  // Static categories for browsing
-  // const categories = [
-  //   { id: 1, name: 'Starters', icon: <UtensilsCrossed size={32} /> },
-  //   { id: 2, name: 'Main Course', icon: <Utensils size={32} /> },
-  //   { id: 3, name: 'Pizza', icon: <Pizza size={32} /> },
-  //   { id: 4, name: 'Burgers', icon: <Beef size={32} /> },
-  //   { id: 5, name: 'Drinks', icon: <Coffee size={32} /> },
-  //   { id: 6, name: 'Desserts', icon: <IceCreamCone size={32} /> },
-  //   { id: 7, name: 'Chinese', icon: <Soup size={32} /> },
-  //   { id: 9, name: 'North Indian', icon: <Drumstick size={32} /> },
-  //   { id: 10, name: 'Snacks', icon: <Popcorn size={32} /> },
-  //   { id: 11, name: 'Biryani', icon: <ChefHat size={32} /> },
-  //   { id: 12, name: 'Sandwiches', icon: <Sandwich size={32} /> },
-  //   { id: 13, name: 'Add New', icon: <Plus size={32} /> },
-  // ];
 
-  // Static popular items
-  const items = [
-    { id: 1, name: 'Margherita Pizza', price: '₹249', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
-    { id: 2, name: 'Chicken Biryani', price: '₹299', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400' },
-    { id: 3, name: 'Paneer Butter Masala', price: '₹279', image: 'https://media.istockphoto.com/id/1354042949/photo/curd-paneer-masala.jpg?s=612x612&w=0&k=20&c=Q_93IPlKtX71VgeJQDcwWK8J0ut0gWg3H3akCTZqfPs=' },
-    { id: 4, name: 'Veg Momos', price: '₹149', image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400' },
-    { id: 5, name: 'Cold Coffee', price: '₹129', image: 'https://images.unsplash.com/photo-1572449043416-55f4685c9bb7?w=400' },
-    { id: 6, name: 'Rassole', price: '₹80', image: 'https://media.istockphoto.com/id/889615242/photo/pakora-bhaji-and-samosa-on-a-wooden-plate-north-indian-food.jpg?s=612x612&w=0&k=20&c=zgAW4FucFPZcoMZsaU8OFqXsm0-JFOsAK0qDNRTLZhY=' },
-    { id: 7, name: 'Butter Naan', price: '₹49', image: 'https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?w=400' },
-    { id: 8, name: 'Tandoori Chicken', price: '₹399', image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400' },
-    { id: 9, name: 'Chocolate Shake', price: '₹149', image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400' },
-    { id: 10, name: 'Rajma Chawal', price: '₹179', image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400' },
-    { id: 11, name: 'Chicken Burger', price: '₹149', image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400' },
-    { id: 12, name: 'Grilled Paneer', price: '₹199', image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400' },
-  ];
+
+  // dyanamic data popular items
+  const AllMenuItems = async () => {
+    try {
+      const result = await axiosInstance.get(`/menuitems/${restaurant.id}/menu-items`, { withCredentials: true })
+      setItems(result.data.data);
+      //  console.log("All menu=>",result.data);
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
+  const AllSubCategory = async () => {
+    try {
+      const result = await axiosInstance.get()
+    } catch (error) {
+
+    }
+  }
+
+  useEffect(() => {
+    if (restaurant?.id) {
+      AllMenuItems();
+    }
+  }, [restaurant?.id]);
 
   // Prepare dynamic chart data from API
   const prepareCategoryChartData = () => {
@@ -1492,50 +1492,103 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Category-wise Breakdown Table from API */}
-      {dashboardData?.analytics?.category_wise && (
-        <Card title="Category Details">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Category Name</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Items Count</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Percentage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dashboardData.analytics.category_wise.map((category) => {
-                  const percentage = ((parseInt(category.item_count) / parseInt(dashboardData.analytics.total_items)) * 100).toFixed(1);
-                  return (
-                    <tr key={category.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4 font-medium text-gray-800">{category.name}</td>
-                      <td className="py-3 px-4 text-right">
-                        <span className="bg-[#FF5252] text-white px-3 py-1 rounded-full text-sm font-semibold">
-                          {category.item_count}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right text-gray-600 font-medium">
-                        {percentage}%
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
 
-      {/* Subcategory-wise Breakdown from API */}
-      {dashboardData?.analytics?.subcategory_wise && (
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-[#FF5252] mb-4 flex items-center gap-2">
-            <TrendingUp size={28} className="text-[#FF5252]" />
-            Subcategory Breakdown
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-            {dashboardData.analytics.subcategory_wise.map((subcategory) => (
+
+
+      {/* Static Categories Section */}
+      <div>
+        <h2 className="text-xl md:text-2xl font-bold text-[#FF5252] mb-4 flex items-center gap-2">
+          <UtensilsCrossed size={28} className="text-[#FF5252]" />
+          Categories
+        </h2>
+        <div
+          className="relative"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
+          <div
+            ref={scrollContainerRef}
+            onScroll={checkScrollPosition}
+            className="flex overflow-x-auto gap-5 md:gap-6 pb-4 scrollbar-hide snap-x snap-mandatory"
+          >
+            {categories.map((cat) => (
+              <div
+                key={cat.id}
+                className={`
+      group relative
+      min-w-[120px] xs:min-w-[130px] sm:min-w-[140px] md:min-w-[155px] lg:min-w-[170px]
+      flex flex-col items-center justify-between
+      bg-white
+      rounded-2xl
+      border border-gray-200 hover:border-[#ef4f5f]/40   /* Zomato-ish red border on hover */
+      overflow-hidden
+      shadow-[0_1px_3px_rgba(0,0,0,0.06)]
+      hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]
+      transition-all duration-250 ease-out
+      hover:scale-[1.02] active:scale-[0.98]
+      cursor-pointer
+      p-3.5 sm:p-4
+      snap-start
+    `}
+              >
+                {/* Square image – Zomato uses square thumbs for categories/dishes */}
+                <div className="
+      w-20 h-20 xs:w-22 xs:h-22 sm:w-24 sm:h-24 md:w-26 md:h-26 
+      rounded-xl overflow-hidden 
+      bg-gradient-to-b from-gray-50 to-gray-100/70
+      mb-3
+    ">
+                  <img
+                    src={cat.categoryImage}
+                    alt={cat.name}
+                    className={`
+          w-full h-full 
+          object-cover 
+          transition-transform duration-400 
+          group-hover:scale-105 group-active:scale-100
+        `}
+                  />
+                </div>
+
+                {/* Name – centered, semi-bold, red on hover like Zomato interactions */}
+                <p className={`
+      font-medium text-gray-900 
+      text-center 
+      text-[13px] xs:text-[13.5px] sm:text-sm md:text-[15px]
+      leading-tight tracking-[-0.01em]
+      group-hover:text-[#ef4f5f] group-active:text-[#ef4f5f]   /* Zomato primary red approx #ef4f5f */
+      transition-colors duration-200 font-semibold
+    `}>
+                  {cat.name}
+                </p>
+
+                {/* Optional count badge – very common in Zomato partner menu categories */}
+                {/* {cat.count && (
+      <span className="
+        absolute top-2 right-2 
+        bg-[#ef4f5f]/90 text-white 
+        text-[10px] font-semibold 
+        px-1.5 py-0.5 rounded-full 
+        shadow-sm
+      ">
+        {cat.count}
+      </span>
+    )} */}
+              </div>
+            ))}
+
+          </div>
+
+
+          {/* Subcategory-wise Breakdown from API */}
+          {/* {dashboardData?.analytics?.subcategory_wise && (
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-[#FF5252] mb-4 flex items-center gap-2">
+                <TrendingUp size={28} className="text-[#FF5252]" />
+                Subcategories
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {dashboardData.analytics.subcategory_wise.map((subcategory) => (
               <div
                 key={subcategory.id}
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 border-[#FF5252]"
@@ -1560,93 +1613,11 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
+              </div>
+            </div>
+          )} */}
 
-      {/* Static Categories Section */}
-      <div>
-        <h2 className="text-xl md:text-2xl font-bold text-[#FF5252] mb-4 flex items-center gap-2">
-          <UtensilsCrossed size={28} className="text-[#FF5252]" />
-          Browse Categories
-        </h2>
-        <div
-          className="relative"
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
-        >
-          <div
-            ref={scrollContainerRef}
-            onScroll={checkScrollPosition}
-            className="flex overflow-x-auto gap-5 md:gap-6 pb-4 scrollbar-hide snap-x snap-mandatory"
-          >
-            {categories.map((cat) => (
-  <div
-    key={cat.id}
-    className={`
-      group relative
-      min-w-[120px] xs:min-w-[130px] sm:min-w-[140px] md:min-w-[155px] lg:min-w-[170px]
-      flex flex-col items-center justify-between
-      bg-white
-      rounded-2xl
-      border border-gray-200 hover:border-[#ef4f5f]/40   /* Zomato-ish red border on hover */
-      overflow-hidden
-      shadow-[0_1px_3px_rgba(0,0,0,0.06)]
-      hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]
-      transition-all duration-250 ease-out
-      hover:scale-[1.02] active:scale-[0.98]
-      cursor-pointer
-      p-3.5 sm:p-4
-      snap-start
-    `}
-  >
-    {/* Square image – Zomato uses square thumbs for categories/dishes */}
-    <div className="
-      w-20 h-20 xs:w-22 xs:h-22 sm:w-24 sm:h-24 md:w-26 md:h-26 
-      rounded-xl overflow-hidden 
-      bg-gradient-to-b from-gray-50 to-gray-100/70
-      mb-3
-    ">
-      <img
-        src={cat.categoryImage}
-        alt={cat.name}
-        className={`
-          w-full h-full 
-          object-cover 
-          transition-transform duration-400 
-          group-hover:scale-105 group-active:scale-100
-        `}
-      />
-    </div>
 
-    {/* Name – centered, semi-bold, red on hover like Zomato interactions */}
-    <p className={`
-      font-medium text-gray-900 
-      text-center 
-      text-[13px] xs:text-[13.5px] sm:text-sm md:text-[15px]
-      leading-tight tracking-[-0.01em]
-      group-hover:text-[#ef4f5f] group-active:text-[#ef4f5f]   /* Zomato primary red approx #ef4f5f */
-      transition-colors duration-200 font-semibold
-    `}>
-      {cat.name}
-    </p>
-
-    {/* Optional count badge – very common in Zomato partner menu categories */}
-    {/* {cat.count && (
-      <span className="
-        absolute top-2 right-2 
-        bg-[#ef4f5f]/90 text-white 
-        text-[10px] font-semibold 
-        px-1.5 py-0.5 rounded-full 
-        shadow-sm
-      ">
-        {cat.count}
-      </span>
-    )} */}
-  </div>
-))}
-
-          </div>
 
           {/* Left Arrow */}
           {showLeftArrow && isHovering && (
@@ -1670,38 +1641,97 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Static Popular Items Section */}
-      <div>
-        <h2 className="text-xl md:text-2xl font-bold text-[#FF5252] mb-4 flex items-center gap-2">
-          <TrendingUp size={28} className="text-[#FF5252]" />
+      {/* dynamic Popular Items Section */}
+      
+      <div className="mt-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-[#FF5252] mb-6 flex items-center gap-3">
+          <TrendingUp size={30} className="text-[#FF5252]" />
           Popular Items
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer group"
-            >
-              <div className="relative overflow-hidden">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full h-44 md:h-48 object-cover group-hover:scale-110 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300"></div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-base md:text-lg truncate text-gray-800 group-hover:text-[#FF5252] transition-colors">
-                  {item.name}
-                </h3>
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-[#FF5252] font-bold text-lg">{item.price}</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array.isArray(items) && items.length > 0 ? (
+            items.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-100"
+              >
+                {/* Image */}
+                <div className="relative overflow-hidden">
+                  <img
+                    src={item.image || "/placeholder.png"}
+                    alt={item.name}
+                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+
+                  {/* gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+
+                  {/* Bestseller */}
+                  {item.is_bestseller && (
+                    <span className="absolute top-3 left-3 bg-[#FF5252] text-white text-xs px-3 py-1 rounded-full font-semibold shadow-md">
+                      Bestseller
+                    </span>
+                  )}
+
+                  {/* Veg / Non-Veg */}
+                  <span
+                    className={`absolute top-3 right-3 text-xs px-2.5 py-1 rounded-full font-semibold shadow
+                ${item.food_type === "VEG"
+                        ? "bg-green-500 text-white"
+                        : "bg-red-500 text-white"
+                      }`}
+                  >
+                    {item.food_type}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg text-gray-800 truncate group-hover:text-[#FF5252] transition-colors">
+                    {item.name}
+                  </h3>
+
+                  {/* Rating + Time */}
+                  {/* <div className="flex items-center justify-between text-sm text-gray-500 mt-1">
+                    <span>⭐ {item.rating || "4.2"}</span>
+                    <span>{item.preparation_time || 0} min</span>
+                  </div> */}
+
+
+                  <div className="flex items-center justify-between text-sm text-gray-500 mt-1">
+                    <span className="flex items-center gap-1 text-yellow-500 font-medium">
+                      <FaStar className="text-yellow-500" />
+                      {item.rating || "4.2"}
+                    </span>
+
+                    <span>{item.preparation_time || 0} min</span>
+                  </div>
+
+
+                  {/* Price */}
+                  <div className="flex items-center gap-2 mt-3">
+                    <span className="text-[#FF5252] font-bold text-xl">
+                      ₹{item.offer_price || item.price}
+                    </span>
+
+                    {item.offer_price && (
+                      <span className="text-gray-400 line-through text-sm">
+                        ₹{item.price}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12 text-gray-500">
+              No popular items available
             </div>
-          ))}
+          )}
         </div>
       </div>
+
     </div>
   );
 };

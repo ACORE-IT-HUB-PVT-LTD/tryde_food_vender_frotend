@@ -1,224 +1,187 @@
 // src/components/DownloadPanel.jsx
 import React from "react";
-import { FaApple, FaGooglePlay, FaCheck, FaStar } from "react-icons/fa";
+import { FaApple, FaGooglePlay, FaCheckCircle, FaStar, FaUtensils } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 export default function DownloadPanel() {
-  // Animation variants
   const fadeUp = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.75, ease: "easeOut" } },
   };
 
-  const buttonHover = {
-    whileHover: { 
-      scale: 1.08, 
-      boxShadow: "0 25px 50px -12px rgba(255, 82, 82, 0.4)",
-      y: -6 
-    },
-    whileTap: { scale: 0.96, y: 0 },
-  };
-
-  const mockupFloat = {
-    hidden: { opacity: 0, y: 100, scale: 0.88 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1, 
-      transition: { duration: 1.4, ease: "easeOut", type: "spring", stiffness: 70 } 
-    },
-  };
-
-  const glowPulse = {
-    animate: {
-      scale: [1, 1.2, 1],
-      opacity: [0.5, 0.9, 0.5],
-      transition: { duration: 8, repeat: Infinity, ease: "easeInOut" },
+  const stagger = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.12, delayChildren: 0.18 },
     },
   };
 
   return (
-    <section className="relative w-full py-24 md:py-32 bg-gradient-to-br from-gray-50 via-white to-gray-100 overflow-hidden font-['Poppins']">
-      {/* Background decorative rings */}
+    <section className="relative w-full py-20 md:py-28 lg:py-36 bg-gradient-to-b from-orange-50/60 via-white to-orange-50/30 overflow-hidden">
+      {/* Very light warm background accents */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-0 w-64 h-64 md:w-96 md:h-96 rounded-full border-8 md:border-[10px] border-[#FF5252]/10 -translate-x-1/3 translate-y-1/4" />
-        <div className="absolute bottom-1/4 right-0 w-64 h-64 md:w-96 md:h-96 rounded-full border-8 md:border-[10px] border-[#FF5252]/10 translate-x-1/3 -translate-y-1/4" />
-        <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-[#FF5252]/5 -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_30%,rgba(249,115,22,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_75%,rgba(249,115,22,0.06),transparent_55%)]" />
       </div>
 
-      {/* Animated background glow */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-radial from-[#FF5252]/15 via-transparent to-transparent pointer-events-none"
-        {...glowPulse}
-      />
-
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-8 z-10">
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 z-10">
         <motion.div
           className="grid lg:grid-cols-2 gap-12 xl:gap-20 items-center"
+          variants={stagger}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-120px" }}
         >
           {/* LEFT - Content */}
-          <motion.div className="space-y-10 text-center lg:text-left" variants={fadeUp}>
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-tight tracking-tight">
-              Download Our App
+          <motion.div className="space-y-10 lg:space-y-12 text-center lg:text-left" variants={fadeUp}>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight">
+              Grow Your Restaurant
               <br />
-              <span className="bg-gradient-to-r from-[#FF5252] via-[#f97316] to-[#e11d48] bg-clip-text text-transparent">
-                Turn Dreams Into Reality
+              <span className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 bg-clip-text text-transparent">
+                With More Orders
               </span>
             </h2>
 
-            <p className="text-gray-700 text-xl md:text-2xl max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-              Manage orders, track earnings, update your menu & grow your restaurant — all in one powerful app.
+            <p className="text-lg md:text-xl text-gray-700 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Real-time order tracking • Fast weekly payouts • Easy menu updates • Reach thousands of hungry customers — all from one app.
             </p>
 
             {/* Features */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8">
               {[
-                "Real-time Order Tracking",
-                "Live Earnings Dashboard",
-                "Instant Menu & Price Updates",
-                "Smart Analytics & Insights",
-              ].map((feature, idx) => (
+                { text: "Live Order Tracking", icon: FaCheckCircle },
+                { text: "Daily Earnings & Fast Payouts", icon: FaCheckCircle },
+                { text: "Instant Menu & Price Updates", icon: FaCheckCircle },
+                { text: "Ratings & Customer Feedback", icon: FaStar },
+              ].map((item, idx) => (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  viewport={{ once: true }}
-                  className="flex items-center gap-5 bg-white/70 backdrop-blur-xl border border-white/30 p-6 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-3 transition-all duration-300"
+                  variants={fadeUp}
+                  whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.25 } }}
+                  className="group flex items-start gap-4 bg-white border border-orange-100 hover:border-orange-300 rounded-2xl p-6 shadow-sm hover:shadow transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF5252]/20 to-[#f97316]/20 flex items-center justify-center text-[#FF5252] text-2xl shadow-inner">
-                    <FaCheck />
+                  <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
+                    <item.icon className="text-xl" />
                   </div>
-                  <p className="text-gray-800 font-medium text-lg">{feature}</p>
+                  <p className="font-semibold text-gray-800 text-base leading-relaxed">{item.text}</p>
                 </motion.div>
               ))}
             </div>
 
-            {/* Download Buttons */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-8 mt-14">
+            {/* Download Buttons - modern + real colors */}
+            <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start mt-12">
+              {/* Google Play - official green */}
               <motion.a
                 href="#"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative flex items-center gap-5 bg-gradient-to-r from-black to-gray-950 text-white px-10 py-6 rounded-3xl shadow-2xl overflow-hidden border border-gray-800/50"
-                {...buttonHover}
+                className="group relative flex items-center justify-center gap-4 bg-[#00C853] hover:bg-[#00B140] text-white px-8 py-5 rounded-xl shadow-lg hover:shadow-xl transition-all min-w-[260px]"
+                whileHover={{ scale: 1.04, y: -4 }}
+                whileTap={{ scale: 0.97 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FF5252]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <FaGooglePlay className="text-5xl text-green-400 drop-shadow-lg" />
-                <div>
-                  <p className="text-sm opacity-80">GET IT ON</p>
-                  <h4 className="text-2xl font-extrabold">Google Play</h4>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                <FaGooglePlay className="text-3xl drop-shadow-md" />
+                <div className="text-left">
+                  <p className="text-xs font-medium opacity-90">GET IT ON</p>
+                  <p className="text-xl font-bold">Google Play</p>
                 </div>
               </motion.a>
 
+              {/* App Store - clean black/white */}
               <motion.a
                 href="#"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative flex items-center gap-5 bg-gradient-to-r from-gray-50 via-white to-gray-50 text-black px-10 py-6 rounded-3xl shadow-2xl border border-gray-200 overflow-hidden"
-                {...buttonHover}
+                className="group relative flex items-center justify-center gap-4 bg-black hover:bg-gray-900 text-white px-8 py-5 rounded-xl shadow-lg hover:shadow-xl transition-all min-w-[260px]"
+                whileHover={{ scale: 1.04, y: -4 }}
+                whileTap={{ scale: 0.97 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FF5252]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <FaApple className="text-5xl drop-shadow-lg" />
-                <div>
-                  <p className="text-sm opacity-80">Download on the</p>
-                  <h4 className="text-2xl font-extrabold">App Store</h4>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                <FaApple className="text-3xl" />
+                <div className="text-left">
+                  <p className="text-xs font-medium opacity-80">Download on the</p>
+                  <p className="text-xl font-bold">App Store</p>
                 </div>
               </motion.a>
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-16 md:gap-24 mt-16">
-              {[
-                { num: "50K+", label: "Active Vendors", color: "#FF5252" },
-                { num: "120K+", label: "Orders Managed", color: "#10b981" },
-              ].map((stat, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.3 }}
-                  viewport={{ once: true }}
-                  className="relative text-center"
-                >
-                  <div className="relative w-40 h-40 mx-auto">
-                    <motion.div
-                      className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF5252]/30 to-transparent blur-xl animate-pulse-slow"
-                    />
-                    <div className="absolute inset-0 rounded-full bg-white shadow-2xl flex items-center justify-center border border-gray-100/80">
-                      <h3 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-[#FF5252] to-[#e11d48] bg-clip-text text-transparent">
-                        {stat.num}
-                      </h3>
-                    </div>
-                  </div>
-                  <p className="mt-6 text-gray-700 font-medium text-xl">{stat.label}</p>
-                </motion.div>
-              ))}
+            <div className="flex flex-wrap justify-center lg:justify-start gap-10 md:gap-16 mt-12">
+              <div className="text-center">
+                <p className="text-5xl font-extrabold text-orange-600">12K+</p>
+                <p className="mt-2 text-gray-600 font-medium">Partner Restaurants</p>
+              </div>
+              <div className="text-center">
+                <p className="text-5xl font-extrabold text-emerald-600">3.2L+</p>
+                <p className="mt-2 text-gray-600 font-medium">Orders This Month</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-5xl font-extrabold text-amber-500">4.7</p>
+                  <FaStar className="text-amber-400 text-3xl" />
+                </div>
+                <p className="mt-2 text-gray-600 font-medium">Partner Rating</p>
+              </div>
             </div>
           </motion.div>
 
-          {/* RIGHT - Phone Mockup */}
+          {/* RIGHT - Phone mockup */}
           <motion.div
-            className="relative flex justify-center mt-16 lg:mt-0 perspective-1000"
-            variants={mockupFloat}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
+            className="relative flex justify-center mt-12 lg:mt-0"
+            variants={fadeUp}
           >
-            {/* Glow */}
             <motion.div
-              className="absolute w-96 h-96 bg-gradient-to-br from-[#FF5252]/40 via-[#f97316]/30 to-transparent blur-3xl rounded-full -z-10"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
-              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            />
-
-            {/* Phone Frame */}
-            <motion.div
-              className="relative bg-gradient-to-br from-black via-gray-900 to-black rounded-[4.5rem] p-6 shadow-[0_80px_160px_rgba(0,0,0,0.7)] border border-gray-800 w-[360px] md:w-[420px] lg:w-[480px] transform hover:scale-105 hover:rotate-[2deg] transition-all duration-700"
-              whileHover={{ rotateX: 5, rotateY: -5, y: -10 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="relative w-[300px] sm:w-[340px] lg:w-[380px]"
+              initial={{ opacity: 0, y: 60, scale: 0.94 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 1.2, type: "spring", stiffness: 80 }}
+              viewport={{ once: true }}
             >
-              <div className="bg-gradient-to-b from-gray-950 to-black rounded-[3.8rem] overflow-hidden h-[740px] relative shadow-inner">
-                {/* Notch */}
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-44 h-1.5 bg-gray-700 rounded-full z-20" />
+              {/* Warm orange glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-100/50 via-amber-50/30 to-transparent blur-3xl rounded-[3rem] -z-10 opacity-70" />
 
-                {/* Header */}
-                <div className="relative bg-gradient-to-br from-[#FF5252] via-[#f97316] to-[#e11d48] p-10 pt-16 text-white overflow-hidden">
-                  <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-                  <h3 className="text-4xl font-bold drop-shadow-lg">Tryde Vendor</h3>
-                  <p className="text-xl opacity-90 mt-4 drop-shadow">Power in Your Pocket</p>
-                </div>
+              <div className="relative bg-white rounded-[3rem] p-4 shadow-2xl border border-orange-100">
+                <div className="bg-gray-50 rounded-[2.6rem] overflow-hidden h-[640px] relative border border-gray-200">
+                  {/* Notch */}
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-1 bg-gray-300 rounded-full z-20" />
 
-                {/* Dashboard */}
-                <div className="p-6 space-y-6">
-                  {[
-                    { title: "Today's Orders", value: "168", progress: 82, color: "#FF5252" },
-                    { title: "Monthly Revenue", value: "₹2,24,800", progress: 94, color: "#10b981" },
-                    { title: "Avg Rating", value: "4.9 ★", progress: 98, color: "#facc15" },
-                    { title: "Pending Payout", value: "₹68,400", progress: 71, color: "#8b5cf6" },
-                  ].map((card, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white/10 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:bg-white/20 transition-all duration-300"
-                    >
-                      <div className="flex justify-between items-center mb-4">
-                        <p className="font-semibold text-white text-xl">{card.title}</p>
-                        <p className="text-white font-bold text-xl">{card.value}</p>
-                      </div>
-                      <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full rounded-full"
-                          style={{ background: `linear-gradient(to right, ${card.color}, ${card.color}dd)` }}
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${card.progress}%` }}
-                          transition={{ duration: 1.8, delay: idx * 0.3, ease: "easeOut" }}
-                        />
-                      </div>
+                  {/* Header - orange theme */}
+                  <div className="relative bg-gradient-to-br from-orange-500 via-orange-600 to-amber-700 px-6 pt-12 pb-8 text-white">
+                    <div className="flex items-center gap-3 mb-2">
+                      <FaUtensils className="text-3xl" />
+                      <h3 className="text-3xl font-bold">Partner App</h3>
                     </div>
-                  ))}
+                    <p className="text-base opacity-90">More Orders • More Revenue</p>
+                  </div>
+
+                  {/* Dashboard Cards */}
+                  <div className="p-5 space-y-4">
+                    {[
+                      { title: "Today's Orders", value: "142", progress: 86, color: "from-orange-500 to-orange-600" },
+                      { title: "Revenue Today", value: "₹1.68L", progress: 92, color: "from-emerald-500 to-emerald-600" },
+                      { title: "Avg. Rating", value: "4.8 ★", progress: 95, color: "from-amber-500 to-amber-600" },
+                      { title: "Pending Payout", value: "₹54,200", progress: 78, color: "from-orange-500 to-amber-600" },
+                    ].map((card, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md hover:border-orange-300 transition-all"
+                      >
+                        <div className="flex justify-between items-center mb-3">
+                          <p className="font-medium text-gray-700 text-sm sm:text-base">{card.title}</p>
+                          <p className="font-bold text-gray-900 text-sm sm:text-base">{card.value}</p>
+                        </div>
+                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <motion.div
+                            className={`h-full rounded-full bg-gradient-to-r ${card.color}`}
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${card.progress}%` }}
+                            transition={{ duration: 1.6, delay: idx * 0.2, ease: "easeOut" }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>

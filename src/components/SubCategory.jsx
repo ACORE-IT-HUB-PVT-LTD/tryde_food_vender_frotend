@@ -1786,7 +1786,8 @@ const SubCategory = () => {
       setOpenModal(true);
       setErrors({});
     } catch (err) {
-      setErrorMsg("Failed to load sub-category details");
+      const msg = err?.response?.data?.message || "Failed to load sub-category details";
+      setErrorMsg(msg);
     }
   };
 
@@ -1808,17 +1809,6 @@ const SubCategory = () => {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (!validTypes.includes(file.type)) {
-      setErrors((prev) => ({ ...prev, image: "Only JPG, PNG, WEBP allowed" }));
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, image: "Image size must not exceed 5MB" }));
-      return;
-    }
 
     setImage(file);
     setCurrentImage(URL.createObjectURL(file));
@@ -1865,10 +1855,7 @@ const SubCategory = () => {
       closeModal();
       await fetchAllSubCategories();
     } catch (err) {
-      let msg = "Failed to save sub-category.";
-      if (err?.response?.data?.message) msg = err.response.data.message;
-      else if (err?.response?.status === 413) msg = "Image is too large.";
-      else if (err?.response?.status === 401) msg = "Please login again.";
+       const msg = err?.response?.data?.message || "Something went wrong!";
       setErrorMsg(msg);
     } finally {
       setIsSaving(false);
@@ -1932,7 +1919,7 @@ const SubCategory = () => {
               Sub-Categories
             </Typography>
             <Typography variant="body2" className="text-gray-600">
-              Organize dishes into more specific groups under main categories
+              Organize items within the selected category
             </Typography>
           </div>
 
@@ -2265,26 +2252,40 @@ const SubCategory = () => {
         />
 
         <label htmlFor="subcat-image">
-          <Box
-            sx={{
-              border: `2px dashed ${errors.image ? "#ef4444" : "#d1d5db"}`,
-              borderRadius: "12px",
-              p: 4,
-              textAlign: "center",
-              cursor: "pointer",
-              bgcolor: "grey.50",
-              "&:hover": { borderColor: "#FF5252", bgcolor: "grey.100" },
-            }}
-          >
-            <IoMdCamera size={48} style={{ color: "#9ca3af", marginBottom: 8 }} />
-            <Typography fontWeight="medium">
-              {image ? "Change image" : currentImage ? "Update image" : "Click to upload image"}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              JPG, PNG, WEBP
-            </Typography>
-          </Box>
-        </label>
+  <Box
+    sx={{
+      border: `2px dashed ${errors.image ? "#ef4444" : "#d1d5db"}`,
+      borderRadius: "12px",
+      height: 200, // fixed height important
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",   // vertical center
+      alignItems: "center",       // horizontal center
+      textAlign: "center",
+      cursor: "pointer",
+      bgcolor: "grey.50",
+      transition: "0.2s",
+      "&:hover": {
+        borderColor: "#FF5252",
+        bgcolor: "grey.100",
+      },
+    }}
+  >
+    <IoMdCamera
+      size={50}
+      style={{ color: "#9ca3af", marginBottom: 8 }}
+    />
+
+    <Typography fontWeight="medium">
+      {image
+        ? "Change image"
+        : currentImage
+        ? "Update image"
+        : "Click to upload image"}
+    </Typography>
+  </Box>
+</label>
+
 
         {errors.image && (
           <Typography color="error" variant="caption" sx={{ mt: 1 }}>

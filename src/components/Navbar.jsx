@@ -12,10 +12,12 @@ export default function Navbar({ siteName, primaryColor }) {
     ["Home", "home"],
     ["Why Partner", "why"],
     ["Success Stories", "stories"],
-    ["How It Works", "how"],
-    ["FAQ", "faq"],
     ["Get Started", "getstarted"],
     ["CTA", "cta"],
+    ["About us", "/about-us"],
+    ["Contact us", "/contact-us"],
+
+    // ["How It Works", "how"],
     // ["Download", "doawnload"],
   ];
 
