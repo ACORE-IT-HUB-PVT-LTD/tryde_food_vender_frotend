@@ -180,7 +180,6 @@ const Orders = () => {
       );
       
       setOrders(updatedOrders);
-      localStorage.setItem("vendorOrders", JSON.stringify(updatedOrders));
     } catch (error) {
       console.error("Error updating order:", error);
     }
@@ -196,7 +195,7 @@ const Orders = () => {
   };
 
   const tabConfig = [
-        { label: "All", status: STATUS.All, color: STATUS_CONFIG[STATUS.All].color },
+      { label: "All", status: STATUS.All, color: STATUS_CONFIG[STATUS.All].color },
     { label: "New", status: STATUS.NEW, color: STATUS_CONFIG[STATUS.NEW].color },
     { label: "Preparing", status: STATUS.PREPARING, color: STATUS_CONFIG[STATUS.PREPARING].color },
     { label: "Ready", status: STATUS.READY, color: STATUS_CONFIG[STATUS.READY].color },
@@ -858,11 +857,6 @@ const Orders = () => {
 };
 
 export default Orders;
-
-
-
-
-
 
 
 

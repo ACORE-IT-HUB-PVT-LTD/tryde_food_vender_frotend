@@ -250,12 +250,13 @@ function RestaurantProfile() {
         <div className="overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-200">
           {/* Hero Banner - Full Width & Height */}
           <div className="relative h-72 sm:h-80 md:h-96 lg:h-[450px] w-full overflow-hidden bg-gradient-to-br from-[#FF5252] to-[#ff8080]">
+
             {getDisplayImage() ? (
               <>
                 <img
                   src={getDisplayImage()}
                   alt="Restaurant Banner"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover object-center"
                   style={{ objectPosition: 'center' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />

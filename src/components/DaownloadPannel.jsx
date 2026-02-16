@@ -38,7 +38,7 @@ export default function DownloadPanel() {
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight">
               Grow Your Restaurant
               <br />
-              <span className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-red-400 via-red-500 to-[#FF5252] bg-clip-text text-transparent">
                 With More Orders
               </span>
             </h2>
@@ -61,7 +61,7 @@ export default function DownloadPanel() {
                   whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.25 } }}
                   className="group flex items-start gap-4 bg-white border border-orange-100 hover:border-orange-300 rounded-2xl p-6 shadow-sm hover:shadow transition-all duration-300"
                 >
-                  <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
+                  <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center text-[#FF5252] group-hover:scale-110 transition-transform">
                     <item.icon className="text-xl" />
                   </div>
                   <p className="font-semibold text-gray-800 text-base leading-relaxed">{item.text}</p>
@@ -109,7 +109,7 @@ export default function DownloadPanel() {
             {/* Stats */}
             <div className="flex flex-wrap justify-center lg:justify-start gap-10 md:gap-16 mt-12">
               <div className="text-center">
-                <p className="text-5xl font-extrabold text-orange-600">12K+</p>
+                <p className="text-5xl font-extrabold text-[#FF5252]">12K+</p>
                 <p className="mt-2 text-gray-600 font-medium">Partner Restaurants</p>
               </div>
               <div className="text-center">
@@ -147,7 +147,7 @@ export default function DownloadPanel() {
                   <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-1 bg-gray-300 rounded-full z-20" />
 
                   {/* Header - orange theme */}
-                  <div className="relative bg-gradient-to-br from-orange-500 via-orange-600 to-amber-700 px-6 pt-12 pb-8 text-white">
+                  <div className="relative bg-gradient-to-br from-red-400 via-red-500 to-[#FF5252] px-6 pt-12 pb-8 text-white">
                     <div className="flex items-center gap-3 mb-2">
                       <FaUtensils className="text-3xl" />
                       <h3 className="text-3xl font-bold">Partner App</h3>
