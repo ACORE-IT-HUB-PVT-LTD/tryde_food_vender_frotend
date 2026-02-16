@@ -1,97 +1,59 @@
 import React from "react";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function FinalCTA({ siteName = "Techify", primaryColor = "#FF5252" }) {
+export default function FinalCTA() {
   const navigate = useNavigate();
-  
-  return (
-    <section className="relative py-20 md:py-28 px-5 sm:px-8 overflow-hidden font-['Poppins']">
-      
-      {/* Background Image with Dark Overlay */}
-      <div className="absolute inset-0 overflow-hidden">
-        <img 
-          src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&auto=format&fit=crop&q=90"
-          alt="Restaurant table with food"
-          className="w-full h-full object-cover scale-110"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-black/60"></div>
-      </div>
 
-      {/* Subtle Glow Effects */}
-      <div className="absolute inset-0 overflow-hidden opacity-20">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-orange-500/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+  return (
+    <section 
+      className="relative h-[480px] md:h-[580px] lg:h-[680px] w-full flex items-center justify-center overflow-hidden font-['Poppins']"
+    >
+      {/* Background */}
+      <div className="absolute inset-0">
+        <img
+          src="https://images.unsplash.com/photo-1686836715835-65af22ea5cd4?w=1920&auto=format&fit=crop&q=85"
+          alt="Modern restaurant interior"
+          className="w-full h-full object-cover scale-105 brightness-[0.52] contrast-[1.05]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black/88" />
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-4xl mx-auto text-center">
+      <div className="relative z-10 text-center px-6 sm:px-10 max-w-5xl mx-auto">
+        {/* Badge */}
+        <div className="mb-8 md:mb-10">
         
-        {/* Badge - Updated Design */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-red-500/20 to-orange-500/20 backdrop-blur-lg px-6 py-3 rounded-full border border-white/30">
-            <Sparkles size={18} className="text-yellow-300" />
-            <span className="text-sm font-bold text-white tracking-widest">LIMITED TIME OFFER</span>
-            <Sparkles size={18} className="text-yellow-300" />
+        </div>
+
+        {/* Main Heading - Vendor focused */}
+        <h1 className="text-white font-extrabold leading-tight mb-10 md:mb-12">
+          <div className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl">
+            GROW YOUR RESTAURANT
           </div>
-        </div>
+          <div className="mt-3 flex items-center justify-center gap-4 text-4xl sm:text-5xl md:text-6xl lg:text-5xl">
+            <span className="text-[#FF5252]">ON TRYDE</span>
+          
+          </div>
+        </h1>
 
-        {/* Main Heading - Improved Contrast */}
-        <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white leading-tight">
-          Ready to 
-          <span className="block mt-2 bg-gradient-to-r from-red-400 via-red-500 to-orange-400 bg-clip-text text-transparent">
-            Grow Your Restaurant?
-          </span>
-        </h2>
-
-        {/* Subheading - Better Readability */}
-        <p className="text-xl sm:text-2xl mb-10 font-semibold text-white/90">
-          <span className="inline-block bg-red-600 text-white px-5 py-2 rounded-xl shadow-lg transform -rotate-1">
-            Zero Commission
-          </span>
-          <span className="ml-3">for 30 Days!</span>
+        {/* Sub text - clear value for vendors */}
+        <p className="text-white/95 text-lg sm:text-xl md:text-2xl mb-10 md:mb-12 max-w-3xl mx-auto font-medium">
+          Zero commission for first 30 days • More customers • Easy orders • Fast payouts
         </p>
 
-        {/* CTA Button - Enhanced */}
-        <div className="flex justify-center mb-8">
-          <button 
-            onClick={() => navigate("/register")}
-            className="group relative bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white px-12 py-4 rounded-xl text-lg md:text-xl font-bold shadow-2xl hover:shadow-red-500/50 transform hover:scale-105 transition-all duration-300 flex items-center gap-3 overflow-hidden border-2 border-white/20"
-          >
-            {/* Shine Effect */}
-            <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-            
-            <span className="relative z-10">Register Now</span>
-            <ArrowRight size={22} className="relative z-10 group-hover:translate-x-2 transition-transform" />
-          </button>
-        </div>
-
-        {/* Bottom Text */}
-        <p className="text-base text-white/80 font-medium">
-          Our team responds within <span className="font-bold text-yellow-300 text-lg">24 hours</span>
-        </p>
-
-        {/* Additional Trust Indicators */}
-        <div className="mt-8 flex flex-wrap justify-center gap-6 text-white/70 text-sm">
-          <span className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            No setup fees
-          </span>
-          <span className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Cancel anytime
-          </span>
-          <span className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            500+ restaurants onboarded
-          </span>
-        </div>
+        {/* Simple clean button */}
+        <button
+          onClick={() => navigate("/register")}
+          className="inline-flex items-center gap-3 px-10 py-4 md:px-14 md:py-5 
+                     text-white text-base md:text-lg font-semibold
+                     bg-[#FF5252] hover:bg-red-600 
+                     rounded-full transition-colors duration-200 shadow-md"
+        >
+          Register Your Restaurant Now
+          <ArrowRight size={22} />
+        </button>
       </div>
-
-      {/* Floating Elements for Visual Interest */}
-      <div className="absolute top-10 left-10 w-6 h-6 bg-red-500/20 rounded-full blur-sm animate-bounce"></div>
-      <div className="absolute bottom-10 right-10 w-8 h-8 bg-orange-500/20 rounded-full blur-sm animate-bounce delay-500"></div>
     </section>
   );
 }

@@ -14,6 +14,7 @@ import Achievements from "../components/Achievements";
 export default function Home() {
   const siteName = "Tryde";
   const primaryColor = "#FF5252";
+  
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased font-['Poppins']">

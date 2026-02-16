@@ -37,6 +37,9 @@ import DownloadPanel from "./components/DaownloadPannel";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import SubCategory from "./components/SubCategory";
+import useDashboardData from "./hooks/useDashboardData";
+import AboutUs from "./pages/About";
+import  Contact  from "./pages/Contact";
 
 // Public Layout - Simple wrapper for public pages
 function PublicLayout() {
@@ -67,7 +70,9 @@ function RedirectIfAuthenticated() {
   return isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Outlet />;
 }
 
+
 function App() {
+  useDashboardData();
   return (
     <Routes>
       {/* Root redirect to home */}
@@ -84,6 +89,8 @@ function App() {
         <Route path="/finalcta" element={<FinalCTA />} />
         <Route path="/getstartedagin" element={<GetStarted />} />
         <Route path="/achievements" element={<Achievements />} />
+        <Route path="/about-us"  element={<AboutUs/>}></Route>
+        <Route path="/contact-us"  element={<Contact/>}></Route>
       </Route>
 
       {/* ==================== AUTH ROUTES ==================== */}
@@ -93,7 +100,6 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-
         </Route>
       </Route>
 

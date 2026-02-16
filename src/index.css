@@ -13,4 +13,38 @@
   -ms-overflow-style: none;
 }
 
+/* Hide scrollbar but keep functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;          /* IE and Edge */
+  scrollbar-width: none;             /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;                     /* Chrome, Safari, Edge */
+}
+
+/* Optional: If you ever want a very thin scrollbar instead */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
 
