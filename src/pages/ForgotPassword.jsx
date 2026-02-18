@@ -18,19 +18,12 @@ function ForgotPassword() {
     setMsg("");
 
     try {
-      const token =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZW5kb3JJZCI6MzcsInZlcnNpb24iOjEsImlhdCI6MTc2OTg3MzUyNSwiZXhwIjoxNzcwNDc4MzI1LCJpc3MiOiJmb29kLWFwcC12ZW5kb3IifQ.01MBwD8qcSKe3-mJ8p7W_xPiL3C_SnDe541MvpdoX9Q";
 
       const res = await axiosInstance.post(
         `/restaurants/forgot-password`,
-        { email },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { email }
       );
-
+      console.log(res);
       setMsg(res.data.message);
     } catch (error) {
       console.log(error);

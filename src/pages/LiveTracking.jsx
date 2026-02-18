@@ -17,7 +17,6 @@ const LiveTracking = () => {
           marginwidth="0"
           src="https://www.openstreetmap.org/export/embed.html?bbox=77.205%2C28.610%2C77.215%2C28.620&layer=mapnik&marker=28.615%2C77.210">
         </iframe>
-
       </div>
     </div>
   );

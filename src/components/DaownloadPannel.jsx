@@ -3,7 +3,7 @@ import React from "react";
 import { FaApple, FaGooglePlay, FaCheckCircle, FaStar, FaUtensils } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-export default function DownloadPanel() {
+export default function DownloadPanel(){
   const fadeUp = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.75, ease: "easeOut" } },
@@ -16,6 +16,7 @@ export default function DownloadPanel() {
       transition: { staggerChildren: 0.12, delayChildren: 0.18 },
     },
   };
+  
 
   return (
     <section className="relative w-full py-20 md:py-28 lg:py-36 bg-gradient-to-b from-orange-50/60 via-white to-orange-50/30 overflow-hidden">
@@ -106,24 +107,7 @@ export default function DownloadPanel() {
               </motion.a>
             </div>
 
-            {/* Stats */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-10 md:gap-16 mt-12">
-              <div className="text-center">
-                <p className="text-5xl font-extrabold text-[#FF5252]">12K+</p>
-                <p className="mt-2 text-gray-600 font-medium">Partner Restaurants</p>
-              </div>
-              <div className="text-center">
-                <p className="text-5xl font-extrabold text-emerald-600">3.2L+</p>
-                <p className="mt-2 text-gray-600 font-medium">Orders This Month</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <p className="text-5xl font-extrabold text-amber-500">4.7</p>
-                  <FaStar className="text-amber-400 text-3xl" />
-                </div>
-                <p className="mt-2 text-gray-600 font-medium">Partner Rating</p>
-              </div>
-            </div>
+          
           </motion.div>
 
           {/* RIGHT - Phone mockup */}

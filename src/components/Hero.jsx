@@ -209,7 +209,7 @@ export default function Hero({ siteName = "Tryde" }) {
   return (
     <section 
       ref={heroRef}
-      className="relative min-h-screen flex items-center bg-black overflow-hidden"
+      className="relative min-h-screen flex items-center bg-black overflow-hidden font-['Poppins']"
     >
       {/* Animated Background */}
       <div className="absolute inset-0">

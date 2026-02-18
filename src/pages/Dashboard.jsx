@@ -1024,9 +1024,9 @@ const Dashboard = () => {
 
 
 
-  // dyanamic data popular items
+  // dyanamic data  items
   const AllMenuItems = async () => {
-    try {
+    try{
       const result = await axiosInstance.get(`/menuitems/${restaurant.id}/menu-items`, { withCredentials: true })
       setItems(result.data.data);
       //  console.log("All menu=>",result.data);
