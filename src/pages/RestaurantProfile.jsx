@@ -1,11 +1,14 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Star, MapPin, Clock, Upload, Utensils, Save, Edit2 } from 'lucide-react';
+import { Star, MapPin, Clock, Upload, Utensils, Save, Edit2, Navigation } from 'lucide-react';
 import { RestaurantContext } from '../context/getRestaurant';
 import axiosInstance from '../api/axiosInstance';
 import { IoIosDocument } from 'react-icons/io';
 import { RxCross1 } from 'react-icons/rx';
 import { VscPreview } from 'react-icons/vsc';
+import { FaLocationDot } from "react-icons/fa6";
 
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
 function RestaurantProfile() {
   const {
     restaurant: contextRestaurant,
@@ -35,6 +38,37 @@ function RestaurantProfile() {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  });
+
+  const redIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
+
+
+  const MapClickHandler = ({ onChange }) => {
+    useMapEvents({
+      click(e) {
+        const { lat, lng } = e.latlng;
+        onChange({
+          target: { name: 'latitude', value: lat.toFixed(6) }
+        });
+        onChange({
+          target: { name: 'longitude', value: lng.toFixed(6) }
+        });
+      },
+    });
+    return null;
   };
 
   const handleChange = (e) => {
@@ -92,7 +126,7 @@ function RestaurantProfile() {
 
       if (response.data && response.data.restaurant) {
         setRestaurant(response.data.restaurant);
-        
+
         if (updateContextRestaurant) {
           updateContextRestaurant(response.data.restaurant);
         }
@@ -124,13 +158,13 @@ function RestaurantProfile() {
     if (contextRestaurant) {
       setRestaurant(contextRestaurant);
     }
-    
+
     setSelectedImage(null);
     if (imagePreview) {
       URL.revokeObjectURL(imagePreview);
       setImagePreview(null);
     }
-    
+
     setIsEditing(false);
   };
 
@@ -228,13 +262,12 @@ function RestaurantProfile() {
         {restaurant.status && (
           <div className="mb-6 flex flex-wrap gap-2.5">
             <span
-              className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold shadow-sm ${
-                restaurant.status === 'APPROVED'
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : restaurant.status === 'PENDING'
+              className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold shadow-sm ${restaurant.status === 'APPROVED'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : restaurant.status === 'PENDING'
                   ? 'bg-amber-50 text-amber-700 border border-amber-200'
                   : 'bg-rose-50 text-rose-700 border border-rose-200'
-              }`}
+                }`}
             >
               Status: {restaurant.status}
             </span>
@@ -435,41 +468,123 @@ function RestaurantProfile() {
 
               {/* Location Coordinates */}
               {(restaurant.latitude || restaurant.longitude || isEditing) && (
-                <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-                  <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
-                    GPS Coordinates
-                  </label>
-                  {isEditing ? (
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="text"
-                        name="latitude"
-                        value={restaurant.latitude || ''}
-                        onChange={handleChange}
-                        placeholder="Latitude"
-                        className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 shadow-sm transition-all placeholder:text-gray-400 hover:border-gray-400 focus:outline-none focus:border-[#FF5252] focus:ring-0 text-gray-700"
-                      />
-                      <input
-                        type="text"
-                        name="longitude"
-                        value={restaurant.longitude || ''}
-                        onChange={handleChange}
-                        placeholder="Longitude"
-                        className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 shadow-sm transition-all placeholder:text-gray-400 hover:border-gray-400 focus:outline-none focus:border-[#FF5252] focus:ring-0 text-gray-700"
-                      />
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-[#E83E3E]/10 rounded-lg flex items-center justify-center">
+                        <MapPin size={16} className="text-[#E83E3E]" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">GPS Coordinates</p>
+                        <p className="text-xs text-gray-400">
+                          {isEditing ? 'Map pe click karke location set karo' : 'Restaurant location'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Current coords badge */}
+                    {restaurant.latitude && restaurant.longitude && (
+                      <div className="hidden sm:flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 font-mono text-xs text-gray-500">
+                        <Navigation size={11} className="text-[#E83E3E]" />
+                        {parseFloat(restaurant.latitude).toFixed(4)},&nbsp;
+                        {parseFloat(restaurant.longitude).toFixed(4)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Map */}
+                  {(restaurant.latitude && restaurant.longitude) ? (
+                    <div className="relative" style={{ height: '260px' }}>
+                      <MapContainer
+                        key={`${restaurant.latitude}-${restaurant.longitude}`}
+                        center={[parseFloat(restaurant.latitude), parseFloat(restaurant.longitude)]}
+                        zoom={15}
+                        style={{ height: '100%', width: '100%', zIndex: 0 }}
+                        scrollWheelZoom={false}
+                        attributionControl={false}
+                      >
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        {isEditing && <MapClickHandler onChange={handleChange} />}
+                        <Marker
+                          position={[parseFloat(restaurant.latitude), parseFloat(restaurant.longitude)]}
+                          icon={redIcon}
+                        >
+                          <Popup>
+                            <div className="text-sm font-medium text-gray-700 py-0.5 flex flex-col items-center justify-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <FaLocationDot size={16} className="text-red-500" />
+                                <span>{restaurant.name || "Restaurant"}</span>
+                              </div>
+                              <img src={restaurant.restaurent_images} alt='resaurent image' />
+                            </div>
+                          </Popup>
+                        </Marker>
+                      </MapContainer>
+
+                      {/* Edit hint overlay */}
+                      {isEditing && (
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[999] bg-black/70 text-white text-xs px-3 py-1.5 rounded-full pointer-events-none backdrop-blur-sm">
+                          🗺️ Tap on the map to change the location
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-700 space-y-2 font-mono bg-white rounded-lg p-3 border border-gray-300">
-                      <p>
-                        <span className="font-bold text-gray-900">Lat:</span>{' '}
-                        {restaurant.latitude}
+                    /* No coords yet — placeholder */
+                    <div className="flex flex-col items-center justify-center h-40 bg-gray-50 text-gray-400">
+                      <MapPin size={32} className="mb-2 opacity-30" />
+                      <p className="text-sm font-medium">  No location has been set yet.
                       </p>
-                      <p>
-                        <span className="font-bold text-gray-900">Lng:</span>{' '}
-                        {restaurant.longitude}
+                      <p className="text-xs mt-0.5">  Please enter the latitude and longitude below.
                       </p>
                     </div>
                   )}
+
+                  {/* Input fields */}
+                  <div className="px-5 py-4">
+                    {isEditing ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-semibold text-gray-500 mb-1 block">Latitude</label>
+                          <input
+                            type="text"
+                            name="latitude"
+                            value={restaurant.latitude || ''}
+                            onChange={handleChange}
+                            placeholder="e.g. 28.613939"
+                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-mono text-gray-700 placeholder:text-gray-300 focus:outline-none focus:border-[#E83E3E] focus:bg-white transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-500 mb-1 block">Longitude</label>
+                          <input
+                            type="text"
+                            name="longitude"
+                            value={restaurant.longitude || ''}
+                            onChange={handleChange}
+                            placeholder="e.g. 77.209021"
+                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-mono text-gray-700 placeholder:text-gray-300 focus:outline-none focus:border-[#E83E3E] focus:bg-white transition-all"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { label: 'Latitude', val: restaurant.latitude },
+                          { label: 'Longitude', val: restaurant.longitude },
+                        ].map(({ label, val }) => (
+                          <div key={label} className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">{label}</p>
+                            <p className="text-sm font-mono font-semibold text-gray-700">{val || '—'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -530,9 +645,8 @@ function RestaurantProfile() {
                       <Clock size={22} className="text-[#FF5252]" />
                       <div className="flex items-center gap-2.5 flex-wrap">
                         <span
-                          className={`font-bold text-base ${
-                            restaurant.is_open ? 'text-emerald-600' : 'text-rose-600'
-                          }`}
+                          className={`font-bold text-base ${restaurant.is_open ? 'text-emerald-600' : 'text-rose-600'
+                            }`}
                         >
                           {restaurant.is_open ? 'Open Now' : 'Closed'}
                         </span>
@@ -642,52 +756,52 @@ function RestaurantProfile() {
 
       {/* Document Preview Modal */}
       {showDocument && (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-    onClick={closeDocument}
-  >
-    <div
-      className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-[#FF5252] to-[#ff6b6b]">
-        <div className="flex items-center gap-2 text-white">
-          <VscPreview className="text-xl" />
-          <h3 className="text-base font-semibold">Document Preview</h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={closeDocument}
+        >
+          <div
+            className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-[#FF5252] to-[#ff6b6b]">
+              <div className="flex items-center gap-2 text-white">
+                <VscPreview className="text-xl" />
+                <h3 className="text-base font-semibold">Document Preview</h3>
+              </div>
+
+              <button
+                onClick={closeDocument}
+                className="p-1.5 rounded-full hover:bg-white/20 transition-colors text-white"
+                aria-label="Close"
+              >
+                <RxCross1 className="text-lg" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 bg-gray-100 flex items-center justify-center">
+              <img
+                src={documentUrl}
+                alt="Document"
+                className="w-full max-h-[60vh] h-auto object-contain rounded-lg shadow-md border border-gray-200"
+                loading="lazy"
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3 bg-white border-t flex justify-end">
+              <button
+                onClick={closeDocument}
+                className="px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 rounded-lg transition-colors text-sm font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
-
-        <button
-          onClick={closeDocument}
-          className="p-1.5 rounded-full hover:bg-white/20 transition-colors text-white"
-          aria-label="Close"
-        >
-          <RxCross1 className="text-lg" />
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="p-4 bg-gray-100 flex items-center justify-center">
-        <img
-          src={documentUrl}
-          alt="Document"
-          className="w-full max-h-[60vh] h-auto object-contain rounded-lg shadow-md border border-gray-200"
-          loading="lazy"
-        />
-      </div>
-
-      {/* Footer */}
-      <div className="px-5 py-3 bg-white border-t flex justify-end">
-        <button
-          onClick={closeDocument}
-          className="px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 rounded-lg transition-colors text-sm font-medium"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
     </div>
   );

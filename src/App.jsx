@@ -37,9 +37,10 @@ import DownloadPanel from "./components/DaownloadPannel";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import SubCategory from "./components/SubCategory";
-import useDashboardData from "./hooks/useDashboardData";
 import AboutUs from "./pages/About";
-import  Contact  from "./pages/Contact";
+import Contact from "./pages/Contact";
+import GetRestaurant from "./context/getRestaurant";
+import GetAllCategories from "./context/GetAllCategories";
 
 // Public Layout - Simple wrapper for public pages
 function PublicLayout() {
@@ -72,7 +73,6 @@ function RedirectIfAuthenticated() {
 
 
 function App() {
-  useDashboardData();
   return (
     <Routes>
       {/* Root redirect to home */}
@@ -89,8 +89,8 @@ function App() {
         <Route path="/finalcta" element={<FinalCTA />} />
         <Route path="/getstartedagin" element={<GetStarted />} />
         <Route path="/achievements" element={<Achievements />} />
-        <Route path="/about-us"  element={<AboutUs/>}></Route>
-        <Route path="/contact-us"  element={<Contact/>}></Route>
+        <Route path="/about-us" element={<AboutUs />}></Route>
+        <Route path="/contact-us" element={<Contact />}></Route>
       </Route>
 
       {/* ==================== AUTH ROUTES ==================== */}
@@ -105,16 +105,22 @@ function App() {
 
 
       {/* ==================== RESET PASSWORD (PUBLIC) ==================== */}
-<Route element={<AuthLayout />}>
-  <Route path="/reset-password/:token" element={<ResetPassword />} />
-</Route>
+      <Route element={<AuthLayout />}>
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+      </Route>
 
       {/* ==================== PROTECTED DASHBOARD ROUTES ==================== */}
       <Route element={<RequireAuth />}>
-        <Route path="/dashboard" element={<VendorLayout />}>
+        <Route path="/dashboard" element={
+          <GetRestaurant>
+            <GetAllCategories>
+              <VendorLayout />
+            </GetAllCategories>
+          </GetRestaurant>
+        }>
           {/* Dashboard Home */}
           <Route index element={<Dashboard />} />
-          
+
           {/* Restaurant Profile */}
           <Route path="profile" element={<RestaurantProfile />} />
 
@@ -122,36 +128,36 @@ function App() {
           <Route path="menu">
             <Route index element={<MenuManagement />} />
             <Route path="category" element={<AddCategory />} />
-              <Route path="sub-category" element={<SubCategory />} />
+            <Route path="sub-category" element={<SubCategory />} />
             <Route path="item" element={<AddFoodItem />} />
           </Route>
 
           {/* Orders Management */}
           <Route path="orders" element={<Orders />} />
-          
+
           {/* Live Tracking */}
           <Route path="tracking" element={<LiveTracking />} />
-          
+
           {/* Earnings & Analytics */}
           <Route path="earnings" element={<Earnings />} />
-          
+
           {/* Customer Reviews */}
           <Route path="reviews" element={<Reviews />} />
-          
+
           {/* Offers & Promotions */}
           <Route path="offers" element={<Offers />} />
-          
+
           {/* Notifications */}
           <Route path="notifications" element={<Notifications />} />
-          
+
           {/* Support & Help */}
           <Route path="support" element={<Support />} />
         </Route>
       </Route>
 
       {/* ==================== 404 NOT FOUND ==================== */}
-      <Route 
-        path="*" 
+      <Route
+        path="*"
         element={
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="text-center">
@@ -165,7 +171,7 @@ function App() {
               </button>
             </div>
           </div>
-        } 
+        }
       />
     </Routes>
   );

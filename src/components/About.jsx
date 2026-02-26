@@ -7,7 +7,7 @@ import Footer from "../components/Footer";
 
 export default function AboutUs() {
   const siteName = "Tryde";
-  const primaryColor = "#FF5252";
+  const primaryColor = "#000000";
 
   // Animation Variants
   const fadeInUp = {

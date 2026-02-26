@@ -42,7 +42,16 @@ export default function Register() {
     fssai_license: null,
     pan_card: null,
     aadhar_card: null,
-    business_license: null
+    business_license: null,
+
+    //bank details
+    account_holder_name: "",
+    bank_name: "",
+    account_number: "",
+    ifsc_code: "",
+    branch_name: "",
+    account_type: "",
+    cancelled_cheque_image: null
   });
 
   // Preview URLs for images
@@ -52,7 +61,9 @@ export default function Register() {
     fssai_license: null,
     pan_card: null,
     aadhar_card: null,
-    business_license: null
+    business_license: null,
+    cancelled_cheque_image: null
+
   });
 
   const steps = [
@@ -230,6 +241,57 @@ export default function Register() {
       }
     }
 
+
+    if (step === 3) {
+
+      // Document Validation
+      if (!formData.fssai_license) {
+        newErrors.fssai_license = "FSSAI License is required.";
+      }
+
+      if (!formData.pan_card) {
+        newErrors.pan_card = "PAN Card is required.";
+      }
+
+      if (!formData.aadhar_card) {
+        newErrors.aadhar_card = "Aadhaar Card is required.";
+      }
+
+      if (!formData.business_license) {
+        newErrors.business_license = "Business License is required.";
+      }
+
+      // Bank Details Validation
+      if (!formData.account_holder_name?.trim()) {
+        newErrors.account_holder_name = "Account Holder Name is required.";
+      }
+
+      if (!formData.bank_name?.trim()) {
+        newErrors.bank_name = "Bank Name is required.";
+      }
+
+      if (!formData.account_number?.trim()) {
+        newErrors.account_number = "Account Number is required.";
+      }
+
+      if (!formData.ifsc_code?.trim()) {
+        newErrors.ifsc_code = "IFSC Code is required.";
+      }
+
+      if (!formData.branch_name?.trim()) {
+        newErrors.branch_name = "Branch Name is required.";
+      }
+
+      if (!formData.account_type) {
+        newErrors.account_type = "Please select an Account Type.";
+      }
+
+      if (!formData.cancelled_cheque_image) {
+        newErrors.cancelled_cheque_image = "Cancelled Cheque image is required.";
+      }
+    }
+
+
     if (step === 4) {
       if (!formData.opening_time) newErrors.opening_time = 'Opening time is required';
       if (!formData.closing_time) newErrors.closing_time = 'Closing time is required';
@@ -295,6 +357,12 @@ export default function Register() {
       formDataToSend.append('restaurant_longitude', formData.restaurant_longitude);
       formDataToSend.append('opening_time', formData.opening_time);
       formDataToSend.append('closing_time', formData.closing_time);
+      formDataToSend.append("account_holder_name", formData.account_holder_name);
+      formDataToSend.append("bank_name", formData.bank_name);
+      formDataToSend.append("account_number", formData.account_number);
+      formDataToSend.append("ifsc_code", formData.ifsc_code);
+      formDataToSend.append("branch_name", formData.branch_name);
+      formDataToSend.append("account_type", formData.account_type);
 
       // Append multiple restaurant images
       if (formData.restaurant_images && formData.restaurant_images.length > 0) {
@@ -317,6 +385,13 @@ export default function Register() {
         formDataToSend.append('business_license', formData.business_license);
       }
 
+      if (formData.cancelled_cheque_image) {
+        formDataToSend.append(
+          "cancelled_cheque_image",
+          formData.cancelled_cheque_image
+        );
+      }
+
       console.log("Sending registration data...");
 
       const result = await axiosInstance.post('/restaurants/register', formDataToSend, {
@@ -328,13 +403,16 @@ export default function Register() {
 
       console.log("Registration Response:", result.data);
 
-      alert('Registration Successful! Redirecting to login...');
+      // alert('Registration Successful! Redirecting to login...');
+
+      alert('Registration submitted successfully! Please wait for admin approval.');
+
 
       setTimeout(() => {
-        navigate('/login');
+        navigate('/');
       }, 1200);
     } catch (error) {
-      console.error("Registration Error:", error);
+      // console.error("Registration Error:", error);
 
       // Handle backend validation errors
       if (error.response?.data?.errors) {
@@ -788,6 +866,206 @@ export default function Register() {
               <div className="space-y-6 animate-fadeIn">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Legal Documents</h2>
 
+                {/* Bank Details */}
+
+                {/* Bank Details Section */}
+                <div className="mt-8 border-t pt-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">
+                    Bank Details
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+                    {/* Account Holder Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Account Holder Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="account_holder_name"
+                        value={formData.account_holder_name}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-3 border rounded-lg 
+          ${errors.account_holder_name ? "border-red-500" : "border-gray-300"} 
+          focus:ring-2 focus:ring-[#FF5252] 
+          focus:border-[#FF5252] 
+          outline-none transition-all duration-200`}
+                      />
+                      {errors.account_holder_name && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.account_holder_name}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Bank Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Bank Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="bank_name"
+                        value={formData.bank_name}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-3 border rounded-lg 
+          ${errors.bank_name ? "border-red-500" : "border-gray-300"} 
+          focus:ring-2 focus:ring-[#FF5252] 
+          focus:border-[#FF5252] 
+          outline-none transition-all duration-200`}
+                      />
+                      {errors.bank_name && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.bank_name}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Account Number */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Account Number *
+                      </label>
+                      <input
+                        type="text"
+                        name="account_number"
+                        value={formData.account_number}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-3 border rounded-lg 
+          ${errors.account_number ? "border-red-500" : "border-gray-300"} 
+          focus:ring-2 focus:ring-[#FF5252] 
+          focus:border-[#FF5252] 
+          outline-none transition-all duration-200`}
+                      />
+                      {errors.account_number && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.account_number}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* IFSC Code */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        IFSC Code *
+                      </label>
+                      <input
+                        type="text"
+                        name="ifsc_code"
+                        value={formData.ifsc_code}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-3 border rounded-lg 
+          ${errors.ifsc_code ? "border-red-500" : "border-gray-300"} 
+          focus:ring-2 focus:ring-[#FF5252] 
+          focus:border-[#FF5252] 
+          outline-none transition-all duration-200`}
+                      />
+                      {errors.ifsc_code && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.ifsc_code}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Branch Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Branch Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="branch_name"
+                        value={formData.branch_name}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-3 border rounded-lg 
+          ${errors.branch_name ? "border-red-500" : "border-gray-300"} 
+          focus:ring-2 focus:ring-[#FF5252] 
+          focus:border-[#FF5252] 
+          outline-none transition-all duration-200`}
+                      />
+                      {errors.branch_name && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.branch_name}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Account Type */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Account Type *
+                      </label>
+                      <select
+                        name="account_type"
+                        value={formData.account_type}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-3 border rounded-lg 
+          ${errors.account_type ? "border-red-500" : "border-gray-300"} 
+          focus:ring-2 focus:ring-[#FF5252] 
+          focus:border-[#FF5252] 
+          outline-none transition-all duration-200`}
+                      >
+                        <option value="">Select Account Type</option>
+                        <option value="SAVINGS">Savings</option>
+                        <option value="CURRENT">Current</option>
+                      </select>
+                      {errors.account_type && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.account_type}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Cancelled Cheque Upload */}
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cancelled Cheque Image *
+                    </label>
+
+                    <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-all w-fit">
+                      <Upload size={20} />
+                      Upload Cancelled Cheque 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleImageChange(e, "cancelled_cheque_image")
+                        }
+                        className="hidden"
+                      />
+                    </label>
+
+                    {previews.cancelled_cheque_image && (
+                      <div className="relative mt-3 w-40">
+                        <img
+                          src={previews.cancelled_cheque_image}
+                          alt="Cheque"
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => removeImage("cancelled_cheque_image")}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-all"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                    )}
+
+                    {errors.cancelled_cheque_image && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.cancelled_cheque_image}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+
+
+
                 {/* FSSAI License */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">FSSAI License</label>
@@ -841,8 +1119,15 @@ export default function Register() {
                         <X size={16} />
                       </button>
                     </div>
+
                   )}
                   {errors.pan_card && <p className="text-red-500 text-xs mt-1">{errors.pan_card}</p>}
+
+                  {/* Bank Details */}
+
+
+
+
                 </div>
 
                 {/* Aadhar Card */}
@@ -973,6 +1258,10 @@ export default function Register() {
                       {formData.aadhar_card && ' Aadhar ✓'}
                       {formData.business_license && ' Business License ✓'}
                     </p>
+                    <p><strong>Bank:</strong> {formData.bank_name}</p>
+                    <p><strong>Account:</strong> {formData.account_number}</p>
+                    <p><strong>IFSC:</strong> {formData.ifsc_code}</p>
+                    <p><strong>Account Type:</strong> {formData.account_type}</p>
                   </div>
                 </div>
               </div>
@@ -984,8 +1273,8 @@ export default function Register() {
                 type="button"
                 onClick={handlePrev}
                 className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${currentStep === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                 disabled={currentStep === 1}
               >
