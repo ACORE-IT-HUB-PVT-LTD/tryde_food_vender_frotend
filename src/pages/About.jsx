@@ -220,7 +220,7 @@ export default function AboutUs() {
             viewport={{ once: true }}
             className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900"
           >
-            Join the Tryde Food Family Today
+           Join the Tryde Food Family Today
           </motion.h2>
 
           <motion.p

@@ -1,802 +1,854 @@
-import React, { useEffect, useState, useCallback } from "react";
-import {
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  Button,
-  useMediaQuery,
-  useTheme,
-  Stack,
-  Card,
-  CardContent,
-  Divider,
-  alpha,
-  CircularProgress,
-  Alert,
-  Tooltip,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Skeleton,
-} from "@mui/material";
-
-import NewReleasesIcon from "@mui/icons-material/NewReleases";
-import TimelapseIcon from "@mui/icons-material/Timelapse";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import LocalShippingIcon from "@mui/icons-material/LocalShipping";
-import CancelIcon from "@mui/icons-material/Cancel";
-import PersonIcon from "@mui/icons-material/Person";
-import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import PhoneIcon from "@mui/icons-material/Phone";
-import GridViewIcon from "@mui/icons-material/GridView";
-import TableRowsIcon from "@mui/icons-material/TableRows";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import CloseIcon from "@mui/icons-material/Close";
-import PaymentIcon from "@mui/icons-material/Payment";
-import ReceiptIcon from "@mui/icons-material/Receipt";
-
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
+import { useNats } from "../hooks/useNats";
 
-// ─── Brand ────────────────────────────────────────────────────────────────────
 const BRAND = "#FF5252";
-const BRAND_DARK = "#E53935";
 
-// ─── Statuses ─────────────────────────────────────────────────────────────────
-const STATUS = {
-  ALL: "ALL",
-  CREATED: "CREATED",
-  ACCEPTED: "ACCEPTED",
-  PREPARING: "PREPARING",
-  READY: "READY",
-  CANCELLED: "CANCELLED",
-};
-
-const STATUS_CONFIG = {
-  [STATUS.ALL]: { color: "#6366f1", bgColor: "#eef2ff", label: "All", icon: GridViewIcon },
-  [STATUS.CREATED]: { color: "#f59e0b", bgColor: "#fffbeb", label: "New", icon: NewReleasesIcon },
-  [STATUS.ACCEPTED]: { color: "#3b82f6", bgColor: "#eff6ff", label: "Accepted", icon: CheckCircleIcon },
-  [STATUS.PREPARING]: { color: "#8b5cf6", bgColor: "#f5f3ff", label: "Preparing", icon: TimelapseIcon },
-  [STATUS.READY]: { color: "#06b6d4", bgColor: "#ecfeff", label: "Ready", icon: CheckCircleIcon },
-  [STATUS.OUT_FOR_DELIVERY]: { color: "#f97316", bgColor: "#fff7ed", label: "Out for Delivery", icon: LocalShippingIcon },
-  [STATUS.DELIVERED]: { color: "#10b981", bgColor: "#ecfdf5", label: "Delivered", icon: LocalShippingIcon },
-  [STATUS.CANCELLED]: { color: "#ef4444", bgColor: "#fef2f2", label: "Cancelled", icon: CancelIcon },
+const KITCHEN_ALLOWED_FLOW = {
+  CREATED:   ["ACCEPTED", "REJECTED"],
+  ACCEPTED:  ["PREPARING"],
+  PREPARING: ["READY"],
+  READY:     [],
+  REJECTED:  [],
 };
 
 const TAB_CONFIG = [
-  STATUS.ALL,
-  STATUS.CREATED,
-  STATUS.ACCEPTED,
-  STATUS.PREPARING,
-  STATUS.READY,
-  STATUS.CANCELLED,
+  { key: "ALL",       label: "All" },
+  { key: "CREATED",   label: "New" },
+  { key: "PREPARING", label: "Preparing" },
+  { key: "READY",     label: "Ready" },
+  { key: "REJECTED",  label: "Cancelled" },
 ];
 
-// ─── Time formatter ───────────────────────────────────────────────────────────
+const STATUS_META = {
+  CREATED:   { label: "New",       dot: "#f59e0b", bg: "#fffbeb", text: "#b45309", border: "#fde68a" },
+  ACCEPTED:  { label: "Accepted",  dot: "#3b82f6", bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
+  PREPARING: { label: "Preparing", dot: "#8b5cf6", bg: "#f5f3ff", text: "#6d28d9", border: "#ddd6fe" },
+  READY:     { label: "Ready",     dot: "#10b981", bg: "#ecfdf5", text: "#065f46", border: "#a7f3d0" },
+  REJECTED:  { label: "Cancelled", dot: "#ef4444", bg: "#fef2f2", text: "#b91c1c", border: "#fecaca" },
+  DELIVERED: { label: "Delivered", dot: "#6366f1", bg: "#eef2ff", text: "#4338ca", border: "#c7d2fe" },
+};
+
+const ACTION_META = {
+  ACCEPTED:  { label: "Accept",          bg: "#FF5252" },
+  REJECTED:  { label: "Reject",          outline: true },
+  PREPARING: { label: "Start Preparing", bg: "#8b5cf6" },
+  READY:     { label: "Mark Ready",      bg: "#10b981" },
+};
+
+// ─── APIs ─────────────────────────────────────────────────────────────────────
+// 1. GET /orders/vendor/orders?page=1&limit=10
+const apiGetOrders = (page = 1) =>
+  axiosInstance.get(`/orders/vendor/orders?page=${page}&limit=10`, { withCredentials: true });
+
+// 2. GET /orders/vendor/orders/:orderId
+const apiGetOrderById=(orderId) =>
+  axiosInstance.get(`/orders/vendor/orders/${orderId}`, { withCredentials: true });
+
+// 3. POST /orders/:orderId/accept
+const apiAcceptOrder = (orderId) =>
+  axiosInstance.post(`/orders/${orderId}/accept`, {}, { withCredentials: true });
+
+// 4. PATCH /orders/:orderId/statusready
+const apiMarkReady = (orderId) =>
+  axiosInstance.patch(`/orders/${orderId}/statusready`, { status: "READY" }, { withCredentials: true });
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatTime = (iso) => {
   if (!iso) return "—";
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 60)    return `${diff}s ago`;
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 };
 
-// ─── 4 API Helpers ────────────────────────────────────────────────────────────
-// API 1 — GET all orders
-const apiGetAllOrders = () =>
-  axiosInstance.get("/orders/vendor/orders", { withCredentials: true });
+const fmt = (n) => parseFloat(n || 0).toFixed(0);
 
-// API 2 — GET order by ID
-const apiGetOrderById = (orderId) =>
-  axiosInstance.get(`/orders/vendor/orders/${orderId}`, { withCredentials: true });
-
-// API 3 — POST accept order
-const apiAcceptOrder = (orderId) =>
-  axiosInstance.post(`/orders/${orderId}/accept`, {}, { withCredentials: true });
-
-// API 4 — POST mark ready
-const apiMarkReady = (orderId) =>
-  axiosInstance.patch(`/orders/${orderId}/statusready`, { status: "READY" }, { withCredentials: true });
-
-// ─── StatusChip ───────────────────────────────────────────────────────────────
-const StatusChip = ({ status }) => {
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG[STATUS.CREATED];
-  const Icon = cfg.icon;
+// ─── StatusBadge ──────────────────────────────────────────────────────────────
+const StatusBadge = ({ status }) => {
+  const m = STATUS_META[status] || STATUS_META.CREATED;
   return (
-    <Chip
-      icon={<Icon sx={{ fontSize: "0.85rem !important" }} />}
-      label={cfg.label}
-      size="small"
-      sx={{
-        bgcolor: cfg.bgColor,
-        color: cfg.color,
-        fontWeight: 700,
-        fontSize: "0.7rem",
-        borderRadius: "6px",
-        height: 26,
-        border: `1px solid ${alpha(cfg.color, 0.2)}`,
-        "& .MuiChip-icon": { color: cfg.color },
-      }}
-    />
+    <span style={{ background: m.bg, color: m.text, border: `1px solid ${m.border}` }}
+      className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-md text-[11px] font-bold whitespace-nowrap">
+      <span style={{ background: m.dot }} className="w-1.5 h-1.5 rounded-full flex-shrink-0" />
+      {m.label}
+    </span>
   );
 };
 
-// ─── Order Detail Dialog (uses API 2) ─────────────────────────────────────────
-const OrderDetailDialog = ({ orderId, open, onClose }) => {
+// ─── Spinner ──────────────────────────────────────────────────────────────────
+const Spin = ({ size = 13, color = "#fff" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" className="animate-spin flex-shrink-0" style={{ color }} fill="none">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+  </svg>
+);
+
+// ─── Action Buttons ───────────────────────────────────────────────────────────
+const ActionButtons = ({ order, updatingId, onAction }) => {
+  const status  = order.order_status;
+  const busy    = updatingId === order.id;
+  const allowed = KITCHEN_ALLOWED_FLOW[status] || [];
+
+  if (allowed.length === 0) {
+    return (
+      <span className={`text-xs font-semibold italic ${status === "REJECTED" ? "text-red-400" : "text-emerald-500"}`}>
+        {status === "REJECTED" ? "❌ Cancelled" : "✅ Completed"}
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 justify-end flex-wrap">
+      {allowed.map((next) => {
+        const m = ACTION_META[next];
+        if (!m) return null;
+        if (m.outline) return (
+          <button key={next} disabled={busy} onClick={() => onAction(order, next)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border border-red-300 text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50">
+            {busy && <Spin size={12} color="#ef4444" />}{m.label}
+          </button>
+        );
+        return (
+          <button key={next} disabled={busy} onClick={() => onAction(order, next)}
+            style={{ background: busy ? "#ccc" : m.bg }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-90 transition-colors disabled:opacity-50">
+            {busy && <Spin size={12} />}{m.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+
+const NewOrderPopup = ({ order, onClose, onAction, updatingId }) => {
+  if (!order) return null;
+
+  const addr = order.delivery_address || {};
+  const busy = updatingId === order.id;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-[popIn_.25s_ease]">
+
+        {/* Header */}
+        <div className="px-5 py-4 flex items-center justify-between bg-amber-500">
+          <div>
+            <p className="text-white font-bold text-sm">
+              🔔 New Order Received
+            </p>
+            <p className="text-amber-100 text-xs font-mono">
+              #{order.order_id}
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="text-white hover:bg-white/20 p-2 rounded-lg transition"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+
+          {/* Customer Info */}
+          <div className="flex gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center font-bold text-sm">
+              {(order.user?.name || "U")[0].toUpperCase()}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 text-sm truncate">
+                {addr.name || order.user?.name || `User #${order.user_id}`}
+              </p>
+              <p className="text-xs text-gray-500">
+                {addr.phone || order.user?.phone || "—"}
+              </p>
+
+              {(addr.addressLine1 || addr.city) && (
+                <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                  📍 {[addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.pincode]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <hr />
+
+          {/* Items */}
+          {order.items?.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-400 mb-2 uppercase">
+                Items Ordered
+              </p>
+
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                {order.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-center bg-gray-50 border rounded-lg px-3 py-2"
+                  >
+                    <div className="flex gap-2 min-w-0">
+                      <span className="bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded">
+                        {item.quantity}×
+                      </span>
+
+                      <span className="text-sm font-medium text-gray-800 truncate">
+                        {item.dish_name || `Item #${item.id}`}
+                      </span>
+                    </div>
+
+                    <span className="text-sm font-bold text-red-500">
+                      ₹{fmt(item.total_price)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Summary */}
+          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="bg-gray-50 border rounded-lg p-2">
+              <p className="text-gray-400 uppercase text-[10px]">Payment</p>
+              <span className="font-bold text-gray-700">
+                {order.payment_mode || "COD"}
+              </span>
+            </div>
+
+            <div className="bg-gray-50 border rounded-lg p-2">
+              <p className="text-gray-400 uppercase text-[10px]">Status</p>
+              <span className={`font-bold ${
+                order.payment_status === "PAID"
+                  ? "text-green-600"
+                  : "text-amber-600"
+              }`}>
+                {order.payment_status || "PENDING"}
+              </span>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-2">
+              <p className="text-gray-400 uppercase text-[10px]">Total</p>
+              <p className="text-lg font-extrabold text-red-500">
+                ₹{fmt(order.total_amount)}
+              </p>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3 pt-2">
+            <button
+              disabled={busy}
+              onClick={() => onAction(order, "REJECTED")}
+              className="flex-1 py-2.5 rounded-lg border border-red-300 text-red-600 font-semibold hover:bg-red-50 transition disabled:opacity-50"
+            >
+              Reject
+            </button>
+
+            <button
+              disabled={busy}
+              onClick={() => onAction(order, "ACCEPTED")}
+              className="flex-1 py-2.5 rounded-lg bg-green-500 text-white font-semibold hover:opacity-90 transition disabled:opacity-50"
+            >
+              Accept Order
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Order Detail Modal ───────────────────────────────────────────────────────
+const OrderDetailModal = ({ orderId, open, onClose }) => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError]   = useState(null);
 
   useEffect(() => {
     if (!open || !orderId) return;
-    setLoading(true);
-    setError(null);
-    setDetail(null);
+    setLoading(true); setError(null); setDetail(null);
     apiGetOrderById(orderId)
-      .then((res) => setDetail(res.data.data))
-      .catch((err) => setError(err?.response?.data?.message || "Failed to load order details"))
+      .then((r) => setDetail(r.data.data))
+      .catch((e) => setError(e?.response?.data?.message || "Failed to load details"))
       .finally(() => setLoading(false));
   }, [open, orderId]);
 
+  if (!open) return null;
   const addr = detail?.delivery_address || {};
+  const m = detail ? (STATUS_META[detail.order_status] || STATUS_META.CREATED) : null;
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      PaperProps={{ sx: { borderRadius: "16px", overflow: "hidden" } }}
-    >
-      {detail && (
-        <Box sx={{ height: 5, bgcolor: STATUS_CONFIG[detail.order_status]?.color || BRAND }} />
-      )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+        {m && <div style={{ height: 5, background: m.dot, flexShrink: 0 }} />}
+        <div className="flex items-start justify-between px-6 pt-5 pb-3 flex-shrink-0">
+          <div>
+            <h2 className="text-lg font-extrabold text-gray-900 tracking-tight">Order Details</h2>
+            {detail && <p className="text-xs text-gray-400 font-mono mt-0.5">{detail.order_id}</p>}
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
 
-      <DialogTitle sx={{ pb: 1, pt: 2.5 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h6" fontWeight={800} letterSpacing="-0.3px">
-              Order Details
-            </Typography>
-            {detail && (
-              <Typography variant="caption" color="text.disabled" sx={{ fontFamily: "monospace" }}>
-                {detail.order_id}
-              </Typography>
-            )}
-          </Box>
-          <IconButton onClick={onClose} size="small" sx={{ borderRadius: "8px" }}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Stack>
-      </DialogTitle>
+        <div className="px-6 pb-6 overflow-y-auto flex-1 space-y-4">
+          {loading && [...Array(4)].map((_, i) => <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />)}
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{error}</div>}
 
-      <DialogContent sx={{ pt: 0 }}>
-        {loading && (
-          <Stack spacing={2} mt={1}>
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} variant="rounded" height={44} sx={{ borderRadius: "10px" }} />
-            ))}
-          </Stack>
-        )}
+          {detail && (
+            <>
+              <div className="flex items-center justify-between">
+                <StatusBadge status={detail.order_status} />
+                <span className="text-xs text-gray-400">{formatTime(detail.created_at)}</span>
+              </div>
+              <hr className="border-gray-100" />
 
-        {error && <Alert severity="error" sx={{ borderRadius: "10px", mt: 1 }}>{error}</Alert>}
+              {/* Customer */}
+              <div className="p-3 rounded-xl border border-red-100" style={{ background: "rgba(255,82,82,0.04)" }}>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Customer</p>
+                <p className="text-sm font-bold text-gray-800">{addr.name || detail.user?.name || `User #${detail.user_id}`}</p>
+                <p className="text-xs text-gray-500 mt-0.5">📞 {addr.phone || detail.user?.phone || "—"}</p>
+                {detail.user?.email && <p className="text-xs text-gray-400 mt-0.5">✉️ {detail.user.email}</p>}
+              </div>
 
-        {detail && (
-          <Stack spacing={2} mt={1}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <StatusChip status={detail.order_status} />
-              <Typography variant="caption" color="text.disabled">{formatTime(detail.created_at)}</Typography>
-            </Stack>
-
-            <Divider />
-
-            {/* Customer block */}
-            <Box p={2} sx={{ bgcolor: alpha(BRAND, 0.04), borderRadius: "10px", border: `1px solid ${alpha(BRAND, 0.1)}` }}>
-              <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: "0.5px", fontSize: "0.62rem" }}>
-                Customer
-              </Typography>
-              <Typography variant="body2" fontWeight={700} mt={0.5}>
-                {addr.name || `User #${detail.user_id}`}
-              </Typography>
-              {addr.phone && (
-                <Stack direction="row" spacing={0.5} alignItems="center" mt={0.3}>
-                  <PhoneIcon sx={{ fontSize: 12, color: "text.disabled" }} />
-                  <Typography variant="caption" color="text.secondary">{addr.phone}</Typography>
-                </Stack>
+              {/* Address */}
+              {(addr.addressLine1 || addr.city) && (
+                <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Delivery Address</p>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {[addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.pincode].filter(Boolean).join(", ")}
+                  </p>
+                </div>
               )}
-            </Box>
 
-            {/* Delivery address */}
-            {(addr.addressLine1 || addr.city) && (
-              <Box p={2} sx={{ bgcolor: "#f8fafc", borderRadius: "10px", border: "1px solid", borderColor: "divider" }}>
-                <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: "0.5px", fontSize: "0.62rem" }}>
-                  Delivery Address
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mt={0.5} lineHeight={1.7}>
-                  {[addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.pincode].filter(Boolean).join(", ")}
-                </Typography>
-              </Box>
-            )}
+              {/* Item data from the api */}
+              {detail.items?.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Items</p>
+                  <div className="space-y-1.5">
+                    {detail.items.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-6 h-6 rounded bg-gray-300 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                          {item.quantity}×
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-800 truncate">{item.dish_name || `Dish ${item.dish_id}`}</p>
+                            <p className="text-xs text-gray-400">₹{fmt(item.unit_price)} each</p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-bold ml-2 flex-shrink-0" style={{ color: BRAND }}>₹{fmt(item.total_price)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            {/* Payment summary */}
-            <Stack direction="row" spacing={1.5}>
-              <Box flex={1} p={1.5} sx={{ bgcolor: "#f8fafc", borderRadius: "10px", border: "1px solid", borderColor: "divider" }}>
-                <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
-                  <PaymentIcon sx={{ fontSize: 13, color: "text.disabled" }} />
-                  <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ textTransform: "uppercase", fontSize: "0.6rem", letterSpacing: "0.4px" }}>Mode</Typography>
-                </Stack>
-                <Chip label={detail.payment_mode} size="small" sx={{ bgcolor: detail.payment_mode === "ONLINE" ? alpha("#3b82f6", 0.1) : alpha("#64748b", 0.1), color: detail.payment_mode === "ONLINE" ? "#3b82f6" : "#64748b", fontWeight: 700, fontSize: "0.68rem", height: 22, borderRadius: "5px" }} />
-              </Box>
-              <Box flex={1} p={1.5} sx={{ bgcolor: "#f8fafc", borderRadius: "10px", border: "1px solid", borderColor: "divider" }}>
-                <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
-                  <ReceiptIcon sx={{ fontSize: 13, color: "text.disabled" }} />
-                  <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ textTransform: "uppercase", fontSize: "0.6rem", letterSpacing: "0.4px" }}>Payment</Typography>
-                </Stack>
-                <Chip label={detail.payment_status} size="small" sx={{ bgcolor: detail.payment_status === "PAID" ? alpha("#10b981", 0.1) : alpha("#f59e0b", 0.1), color: detail.payment_status === "PAID" ? "#10b981" : "#f59e0b", fontWeight: 700, fontSize: "0.68rem", height: 22, borderRadius: "5px" }} />
-              </Box>
-              <Box flex={1} p={1.5} sx={{ bgcolor: alpha(BRAND, 0.05), borderRadius: "10px", border: `1px solid ${alpha(BRAND, 0.12)}`, textAlign: "center" }}>
-                <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ textTransform: "uppercase", fontSize: "0.6rem", letterSpacing: "0.4px" }}>Total</Typography>
-                <Typography variant="h6" fontWeight={800} color={BRAND} lineHeight={1.4} mt={0.2}>
-                  ₹{parseFloat(detail.total_amount).toFixed(0)}
-                </Typography>
-              </Box>
-            </Stack>
+              {/* Payment */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="p-2.5 rounded-xl border border-gray-100 bg-gray-50">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Mode</p>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${detail.payment_mode === "ONLINE" ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-600"}`}>
+                    {detail.payment_mode}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl border border-gray-100 bg-gray-50">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Payment</p>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${detail.payment_status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                    {detail.payment_status}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl text-center" style={{ background: "rgba(255,82,82,0.06)", border: "1px solid rgba(255,82,82,0.15)" }}>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Total</p>
+                  <p className="text-xl font-extrabold" style={{ color: BRAND }}>₹{fmt(detail.total_amount)}</p>
+                </div>
+              </div>
 
-            {/* Driver */}
-            <Box p={1.5} sx={{ borderRadius: "10px", bgcolor: detail.driver_status !== "NOT_ASSIGNED" ? alpha("#10b981", 0.06) : alpha("#94a3b8", 0.06), border: `1px solid ${alpha(detail.driver_status !== "NOT_ASSIGNED" ? "#10b981" : "#94a3b8", 0.15)}` }}>
-              <Typography variant="caption" fontWeight={700} color={detail.driver_status !== "NOT_ASSIGNED" ? "#10b981" : "text.secondary"}>
-                🚗 Driver: {detail.driver_status === "NOT_ASSIGNED" ? "Not yet assigned" : detail.driver_status}
-              </Typography>
-            </Box>
+              {/* OTP */}
+              {detail.pickup_otp && (
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-700">
+                  Pickup OTP:&nbsp;
+                  <span className="font-mono font-black text-base tracking-widest">{detail.pickup_otp}</span>
+                  &nbsp;{detail.otp_verified ? "✅ Verified" : "⏳ Awaiting verification"}
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
-            {/* OTP */}
-            {detail.pickup_otp && (
-              <Box p={1.5} sx={{ borderRadius: "10px", bgcolor: alpha("#f59e0b", 0.06), border: `1px solid ${alpha("#f59e0b", 0.2)}` }}>
-                <Typography variant="caption" color="#f59e0b" fontWeight={700}>
-                  Pickup OTP: {detail.pickup_otp} &nbsp;
-                  {detail.otp_verified ? "✅ Verified" : "⏳ Awaiting verification"}
-                </Typography>
-              </Box>
-            )}
-          </Stack>
-        )}
-      </DialogContent>
-
-      <DialogActions sx={{ p: 2, pt: 1 }}>
-        <Button onClick={onClose} sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600, color: "text.secondary" }}>
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <div className="px-6 pb-4 flex justify-end flex-shrink-0 border-t border-gray-50 pt-3">
+          <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-100 transition-colors">Close</button>
+        </div>
+      </div>
+    </div>
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-const Orders = () => {
-  const [activeTab, setActiveTab] = useState(0);
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+// ─── Main Orders Component ────────────────────────────────────────────────────
+export default function Orders() {
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab]= useState(0);
+  const [orders, setOrders]= useState([]);
+  const [loading, setLoading]= useState(false);
+  const [error, setError]= useState(null);
   const [actionError, setActionError] = useState(null);
-  const [updatingId, setUpdatingId] = useState(null);
-  const [viewMode, setViewMode] = useState("card");
+  const [updatingId, setUpdatingId]   = useState(null);
   const [detailOrderId, setDetailOrderId] = useState(null);
+  const [newOrderPopup, setNewOrderPopup] = useState(null);
+  const [page, setPage]= useState(1);
+  const [totalOrders, setTotalOrders]= useState(0);
+  const [search, setSearch]= useState("");
+  const prevIds = useRef(new Set());
+  const LIMIT = 10;
+  const totalPages = Math.ceil(totalOrders / LIMIT);
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  // ── API 1: Fetch all orders ─────────────────────────────────────────────────
-  const fetchOrders = useCallback(async () => {
+  // ── 1. Fetch Orders ────────────────────────────────────────────────────────
+  const fetchOrders = useCallback(async (pg = 1) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiGetAllOrders();
-      setOrders(res.data.data || []);
+      const res = await apiGetOrders(pg);
+      const payload = res.data;
+
+      // ✅ API response: { data: [...], total_orders: N }
+      const list  = Array.isArray(payload.data) ? payload.data : Array.isArray(payload) ? payload : [];
+      const total = payload.total_orders ?? list.length;
+
+      if (pg === 1 && prevIds.current.size > 0) {
+        const newOnes = list.filter((o) => o.order_status === "CREATED" && !prevIds.current.has(o.id));
+        if (newOnes.length > 0) setNewOrderPopup(newOnes[0]);
+      }
+      prevIds.current = new Set(list.map((o) => o.id));
+      setOrders(list);
+      setTotalOrders(total);
     } catch (err) {
-      setError(err?.response?.data?.message || "Failed to load orders. Please try again.");
+      setError(err?.response?.data?.message || "Failed to load orders.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchOrders();
+  useEffect(() => { fetchOrders(page); }, [fetchOrders, page]);
+
+  // ── 2. NATS Real-time──────────────────────────────────────────────────────
+  const handleNats = useCallback((subject, data) => {
+    console.log("📨 NATS:", subject, data);
+
+    // ✅ Naya order aaya — API se full data fetch karo
+    if (subject === "order.created") {
+      apiGetOrderById(data.orderId)
+        .then((res) => {
+          const newOrder = res.data.data;
+          if (!newOrder) return;
+          setOrders((prev) => {
+            const exists = prev.find((o) => o.order_id === data.orderId);
+            if (exists) return prev;
+            return [newOrder, ...prev];
+          });
+          setNewOrderPopup(newOrder);
+          setTotalOrders((prev) => prev + 1);
+        })
+        .catch(() => fetchOrders(1));
+    }
+
+    // ✅ Driver assign hua — otp_verified check ke baad tracking button dikhega
+    else if (subject === "driver.assigned") {
+      if (data.orderId) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.order_id === data.orderId
+              ? { ...o, driver_assigned: true }
+              : o
+          )
+        );
+      }
+    }
+
+    // ✅ OTP verify hua — tracking button enable karo
+    else if (subject === "order.status.updated") {
+      const newStatus = data.status || data.order_status;
+      if (data.orderId) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.order_id === data.orderId
+              ? {
+                  ...o,
+                  ...(newStatus && { order_status: newStatus }),
+                  // ✅ OTP verified aaya to update karo
+                  ...(data.otp_verified !== undefined && { otp_verified: data.otp_verified }),
+                }
+              : o
+          )
+        );
+      }
+    }
+
+    // ✅ Order accepted
+    else if (subject === "order.accepted") {
+      if (data.orderId) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.order_id === data.orderId
+              ? { ...o, order_status: "ACCEPTED" }
+              : o
+          )
+        );
+      }
+    }
+
+    // ✅ Order delivered
+    else if (subject === "order.delivered") {
+      if (data.orderId) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.order_id === data.orderId
+              ? { ...o, order_status: "DELIVERED" }
+              : o
+          )
+        );
+      }
+    }
+
   }, [fetchOrders]);
 
-  // ── API 3: Accept order ─────────────────────────────────────────────────────
-  const handleAccept = async (order) => {
+  useNats([
+    "order.created",
+    "order.accepted",
+    "order.status.updated",
+    "order.delivered",
+    "driver.assigned",
+  ], handleNats);
+
+  // ── 3. Action Handler ──────────────────────────────────────────────────────
+  const handleAction = async (order, nextStatus) => {
     setUpdatingId(order.id);
     setActionError(null);
     try {
-      await apiAcceptOrder(order.order_id);
+      // ✅ POST /orders/:orderId/accept — response: { status: "ACCEPTED", otp: 4177 }
+      if (nextStatus === "ACCEPTED") {
+        const res = await apiAcceptOrder(order.order_id);
+        console.log("Accept response:", res.data);
+      }
+      // ✅ PATCH /orders/:orderId/statusready — body: { status: "READY" }
+      if (nextStatus === "READY") {
+        await apiMarkReady(order.order_id);
+      }
+
+      // Local state update
       setOrders((prev) =>
-        prev.map((o) => (o.id === order.id ? { ...o, order_status: STATUS.ACCEPTED } : o))
+        prev.map((o) => o.id === order.id ? { ...o, order_status: nextStatus } : o)
       );
+      if (newOrderPopup?.id === order.id) setNewOrderPopup(null);
+
     } catch (err) {
-      setActionError(`Accept failed: ${err?.response?.data?.message || "Please try again"}`);
+      setActionError(err?.response?.data?.message || "Action failed. Please try again.");
     } finally {
       setUpdatingId(null);
     }
   };
 
-  // ── API 4: Mark ready ───────────────────────────────────────────────────────
-  const handleMarkReady = async (order) => {
-    setUpdatingId(order.id);
-    setActionError(null);
-    try {
-      await apiMarkReady(order.order_id);
-      setOrders((prev) =>
-        prev.map((o) => (o.id === order.id ? { ...o, order_status: STATUS.READY } : o))
-      );
-    } catch (err) {
-      setActionError(`Mark ready failed: ${err?.response?.data?.message || "Please try again"}`);
-    } finally {
-      setUpdatingId(null);
-    }
-  };
+  // ── 4. Filter + Search ─────────────────────────────────────────────────────
+  const activeKey = TAB_CONFIG[activeTab].key;
 
-  // ── Local status step (no API endpoint provided for these transitions) ───────
-  const stepStatus = (order, newStatus) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === order.id ? { ...o, order_status: newStatus } : o))
-    );
-  };
+  const searchedOrders = activeKey === "ALL" && search.trim()
+    ? orders.filter((o) =>
+        o.order_id?.toLowerCase().includes(search.toLowerCase()) ||
+        o.delivery_address?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        o.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        o.delivery_address?.phone?.includes(search)
+      )
+    : orders;
 
-  // ── Filtering ───────────────────────────────────────────────────────────────
-  const activeStatus = TAB_CONFIG[activeTab];
-  const filteredOrders =
-    activeStatus === STATUS.ALL
-      ? orders
-      : orders.filter((o) => o.order_status === activeStatus);
+  const filteredOrders = activeKey === "ALL"
+    ? searchedOrders
+    : orders.filter((o) => o.order_status === activeKey);
 
-  const getCount = (status) =>
-    status === STATUS.ALL
+  const getCount = (key) =>
+    key === "ALL"
       ? orders.length
-      : orders.filter((o) => o.order_status === status).length;
+      : orders.filter((o) => o.order_status === key).length;
 
-  // ─── Action Buttons ────────────────────────────────────────────────────────
-  const ActionButtons = ({ order, compact = false }) => {
-    const status = order.order_status;
-    const isUpdating = updatingId === order.id;
-    const isTerminal = status === STATUS.DELIVERED || status === STATUS.CANCELLED;
-
-    if (isTerminal) {
-      return (
-        <Typography variant="caption" color="text.disabled" fontStyle="italic" sx={{ whiteSpace: "nowrap" }}>
-          {status === STATUS.DELIVERED ? "✅ Completed" : "❌ Cancelled"}
-        </Typography>
-      );
-    }
-
-    const base = {
-      borderRadius: "8px",
-      textTransform: "none",
-      fontWeight: 700,
-      fontSize: compact ? "0.72rem" : "0.82rem",
-      py: compact ? 0.5 : 0.9,
-      px: compact ? 1.5 : 2,
-      boxShadow: "none",
-      whiteSpace: "nowrap",
-    };
-
-    const Spinner = () =>
-      isUpdating ? <CircularProgress size={11} color="inherit" sx={{ mr: 0.5 }} /> : null;
-
-    return (
-      <Stack direction="row" spacing={1} justifyContent={compact ? "flex-end" : "stretch"}>
-        {/* NEW → Accept (API 3) + Reject */}
-        {status === STATUS.CREATED && (
-          <>
-            <Button
-              variant="contained"
-              size={compact ? "small" : "medium"}
-              disabled={isUpdating}
-              onClick={() => handleAccept(order)}
-              startIcon={<Spinner />}
-              sx={{ ...base, flex: compact ? "none" : 1, bgcolor: BRAND, "&:hover": { bgcolor: BRAND_DARK } }}
-            >
-              Accept
-            </Button>
-            <Button
-              variant="outlined"
-              size={compact ? "small" : "medium"}
-              disabled={isUpdating}
-              onClick={() => stepStatus(order, STATUS.CANCELLED)}
-              sx={{ ...base, flex: compact ? "none" : 1, borderColor: alpha(theme.palette.error.main, 0.4), color: theme.palette.error.main, "&:hover": { bgcolor: alpha(theme.palette.error.main, 0.06), borderColor: theme.palette.error.main } }}
-            >
-              Reject
-            </Button>
-          </>
-        )}
-
-        {/* ACCEPTED → Start Preparing */}
-        {status === STATUS.ACCEPTED && (
-          <Button
-            variant="contained"
-            size={compact ? "small" : "medium"}
-            disabled={isUpdating}
-            onClick={() => stepStatus(order, STATUS.PREPARING)}
-            sx={{ ...base, flex: compact ? "none" : 1, bgcolor: "#8b5cf6", "&:hover": { bgcolor: "#7c3aed" } }}
-          >
-            Start Preparing
-          </Button>
-        )}
-
-        {/* PREPARING → Mark Ready (API 4) */}
-        {status === STATUS.PREPARING && (
-          <Button
-            variant="contained"
-            size={compact ? "small" : "medium"}
-            disabled={isUpdating}
-            onClick={() => handleMarkReady(order)}
-            startIcon={<Spinner />}
-            sx={{ ...base, flex: compact ? "none" : 1, bgcolor: "#06b6d4", "&:hover": { bgcolor: "#0891b2" } }}
-          >
-            Mark Ready
-          </Button>
-        )}
-
-        {/* READY → Out for Delivery */}
-        {status === STATUS.READY && (
-          <Button
-            variant="contained"
-            size={compact ? "small" : "medium"}
-            disabled={isUpdating}
-            onClick={() => stepStatus(order, STATUS.OUT_FOR_DELIVERY)}
-            sx={{ ...base, flex: compact ? "none" : 1, bgcolor: "#f97316", "&:hover": { bgcolor: "#ea6c0a" } }}
-          >
-            Out for Delivery
-          </Button>
-        )}
-
-        {/* OUT_FOR_DELIVERY → Mark Delivered */}
-        {status === STATUS.OUT_FOR_DELIVERY && (
-          <Button
-            variant="contained"
-            size={compact ? "small" : "medium"}
-            disabled={isUpdating}
-            onClick={() => stepStatus(order, STATUS.DELIVERED)}
-            sx={{ ...base, flex: compact ? "none" : 1, bgcolor: "#10b981", "&:hover": { bgcolor: "#059669" } }}
-          >
-            Mark Delivered
-          </Button>
-        )}
-      </Stack>
-    );
-  };
-
-  // ─── Order Card ────────────────────────────────────────────────────────────
-  const OrderCard = ({ order }) => {
-    const cfg = STATUS_CONFIG[order.order_status] || STATUS_CONFIG[STATUS.CREATED];
-    const addr = order.delivery_address || {};
-    return (
-      <Card
-        elevation={0}
-        sx={{
-          borderRadius: "16px",
-          border: `1px solid ${alpha(cfg.color, 0.18)}`,
-          bgcolor: "#fff",
-          transition: "all 0.25s ease",
-          display: "flex",
-          flexDirection: "column",
-          "&:hover": { transform: "translateY(-2px)", boxShadow: `0 10px 30px ${alpha(cfg.color, 0.12)}`, borderColor: alpha(cfg.color, 0.4) },
-        }}
-      >
-        <Box sx={{ height: 4, bgcolor: cfg.color, borderRadius: "16px 16px 0 0", flexShrink: 0 }} />
-        <CardContent sx={{ p: 2.5, flex: 1, display: "flex", flexDirection: "column" }}>
-          {/* Header */}
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
-            <Box>
-              <Typography variant="subtitle2" fontWeight={800} color="text.primary" sx={{ fontFamily: "monospace", fontSize: "0.78rem" }}>
-                {order.order_id}
-              </Typography>
-              <Stack direction="row" spacing={0.5} alignItems="center" mt={0.3}>
-                <AccessTimeIcon sx={{ fontSize: 12, color: "text.disabled" }} />
-                <Typography variant="caption" color="text.disabled" fontWeight={500}>{formatTime(order.created_at)}</Typography>
-              </Stack>
-            </Box>
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <StatusChip status={order.order_status} />
-              <Tooltip title="View full details">
-                <IconButton
-                  size="small"
-                  onClick={() => setDetailOrderId(order.order_id)}
-                  sx={{ borderRadius: "7px", color: "text.disabled", "&:hover": { color: BRAND, bgcolor: alpha(BRAND, 0.06) } }}
-                >
-                  <InfoOutlinedIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-          </Stack>
-
-          <Divider sx={{ my: 1.5, opacity: 0.5 }} />
-
-          {/* Customer */}
-          <Stack direction="row" spacing={1.5} alignItems="center" mb={1.5}>
-            <Box sx={{ width: 36, height: 36, borderRadius: "10px", bgcolor: alpha(BRAND, 0.08), display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <PersonIcon sx={{ color: BRAND, fontSize: 18 }} />
-            </Box>
-            <Box>
-              <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: "0.4px", fontSize: "0.6rem" }}>Customer</Typography>
-              <Typography variant="body2" fontWeight={700} color="text.primary" lineHeight={1.3}>
-                {addr.name || `User #${order.user_id}`}
-              </Typography>
-              {addr.phone && (
-                <Stack direction="row" spacing={0.4} alignItems="center">
-                  <PhoneIcon sx={{ fontSize: 11, color: "text.disabled" }} />
-                  <Typography variant="caption" color="text.disabled">{addr.phone}</Typography>
-                </Stack>
-              )}
-            </Box>
-          </Stack>
-
-          {/* Address */}
-          {(addr.addressLine1 || addr.city) && (
-            <Stack direction="row" spacing={0.8} alignItems="flex-start" mb={1.5}>
-              <LocationOnIcon sx={{ fontSize: 14, color: alpha(BRAND, 0.5), mt: 0.2, flexShrink: 0 }} />
-              <Typography variant="caption" color="text.secondary" lineHeight={1.6}>
-                {[addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.pincode].filter(Boolean).join(", ")}
-              </Typography>
-            </Stack>
-          )}
-
-          <Divider sx={{ my: 1.5, opacity: 0.5 }} />
-
-          {/* Payment & Total */}
-          <Stack direction="row" spacing={1.5} mb={2}>
-            <Box flex={1} p={1.2} sx={{ borderRadius: "10px", bgcolor: "#f8fafc", border: "1px solid", borderColor: "divider" }}>
-              <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ textTransform: "uppercase", fontSize: "0.58rem", letterSpacing: "0.4px" }}>Payment</Typography>
-              <Box mt={0.5}>
-                <Chip label={order.payment_mode} size="small" sx={{ bgcolor: order.payment_mode === "ONLINE" ? alpha("#3b82f6", 0.1) : alpha("#64748b", 0.1), color: order.payment_mode === "ONLINE" ? "#3b82f6" : "#64748b", fontWeight: 700, fontSize: "0.64rem", height: 20, borderRadius: "5px" }} />
-              </Box>
-            </Box>
-            <Box flex={1} p={1.2} sx={{ borderRadius: "10px", bgcolor: alpha(BRAND, 0.04), border: `1px solid ${alpha(BRAND, 0.12)}`, textAlign: "center" }}>
-              <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ textTransform: "uppercase", fontSize: "0.58rem", letterSpacing: "0.4px" }}>Total</Typography>
-              <Typography variant="h6" fontWeight={800} color={BRAND} lineHeight={1.3} mt={0.2} fontSize="1.05rem">
-                ₹{parseFloat(order.total_amount).toFixed(0)}
-              </Typography>
-            </Box>
-          </Stack>
-
-          {/* Driver badge */}
-          {order.driver_status && order.driver_status !== "NOT_ASSIGNED" && (
-            <Box mb={1.5} p={1.2} sx={{ borderRadius: "10px", bgcolor: alpha("#10b981", 0.06), border: `1px solid ${alpha("#10b981", 0.15)}` }}>
-              <Typography variant="caption" color="#10b981" fontWeight={700}>🚗 Driver: {order.driver_status}</Typography>
-            </Box>
-          )}
-
-          {/* Actions */}
-          <Box mt="auto" pt={1}>
-            <ActionButtons order={order} />
-          </Box>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // ─── Table Row ─────────────────────────────────────────────────────────────
-  const OrderTableRow = ({ order }) => {
-    const cfg = STATUS_CONFIG[order.order_status] || STATUS_CONFIG[STATUS.CREATED];
-    const addr = order.delivery_address || {};
-    return (
-      <TableRow sx={{ "&:hover": { bgcolor: alpha(cfg.color, 0.025) }, transition: "background 0.2s" }}>
-        <TableCell sx={{ py: 2, borderLeft: `3px solid ${cfg.color}` }}>
-          <Typography variant="caption" fontWeight={700} sx={{ fontFamily: "monospace", display: "block", fontSize: "0.78rem" }}>{order.order_id}</Typography>
-          <Typography variant="caption" color="text.disabled">#{order.id}</Typography>
-        </TableCell>
-        <TableCell sx={{ py: 2 }}>
-          <Typography variant="body2" fontWeight={600}>{addr.name || `User #${order.user_id}`}</Typography>
-          {addr.phone && <Typography variant="caption" color="text.disabled" display="block">{addr.phone}</Typography>}
-          {addr.city && <Typography variant="caption" color="text.disabled">{addr.city}, {addr.state}</Typography>}
-        </TableCell>
-        <TableCell sx={{ py: 2 }}>
-          <Stack spacing={0.5}>
-            <Chip label={order.payment_mode} size="small" sx={{ bgcolor: order.payment_mode === "ONLINE" ? alpha("#3b82f6", 0.1) : alpha("#64748b", 0.1), color: order.payment_mode === "ONLINE" ? "#3b82f6" : "#64748b", fontWeight: 700, fontSize: "0.68rem", borderRadius: "5px", width: "fit-content" }} />
-            <Chip label={order.payment_status} size="small" sx={{ bgcolor: order.payment_status === "PAID" ? alpha("#10b981", 0.1) : alpha("#f59e0b", 0.1), color: order.payment_status === "PAID" ? "#10b981" : "#f59e0b", fontWeight: 700, fontSize: "0.68rem", borderRadius: "5px", width: "fit-content" }} />
-          </Stack>
-        </TableCell>
-        <TableCell sx={{ py: 2 }}>
-          <Typography fontWeight={800} color={BRAND}>₹{parseFloat(order.total_amount).toFixed(0)}</Typography>
-        </TableCell>
-        <TableCell sx={{ py: 2 }}><StatusChip status={order.order_status} /></TableCell>
-        <TableCell sx={{ py: 2 }}>
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            <AccessTimeIcon sx={{ fontSize: 12, color: "text.disabled" }} />
-            <Typography variant="caption" color="text.disabled">{formatTime(order.created_at)}</Typography>
-          </Stack>
-        </TableCell>
-        <TableCell align="right" sx={{ py: 2 }}>
-          <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
-            <Tooltip title="View Details">
-              <IconButton size="small" onClick={() => setDetailOrderId(order.order_id)} sx={{ borderRadius: "8px", color: "text.disabled", "&:hover": { color: BRAND, bgcolor: alpha(BRAND, 0.06) } }}>
-                <InfoOutlinedIcon sx={{ fontSize: 16 }} />
-              </IconButton>
-            </Tooltip>
-            <ActionButtons order={order} compact />
-          </Stack>
-        </TableCell>
-      </TableRow>
-    );
-  };
-
-  // ─── Empty State ───────────────────────────────────────────────────────────
-  const EmptyState = () => (
-    <Box textAlign="center" py={8}>
-      <Box sx={{ width: 72, height: 72, borderRadius: "18px", bgcolor: alpha(BRAND, 0.08), display: "flex", alignItems: "center", justifyContent: "center", mx: "auto", mb: 2, transform: "rotate(-6deg)" }}>
-        <ShoppingBagIcon sx={{ fontSize: 36, color: BRAND }} />
-      </Box>
-      <Typography variant="h6" fontWeight={700} color="text.primary" mb={0.5}>
-        No {STATUS_CONFIG[activeStatus]?.label || ""} orders
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Orders will appear here once customers place them
-      </Typography>
-    </Box>
-  );
-
-  // ─── Skeleton ──────────────────────────────────────────────────────────────
-  const SkeletonCards = () => (
-    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }, gap: 2 }}>
-      {[...Array(6)].map((_, i) => (
-        <Skeleton key={i} variant="rounded" height={290} sx={{ borderRadius: "16px" }} />
-      ))}
-    </Box>
-  );
-
-  // ─── Render ────────────────────────────────────────────────────────────────
+  // ── 5. Render ──────────────────────────────────────────────────────────────
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc", p: { xs: 1.5, md: 3 } }}>
-      <Box sx={{ maxWidth: 1400, mx: "auto" }}>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={3}>
-          <Box>
-            <Typography variant={isMobile ? "h5" : "h4"} fontWeight={800} color="text.primary" letterSpacing="-0.5px">
-              Orders Dashboard
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mt={0.3}>
-              {loading ? "Loading..." : `${orders.length} total order${orders.length !== 1 ? "s" : ""}`}
-            </Typography>
-          </Box>
-          <Stack direction="row" spacing={1} alignItems="center">
-            {!isMobile && (
-              <>
-                <Tooltip title="Card View">
-                  <IconButton onClick={() => setViewMode("card")} sx={{ borderRadius: "10px", bgcolor: viewMode === "card" ? alpha(BRAND, 0.1) : "transparent", color: viewMode === "card" ? BRAND : "text.secondary" }}>
-                    <GridViewIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Table View">
-                  <IconButton onClick={() => setViewMode("table")} sx={{ borderRadius: "10px", bgcolor: viewMode === "table" ? alpha(BRAND, 0.1) : "transparent", color: viewMode === "table" ? BRAND : "text.secondary" }}>
-                    <TableRowsIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </>
-            )}
-            <Button
-              variant="outlined"
-              startIcon={loading ? <CircularProgress size={13} /> : <RefreshIcon />}
-              onClick={fetchOrders}
-              disabled={loading}
-              sx={{ borderRadius: "10px", textTransform: "none", fontWeight: 600, borderColor: alpha(BRAND, 0.3), color: BRAND, "&:hover": { bgcolor: alpha(BRAND, 0.05), borderColor: BRAND } }}
-            >
-              {!isMobile && "Refresh"}
-            </Button>
-          </Stack>
-        </Stack>
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Orders Dashboard</h1>
+          <p className="text-sm text-gray-400 mt-0.5">
+            {loading ? "Loading…" : `${totalOrders} total order${totalOrders !== 1 ? "s" : ""}`}
+          </p>
+        </div>
 
-        {/* Fetch error */}
+        {/* Errors */}
         {error && (
-          <Alert severity="error" sx={{ mb: 2, borderRadius: "12px" }} onClose={() => setError(null)}
-            action={<Button color="error" size="small" onClick={fetchOrders}>Retry</Button>}>
-            {error}
-          </Alert>
+          <div className="mb-4 flex items-center justify-between bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+            <span>{error}</span>
+            <button onClick={() => fetchOrders(page)} className="ml-4 font-bold underline text-red-600 text-xs hover:text-red-800">Retry</button>
+          </div>
         )}
-
-        {/* Action error */}
         {actionError && (
-          <Alert severity="warning" sx={{ mb: 2, borderRadius: "12px" }} onClose={() => setActionError(null)}>
-            {actionError}
-          </Alert>
+          <div className="mb-4 flex items-center justify-between bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-xl px-4 py-3">
+            <span>{actionError}</span>
+            <button onClick={() => setActionError(null)} className="ml-4 text-amber-500 hover:text-amber-700 font-bold">✕</button>
+          </div>
         )}
 
         {/* Tabs */}
-        <Paper elevation={0} sx={{ borderRadius: "14px", mb: 3, bgcolor: "#fff", border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
-          <Tabs
-            value={activeTab}
-            onChange={(_, v) => setActiveTab(v)}
-            variant="scrollable"
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            sx={{
-              minHeight: { xs: 50, md: 58 },
-              "& .MuiTab-root": { minHeight: { xs: 50, md: 58 }, fontWeight: 600, textTransform: "none", fontSize: { xs: "0.78rem", md: "0.87rem" }, px: { xs: 1.5, md: 2.5 }, color: "text.secondary", "&.Mui-selected": { color: BRAND, fontWeight: 800 } },
-              "& .MuiTabs-indicator": { height: 3, borderRadius: "3px 3px 0 0", bgcolor: BRAND },
-            }}
-          >
-            {TAB_CONFIG.map((status, idx) => {
-              const cfg = STATUS_CONFIG[status];
-              const count = getCount(status);
+        <div className="bg-white rounded-2xl border border-gray-200 mb-4 overflow-hidden">
+          <div className="flex overflow-x-auto">
+            {TAB_CONFIG.map((tab, idx) => {
+              const count  = getCount(tab.key);
+              const active = activeTab === idx;
               return (
-                <Tab
-                  key={status}
-                  label={
-                    <Stack direction="row" spacing={0.8} alignItems="center">
-                      <span>{cfg.label}</span>
-                      {count > 0 && (
-                        <Box sx={{ px: 0.7, py: 0.05, borderRadius: "5px", bgcolor: activeTab === idx ? alpha(cfg.color, 0.15) : alpha(cfg.color, 0.07), color: cfg.color, fontWeight: 800, fontSize: "0.67rem", minWidth: 18, textAlign: "center", lineHeight: 1.7 }}>
-                          {count}
-                        </Box>
-                      )}
-                    </Stack>
-                  }
-                />
+                <button key={tab.key}
+                  onClick={() => { setActiveTab(idx); setPage(1); setSearch(""); }}
+                  style={active ? { borderColor: BRAND, color: BRAND } : {}}
+                  className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors flex-shrink-0 ${active ? "bg-red-50/40" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
+                  {tab.label}
+                  {count > 0 && (
+                    <span style={active ? { background: "rgba(255,82,82,0.12)", color: BRAND } : {}}
+                      className={`text-xs font-bold px-1.5 py-0.5 rounded min-w-[20px] text-center ${!active && "bg-gray-100 text-gray-500"}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
               );
             })}
-          </Tabs>
-        </Paper>
+          </div>
+        </div>
 
-        {/* Content Area */}
-        {loading ? (
-          <SkeletonCards />
-        ) : isMobile || viewMode === "card" ? (
-          <Box>
-            {filteredOrders.length === 0 ? (
-              <Paper elevation={0} sx={{ borderRadius: "14px", bgcolor: "#fff", border: "1px solid", borderColor: "divider" }}>
-                <EmptyState />
-              </Paper>
-            ) : (
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }, gap: 2 }}>
-                {filteredOrders.map((order) => <OrderCard key={order.id} order={order} />)}
-              </Box>
-            )}
-          </Box>
-        ) : (
-          <TableContainer component={Paper} elevation={0} sx={{ borderRadius: "14px", border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: "#f8fafc" }}>
-                  {["Order ID", "Customer", "Payment", "Total", "Status", "Time", "Actions"].map((h) => (
-                    <TableCell key={h} align={h === "Actions" ? "right" : "left"} sx={{ fontWeight: 800, py: 1.8, color: "text.secondary", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                      {h}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredOrders.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} sx={{ border: 0 }}><EmptyState /></TableCell></TableRow>
-                ) : (
-                  filteredOrders.map((order) => <OrderTableRow key={order.id} order={order} />)
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+        {/* Search Bar - Sirf ALL tab pe */}
+        {activeKey === "ALL" && (
+          <div className="mb-4">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                value={search}
+                onChange={(e)=>setSearch(e.target.value)}
+                placeholder="Search by order ID, customer name, phone..."
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100"
+              />
+              {search && (
+                <button onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 font-bold">✕</button>
+              )}
+            </div>
+          </div>
         )}
-      </Box>
 
-      {/* Detail Dialog — API 2 */}
-      <OrderDetailDialog
+        {/* Table */}
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  {["Order ID","Customer","Items","Payment","Total","Status","Time","Actions"].map((h) => (
+                    <th key={h} className={`py-3.5 px-4 text-xs font-bold uppercase tracking-wider text-gray-400 ${h === "Actions" ? "text-right" : "text-left"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  [...Array(6)].map((_, i) => (
+                    <tr key={i} className="border-b border-gray-50">
+                      {[...Array(8)].map((_, j) => (
+                        <td key={j} className="py-4 px-4">
+                          <div className="h-4 bg-gray-100 rounded animate-pulse" style={{ width: `${45 + Math.random()*45}%` }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ):filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-16 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,82,82,0.08)", transform: "rotate(-6deg)" }}>
+                          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FF5252" strokeWidth="1.5">
+                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">
+                            {search ? `No results for "${search}"` : `No ${TAB_CONFIG[activeTab].label} orders`}
+                          </p>
+                          <p className="text-sm text-gray-400 mt-0.5">
+                            {search ? "Try a different search term" : "Orders will appear here once customers place them"}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders.map((order) => {
+                    const m     = STATUS_META[order.order_status] || STATUS_META.CREATED;
+                    const addr  = order.delivery_address || {};
+                    const isNew = order.order_status === "CREATED";
+
+                    // ✅ Tracking button — driver pickup ke baad (otp_verified = true)
+                    const showTracking = order.otp_verified === true || order.driver_assigned === true;
+
+                    return (
+                      <tr key={order.id} className="border-b border-gray-50 transition-colors"
+                        style={{ borderLeft: `3px solid ${m.dot}`, background: isNew ? "rgba(245,158,11,0.04)" : undefined }}>
+
+                        {/* Order ID */}
+                        <td className="py-3.5 px-4">
+                          <span className="font-mono text-xs font-bold text-gray-700 block">{order.order_id}</span>
+                          {isNew && (
+                            <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded mt-1 inline-block">🆕 NEW</span>
+                          )}
+                        </td>
+
+                        {/* Customer */}
+                        <td className="py-3.5 px-4">
+                          <span className="text-sm font-semibold text-gray-800 block">
+                            {addr.name || order.user?.name || `User #${order.user_id}`}
+                          </span>
+                          <span className="text-xs text-gray-400 block">{addr.phone || order.user?.phone || "—"}</span>
+                          {addr.city && (
+                            <span className="text-xs text-gray-400">{addr.city}{addr.state ? `, ${addr.state}` : ""}</span>
+                          )}
+                        </td>
+
+                        {/* Items - ✅ dish_name use kar rahe hain */}
+                        <td className="py-3.5 px-4" style={{ maxWidth: 180 }}>
+                          {order.items?.length > 0 ? (
+                            <div className="space-y-0.5">
+                              {order.items.slice(0, 2).map((item) => (
+                                <p key={item.id} className="text-xs text-gray-600 truncate">
+                                  <span className="font-bold text-gray-800">{item.quantity}×</span>{" "}
+                                  {item.dish?.name || `Item #${item.id}`}
+                                </p>
+                              ))}
+                              {order.items?.length > 2 && (
+                                <p className="text-xs text-gray-400">+{order.items.length - 2} more</p>
+                              )}
+                            </div>
+                          ) : <span className="text-xs text-gray-400">—</span>}
+                        </td>
+
+                        {/* Payment */}
+                        <td className="py-3.5 px-4">
+                          <div className="flex flex-col gap-1">
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded w-fit ${order.payment_mode === "ONLINE" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>
+                              {order.payment_mode || "COD"}
+                            </span>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded w-fit ${order.payment_status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                              {order.payment_status || "PENDING"}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Total */}
+                        <td className="py-3.5 px-4">
+                          <span className="text-base font-extrabold" style={{ color: BRAND }}>₹{fmt(order.total_amount)}</span>
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-3.5 px-4">
+                          <StatusBadge status={order.order_status} />
+                        </td>
+
+                        {/* Time */}
+                        <td className="py-3.5 px-4">
+                          <span className="text-xs text-gray-400 whitespace-nowrap">{formatTime(order.created_at)}</span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
+
+                            {/* Info button */}
+                            <button onClick={() => setDetailOrderId(order.order_id)} title="View details"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                              </svg>
+                            </button>
+
+                            {/* Kitchen action buttons */}
+                            <ActionButtons order={order} updatingId={updatingId} onAction={handleAction} />
+
+                            {/* ✅ Tracking button - OTP verify hone ke baad dikhega */}
+                            {showTracking && (
+                              <button
+                                onClick={() => navigate(`/tracking?orderId=${order.order_id}`)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white flex-shrink-0 hover:opacity-90 transition-opacity"
+                                style={{ background: "#0ea5e9" }}
+                                title="Track Order">
+                                📍Track
+                              </button>
+                            )}
+
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination - Sirf ALL tab pe */}
+          {activeKey === "ALL" && totalPages > 1 && (
+            <div className="flex items-center justify-between px-5 py-3.5 border-t border-gray-100 bg-gray-50/60">
+              <p className="text-xs text-gray-400">
+                Page <span className="font-bold text-gray-600">{page}</span> of{" "}
+                <span className="font-bold text-gray-600">{totalPages}</span> · {totalOrders} total
+              </p>
+              <div className="flex items-center gap-1">
+                <button disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">← Prev</button>
+                {[...Array(Math.min(totalPages, 7))].map((_, i) => {
+                  const pg = i + 1;
+                  return (
+                    <button key={pg} onClick={() => setPage(pg)}
+                      style={page === pg ? { background: BRAND, borderColor: BRAND, color: "#fff" } : {}}
+                      className="w-8 h-8 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">{pg}</button>
+                  );
+                })}
+                <button disabled={page >= totalPages || loading} onClick={() => setPage((p) => p + 1)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Next →</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* New Order Popup */}
+      {newOrderPopup && (
+        <NewOrderPopup
+          order={newOrderPopup}
+          onClose={() => setNewOrderPopup(null)}
+          onAction={handleAction}
+          updatingId={updatingId}
+        />
+      )}
+
+      {/* Detail Modal */}
+      <OrderDetailModal
         orderId={detailOrderId}
         open={Boolean(detailOrderId)}
         onClose={() => setDetailOrderId(null)}
       />
-    </Box>
+    </div>
   );
-};
+}
 
-export default Orders;
+

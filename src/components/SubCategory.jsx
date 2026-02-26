@@ -1097,8 +1097,8 @@ const SubCategory = () => {
         checked={Boolean(sc.is_active)}
         onChange={() => updateStatus(sc.id, sc.is_active)}
         sx={{
-          "& .MuiSwitch-switchBase.Mui-checked": { color: "#FF5252" },
-          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: "#FF5252" },
+          "& .MuiSwitch-switchBase.Mui-checked": { color: "#2563EB" },
+          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: "#2563EB" },
         }}
       />
       <Chip

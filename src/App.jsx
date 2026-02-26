@@ -73,8 +73,6 @@ function RedirectIfAuthenticated() {
 
 
 function App() {
-  // useDashboardData();
-  // useOrder()
   return (
     <Routes>
       {/* Root redirect to home */}

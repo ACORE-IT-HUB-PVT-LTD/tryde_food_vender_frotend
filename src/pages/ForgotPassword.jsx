@@ -26,7 +26,7 @@ function ForgotPassword() {
       console.log(res);
       setMsg(res.data.message);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       setErr("Something went wrong. Try again.");
     } finally {
       setLoading(false);
