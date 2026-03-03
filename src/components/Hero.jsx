@@ -1,809 +1,538 @@
-// // src/components/Hero.jsx
-// import React, { useState, useEffect, useRef } from 'react';
-// import { ArrowRight, Sparkles, TrendingUp, Zap } from 'lucide-react';
-// import { useNavigate } from 'react-router-dom';
-// import { motion, AnimatePresence } from 'framer-motion';
-
-// export default function Hero({ siteName = "Tryde" }) {
-//   const [currentSlide, setCurrentSlide] = useState(0);
-//   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-//   const navigate = useNavigate();
-//   const heroRef = useRef(null);
-
-//   const slides =[
-//     {
-//       title: `Grow with ${siteName}`,
-//       highlight: "0% Commission",
-//       highlightSub: "First 30 Days",
-//       subtitle: "Fast onboarding • Instant orders • Weekly payouts",
-//       icon: TrendingUp,
-//       color: "from-[#FF5252] to-[#e03e3e] hover:from-[#e03e3e]"
-
-//     },
-//     {
-//       title: "Zero Risk Partner Program",
-//       highlight: "50,000+ Restaurants",
-//       highlightSub: "Trust Us",
-//       subtitle: "No fees • Dedicated support • Grow easily",
-//       icon: Sparkles,
-//       color: "from-[#FF5252] to-[#e03e3e] hover:from-[#e03e3e]",
-//     },
-//   ];
-
-//   // Auto-slide effect
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setCurrentSlide((prev) => (prev + 1) % slides.length);
-//     }, 7000);
-//     return () => clearInterval(timer);
-//   }, [slides.length]);
-
-//   // Mouse move parallax effect
-//   useEffect(() => {
-//     const handleMouseMove = (e) => {
-//       if (!heroRef.current) return;
-//       const rect = heroRef.current.getBoundingClientRect();
-//       const x = (e.clientX - rect.left) / rect.width;
-//       const y = (e.clientY - rect.top) / rect.height;
-//       setMousePosition({ x, y });
-//     };
-
-//     const heroElement = heroRef.current;
-//     heroElement?.addEventListener('mousemove', handleMouseMove);
-//     return () => heroElement?.removeEventListener('mousemove', handleMouseMove);
-//   }, []);
-
-//   const current = slides[currentSlide];
-//   const IconComponent = current.icon;
-
-//   // Animation variants
-//   const containerVariants = {
-//     hidden: { opacity: 0 },
-//     visible: {
-//       opacity: 1,
-//       transition: {
-//         staggerChildren: 0.15,
-//         delayChildren: 0.2,
-//       },
-//     },
-//     exit: { opacity: 0, transition: { duration: 0.3 } },
-//   };
-
-//   const itemVariants = {
-//     hidden: { opacity: 0, y: 30, filter: "blur(10px)" },
-//     visible: {
-//       opacity: 1,
-//       y: 0,
-//       filter: "blur(0px)",
-//       transition: {
-//         duration: 0.8,
-//         ease: [0.25, 0.4, 0.25, 1],
-//       },
-//     },
-//   };
-
-//   const highlightVariants = {
-//     hidden: { opacity: 0, scale: 0.8, y: 20 },
-//     visible: {
-//       opacity: 1,
-//       scale: 1,
-//       y: 0,
-//       transition: {
-//         duration: 0.9,
-//         ease: [0.34, 1.56, 0.64, 1],
-//       },
-//     },
-//   };
-
-//   return (
-//     <section 
-//       ref={heroRef}
-//       className="relative min-h-screen flex items-center bg-black overflow-hidden font-['Poppins']"
-//     >
-//       {/* Animated Background */}
-//       <div className="absolute inset-0">
-//         {/* Base Image */}
-//         <motion.img
-//           key={currentSlide}
-//           initial={{ scale: 1.1, opacity: 0 }}
-//           animate={{ scale: 1, opacity: 1 }}
-//           transition={{ duration: 1.5, ease: "easeOut" }}
-//           src="https://media.istockphoto.com/id/2117185386/photo/sandwich-one-fresh-big-submarine-sandwich-with-ham-cheese-lettuce-tomatoes-and-microgreens-on.jpg?s=612x612&w=0&k=20&c=TGF0ndDCbSxOoqD7jC8HrsrtX-vNVJPSgGrHw7d8mmk="
-//           alt="Delicious food background"
-//           className="w-full h-full object-cover brightness-[0.5]"
-//           style={{
-//             transform: `translate(${mousePosition.x * 10}px, ${mousePosition.y * 10}px)`,
-//           }}
-//         />
-        
-//         {/* Gradient Overlays */}
-//         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/40" />
-//         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        
-//         {/* Animated Gradient Orbs */}
-//         <motion.div
-//           animate={{
-//             x: [0, 100, 0],
-//             y: [0, 50, 0],
-//             scale: [1, 1.2, 1],
-//           }}
-//           transition={{
-//             duration: 20,
-//             repeat: Infinity,
-//             ease: "easeInOut",
-//           }}
-//           className={`absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r ${current.color} rounded-full blur-3xl opacity-20`}
-//         />
-//         <motion.div
-//           animate={{
-//             x: [0, -80, 0],
-//             y: [0, -60, 0],
-//             scale: [1, 1.3, 1],
-//           }}
-//           transition={{
-//             duration: 25,
-//             repeat: Infinity,
-//             ease: "easeInOut",
-//           }}
-//           className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-l from-[#FF5252] to-[#e03e3e] hover:from-[#e03e3e] rounded-full blur-3xl opacity-15"
-//         />
-//       </div>
-
-//       {/* Floating Particles */}
-//       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-//         {[...Array(15)].map((_, i) => (
-//           <motion.div
-//             key={i}
-//             className="absolute w-1 h-1 bg-white rounded-full"
-//             initial={{
-//               x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920),
-//               y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1080),
-//               opacity: 0,
-//             }}
-//             animate={{
-//               y: [null, -100],
-//               opacity: [0, 1, 0],
-//             }}
-//             transition={{
-//               duration: Math.random() * 5 + 5,
-//               repeat: Infinity,
-//               delay: Math.random() * 5,
-//               ease: "linear",
-//             }}
-//           />
-//         ))}
-//       </div>
-
-//       {/* Main Content */}
-//       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-20">
-//         <AnimatePresence mode="wait">
-//           <motion.div
-//             key={currentSlide}
-//             variants={containerVariants}
-//             initial="hidden"
-//             animate="visible"
-//             exit="exit"
-//             className="max-w-3xl space-y-8"
-//           >
-//             {/* Icon Badge */}
-//             <motion.div
-//               variants={itemVariants}
-//               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20"
-//             >
-//               <IconComponent className="w-4 h-4 text-[#FF5252]" />
-//               <span className="text-sm font-medium text-white/90">Partner Program</span>
-//               <Zap className="w-3 h-3 from-[#FF5252] to-[#e03e3e] hover:from-[#e03e3e]" />
-//             </motion.div>
-
-//             {/* Main Title */}
-//             <motion.h1
-//               variants={itemVariants}
-//               className="text-2xl sm:text-3xl md:text-3xl lg:text-5xl font-bold leading-[1.1] text-white tracking-tight"
-//             >
-//               {current.title}
-//             </motion.h1>
-
-//             {/* Highlight Box */}
-//             <motion.div
-//   variants={highlightVariants}
-//   className="relative inline-block"
-// >
-//   <div className="relative px-5 py-3 rounded-xl bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-lg border border-white/20 overflow-hidden">
-    
-//     {/* Animated Border */}
-//     <motion.div
-//       animate={{ rotate: 360 }}
-//       transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-//       className={`absolute inset-0 bg-gradient-to-r ${current.color} opacity-20 blur-xl`}
-//     />
-
-//     <div className="relative space-y-0.5">
-//       <div
-//         className={`text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r ${current.color} bg-clip-text text-transparent`}
-//       >
-//         {current.highlight}
-//       </div>
-
-//       <div className="text-xs sm:text-sm text-white/80 font-semibold">
-//         {current.highlightSub}
-//       </div>
-//     </div>
-//   </div>
-// </motion.div>
-
-
-//             {/* Subtitle */}
-//             <motion.p
-//               variants={itemVariants}
-//               className="text-xl sm:text-2xl md:text-3xl text-gray-300 font-light max-w-2xl leading-relaxed"
-//             >
-//               {current.subtitle}
-//             </motion.p>
-
-//             {/* CTA Button */}
-//             <motion.div 
-//               variants={itemVariants}
-//               className="pt-4 flex flex-wrap gap-4 items-center"
-//             >
-//               <motion.button
-//                 onClick={() => navigate("/register")}
-//                 className={`
-//                   group relative inline-flex items-center gap-3
-//                   bg-gradient-to-r ${current.color}
-//                   text-white px-8 py-5 rounded-full text-lg font-bold
-//                   shadow-2xl shadow-orange-500/30
-//                   overflow-hidden cursor-pointer
-//                 `}
-//                 whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(251, 146, 60, 0.4)" }}
-//                 whileTap={{ scale: 0.98 }}
-//               >
-//                 {/* Button Shimmer Effect */}
-//                 <motion.div
-//                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent "
-//                   animate={{
-//                     x: ['-200%', '200%'],
-//                   }}
-//                   transition={{
-//                     duration: 2,
-//                     repeat: Infinity,
-//                     ease: "linear",
-//                   }}
-//                 />
-                
-//                 <span className="relative z-10">Join Now</span>
-//                 <ArrowRight 
-//                   size={22} 
-//                   className="relative z-10 group-hover:translate-x-1 transition-transform duration-300" 
-//                 />
-//               </motion.button>
-
-//               <motion.div
-//                 variants={itemVariants}
-//                 className="flex items-center gap-2 text-white/60 text-sm"
-//               >
-                
-//               </motion.div>
-//             </motion.div>
-//           </motion.div>
-//         </AnimatePresence>
-
-//         {/* Slide Indicators */}
-//         <motion.div
-//           variants={itemVariants}
-//           initial="hidden"
-//           animate="visible"
-//           className="absolute bottom-10 left-6 sm:left-10 lg:left-16 flex gap-3"
-//         >
-//           {slides.map((_, index) => (
-//             <button
-//               key={index}
-//               onClick={() => setCurrentSlide(index)}
-//               className="group relative"
-//               aria-label={`Go to slide ${index + 1}`}
-//             >
-//               <div
-//                 className={`
-//                   h-0 rounded-full transition-all duration-500
-//                   ${index === currentSlide ? 'w-12 bg-gradient-to-r from-[#FF5252] to-[#e03e3e] hover:from-[#e03e3e]' : 'w-8 bg-white/30'}
-//                 `}
-//               />
-//               {index === currentSlide && (
-//                 <motion.div
-//                   layoutId="activeSlide"
-//                   className="absolute inset-0 bg-white/20 rounded-full blur-md"
-//                 />
-//               )}
-//             </button>
-//           ))}
-//         </motion.div>
-//       </div>
-
-//       {/* Scroll Indicator */}
-//       <motion.div
-//         initial={{ opacity: 0, y: -20 }}
-//         animate={{ opacity: 1, y: 0 }}
-//         transition={{ delay: 1.5, duration: 0.8 }}
-//         className="absolute bottom-8 right-8 sm:right-12 lg:right-16"
-//       >
-//         <motion.div
-//           animate={{ y: [0, 10, 0] }}
-//           transition={{ duration: 2, repeat: Infinity }}
-//           className="flex flex-col items-center gap-2 text-white/50"
-//         >         
-//         </motion.div>
-//       </motion.div>
-//     </section>
-//   );
-// }
-
-
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ArrowRight, CheckCircle, TrendingUp, Zap, Shield, Clock, ChefHat, Users, Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from "react";
 
 const SLIDES = [
   {
-    badge: "🍕Food Delivery Platform",
-    line1: "Scale Your",
-    line2: "Restaurant",
-    line3: "Revenue",
-    accentLine: 1,
-    desc: "Join 50,000+ restaurants earning more every day. Zero commission for your first 30 days — guaranteed.",
-    cta: "Start For Free",
-    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=700&q=85",
-    earnings: "₹18,240",
-    growth: "↑ 31%",
-    orders: "342 Live Orders",
-    stats: [
-      { icon: TrendingUp, value: "0%",   label: "Commission"  },
-      { icon: Users,      value: "50K+", label: "Restaurants" },
-      { icon: Clock,      value: "24hr", label: "Onboarding"  },
+    id: "01", cat: "Restaurants",
+    word: "REGISTER",
+    sub: "YOUR RESTAURANT",
+    desc: "Join 12,000+ restaurants already thriving on the Tryde platform.",
+    img: "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=1400&auto=format&fit=crop&q=90",
+    tiles: [
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&auto=format&fit=crop&q=80",
     ],
   },
   {
-    badge: "⚡Weekly Guaranteed Payouts",
-    line1: "Real Orders.",
-    line2: "Real Growth.",
-    line3: "Real Money.",
-    accentLine: 2,
-    desc: "Instant order management, live analytics, and a dedicated partner success team for restaurant owners.",
-    cta: "Join Now — Free",
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=700&q=85",
-    earnings: "₹24,580",
-    growth: "↑ 43%",
-    orders: "519 Live Orders",
-    stats: [
-      { icon: Zap,        value: "2min", label: "Avg Order" },
-      { icon: Star,       value: "4.9★", label: "Rating"   },
-      { icon: TrendingUp, value: "3x",   label: "Revenue"  },
+    id: "02", cat: "Vendors",
+    word: "VENDOR",
+    sub: "PLATFORM",
+    desc: "Get your storefront live in under 10 minutes. Zero hassle.",
+    img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1400&auto=format&fit=crop&q=90",
+    tiles: [
+      "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=400&auto=format&fit=crop&q=80",
     ],
   },
   {
-    badge: "🏆Award Winning Partner Program",
-    line1: "More Diners.",
-    line2: "More Orders.",
-    line3: "More Profit.",
-    accentLine: 0,
-    desc: "Smart menu tools, surge pricing alerts, and marketing support — everything a modern restaurant needs.",
-    cta: "Get Started Today",
-    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&q=85",
-    earnings: "₹31,900",
-    growth: "↑ 58%",
-    orders: "781 Live Orders",
-    stats: [
-      { icon: ChefHat, value: "200+", label: "Cuisines" },
-      { icon: Shield,  value: "Safe", label: "Payouts"  },
-      { icon: Zap,     value: "Live", label: "Analytics"},
+    id: "03", cat: "Our Story",
+    word: "PASSION",
+    sub: "BUILT WITH",
+    desc: "A dedicated team crafting the future of modern food service.",
+    img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1400&auto=format&fit=crop&q=90",
+    tiles: [
+      "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=400&auto=format&fit=crop&q=80",
+    ],
+  },
+  {
+    id: "04", cat: "Growth",
+    word: "REVENUE",
+    sub: "GROW YOUR",
+    desc: "Powerful analytics and tools to accelerate your business.",
+    img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1400&auto=format&fit=crop&q=90",
+    tiles: [
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&auto=format&fit=crop&q=80",
+    ],
+  },
+  {
+    id: "05", cat: "Community",
+    word: "THOUSANDS",
+    sub: "LOVED BY",
+    desc: "A thriving community of vendors who chose Tryde and stay.",
+    img: "https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=1400&auto=format&fit=crop&q=90",
+    tiles: [
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&auto=format&fit=crop&q=80",
     ],
   },
 ];
 
-const PERKS = ["Free onboarding", "No hidden fees", "Weekly payouts", "24/7 support"];
+const R = "#ff0000";
+const TICK = 6000;
 
-const BARS = [42, 58, 35, 70, 52, 80, 96];
-
-export default function Hero({ siteName = "Tryde" }) {
-  const [slide, setSlide]       = useState(0);
-  const [progress, setProgress] = useState(0);
+export default function Hero() {
+  const [cur, setCur]     = useState(0);
+  const [key, setKey]     = useState(0);
+  const [phase, setPhase] = useState("idle");
+  const [prog, setProg]   = useState(0);
   const timerRef = useRef(null);
-  const heroRef  = useRef(null);
-  const navigate = useNavigate();
+  const progRef  = useRef(null);
+  const startRef = useRef(null);
 
-  const mx = useMotionValue(0.5);
-  const my = useMotionValue(0.5);
-  const sx = useSpring(mx, { stiffness: 55, damping: 20 });
-  const sy = useSpring(my, { stiffness: 55, damping: 20 });
-  const px = useTransform(sx, [0,1], [-10, 10]);
-  const py = useTransform(sy, [0,1], [-6,  6 ]);
+  const startProg = useCallback(() => {
+    setProg(0); clearInterval(progRef.current);
+    startRef.current = Date.now();
+    progRef.current = setInterval(() => {
+      setProg(Math.min(((Date.now() - startRef.current) / TICK) * 100, 100));
+    }, 25);
+  }, []);
 
-  const startTimer = () => {
-    clearInterval(timerRef.current);
-    setProgress(0);
-    let p = 0;
-    timerRef.current = setInterval(() => {
-      p += 100 / 60;
-      if (p >= 100) { setSlide(prev => (prev + 1) % SLIDES.length); p = 0; }
-      setProgress(p);
-    }, 100);
-  };
+  const go = useCallback((next) => {
+    if (phase !== "idle" || next === cur) return;
+    clearTimeout(timerRef.current); clearInterval(progRef.current);
+    setPhase("out");
+    setTimeout(() => {
+      setCur(next); setKey(k => k + 1);
+      setPhase("in"); startProg();
+      setTimeout(() => {
+        setPhase("idle");
+        timerRef.current = setTimeout(() => go((next + 1) % SLIDES.length), TICK);
+      }, 800);
+    }, 500);
+  }, [cur, phase, startProg]);
 
-  useEffect(() => { startTimer(); return () => clearInterval(timerRef.current); }, []);
-  const goTo = (i) => { setSlide(i); startTimer(); };
+  useEffect(() => {
+    startProg();
+    timerRef.current = setTimeout(() => go(1), TICK);
+    return () => { clearTimeout(timerRef.current); clearInterval(progRef.current); };
+  }, []);
 
-  const onMouseMove = (e) => {
-    const r = heroRef.current?.getBoundingClientRect();
-    if (!r) return;
-    mx.set((e.clientX - r.left) / r.width);
-    my.set((e.clientY - r.top)  / r.height);
-  };
-
-  const s = SLIDES[slide];
-
-  const wrap = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.09 } },
-    exit: { transition: { staggerChildren: 0.04, staggerDirection: -1 } },
-  };
-  const item = {
-    hidden: { opacity: 0, y: 32, filter: "blur(10px)" },
-    show:   { opacity: 1, y: 0,  filter: "blur(0px)",  transition: { duration: 0.65, ease: [0.22,1,0.36,1] } },
-    exit:   { opacity: 0, y: -18, filter: "blur(6px)", transition: { duration: 0.3 } },
-  };
+  const s = SLIDES[cur];
+  const isOut = phase === "out";
 
   return (
-    <section
-      ref={heroRef}
-      onMouseMove={onMouseMove}
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        overflow: "hidden",
-        background: "#080C14",
-        fontFamily: "'DM Sans', 'Inter', sans-serif",
-        position: "relative",
-      }}
-    >
-      {/* ── BG gradient ── */}
-      <div style={{
-        position:"absolute", inset:0, pointerEvents:"none",
-        backgroundImage:`
-          radial-gradient(ellipse 70% 55% at 15% 55%, rgba(255,72,60,0.10) 0%, transparent 65%),
-          radial-gradient(ellipse 50% 45% at 88% 25%, rgba(255,130,0,0.07) 0%, transparent 60%)
-        `,
-      }}/>
-      <div style={{
-        position:"absolute", inset:0, pointerEvents:"none", opacity:0.025,
-        backgroundImage:"linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)",
-        backgroundSize:"52px 52px",
-      }}/>
-      <motion.div
-        animate={{ scale:[1,1.2,1], opacity:[0.1,0.22,0.1] }}
-        transition={{ duration:10, repeat:Infinity, ease:"easeInOut" }}
-        style={{
-          position:"absolute", top:"25%", left:"-8%",
-          width:500, height:500, borderRadius:"50%", pointerEvents:"none",
-          background:"radial-gradient(circle, rgba(255,72,60,0.32) 0%, transparent 70%)",
-        }}
-      />
+    <div id="th7">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Poppins:wght@300;400;500;600&display=swap');
 
-      {/* ════ LAYOUT ════ */}
-      <div style={{
-        position:"relative", zIndex:10,
-        width:"100%", maxWidth:1200, margin:"0 auto",
-        padding:"60px 48px",
-        display:"grid",
-        gridTemplateColumns:"1fr 1fr",
-        gap:56,
-        alignItems:"center",
-      }}>
+        #th7, #th7 * { box-sizing: border-box; }
+        #th7 button { border: none; background: none; padding: 0; cursor: pointer; font-family: 'Poppins', sans-serif; }
 
-        {/* ─── LEFT: TEXT ─── */}
-        <div>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={slide}
-              variants={wrap} initial="hidden" animate="show" exit="exit"
-              style={{ display:"flex", flexDirection:"column", gap:20 }}
-            >
-              {/* Badge */}
-              <motion.span variants={item} style={{
-                alignSelf:"flex-start",
-                padding:"6px 14px", borderRadius:999,
-                background:"rgba(255,72,60,0.13)",
-                border:"1px solid rgba(255,72,60,0.32)",
-                color:"#FF8A80", fontSize:12, fontWeight:600, letterSpacing:"0.02em",
-              }}>
-                {s.badge}
-              </motion.span>
+        /* ── ROOT ── */
+        #th7 {
+          position: relative;
+          width: 100%;
+          height: 100vh;
+          min-height: 620px;
+          background: #080808;
+          overflow: hidden;
+          font-family: 'Poppins', sans-serif;
+          display: flex;
+          flex-direction: column;
+        }
 
-              {/* Headline — compact */}
-              <motion.h1 variants={item} style={{ margin:0, lineHeight:1.06 }}>
-                {[s.line1, s.line2, s.line3].map((w, i) => (
-                  <span key={i} style={{ display:"block", fontSize:46, fontWeight:800, letterSpacing:"-1.5px" }}>
-                    {i === s.accentLine
-                      ? <span style={{ background:"linear-gradient(118deg,#FF5252,#FF8C00)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>{w}</span>
-                      : <span style={{ color:"#fff" }}>{w}</span>
-                    }
-                  </span>
-                ))}
-              </motion.h1>
+        /* ── FULL BG (very dark) ── */
+        #th7 .bg {
+          position: absolute; inset: 0; z-index: 0;
+        }
+        #th7 .bg img {
+          width: 100%; height: 100%;
+          object-fit: cover;
+          filter: brightness(.08) saturate(.5);
+          transform: scale(1.04);
+          transition: transform 8s ease;
+        }
+        #th7 .bg img.z { transform: scale(1); }
 
-              {/* Desc */}
-              <motion.p variants={item} style={{
-                margin:0, color:"#8B95A8", fontSize:14, lineHeight:1.65, maxWidth:420,
-              }}>
-                {s.desc}
-              </motion.p>
+        /* noise */
+        #th7 .noise {
+          position: absolute; inset: 0; z-index: 1;
+          opacity: .04; pointer-events: none;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          background-size: 180px;
+        }
 
-              {/* Perks */}
-              <motion.div variants={item} style={{ display:"flex", flexWrap:"wrap", gap:"6px 18px" }}>
-                {PERKS.map(p => (
-                  <span key={p} style={{ display:"flex", alignItems:"center", gap:5, fontSize:12.5, color:"#C4CDD8", fontWeight:500 }}>
-                    <CheckCircle size={13} style={{ color:"#FF5252", flexShrink:0 }} />
-                    {p}
-                  </span>
-                ))}
-              </motion.div>
+        /* ── TOP BAR ── */
+        #th7 .topbar {
+          position: relative; z-index: 20;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: clamp(1.5rem,3vh,2.5rem) clamp(2rem,4vw,4.5rem) 0;
+          flex-shrink: 0;
+        }
+        #th7 .logo {
+          font-family: 'Oswald', sans-serif;
+          font-size: clamp(1rem,1.8vw,1.3rem);
+          letter-spacing: .3em;
+          font-weight: 700;
+          color: #fff;
+          display: flex; align-items: center; gap: .5rem;
+        }
+        #th7 .logo-r { color: ${R}; }
+        #th7 .topbar-right {
+          display: flex; align-items: center; gap: 1.5rem;
+        }
+        #th7 .tb-cat {
+          font-size: .6rem; font-weight: 600;
+          letter-spacing: .2em; text-transform: uppercase;
+          color: rgba(255,255,255,.3);
+          display: flex; align-items: center; gap: .5rem;
+        }
+        #th7 .tb-dot {
+          width: 5px; height: 5px; border-radius: 50%;
+          background: ${R};
+          animation: th7-blink 1.8s ease infinite;
+        }
 
-              {/* CTAs */}
-              <motion.div variants={item} style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-                <motion.button
-                  whileHover={{ scale:1.04, boxShadow:"0 16px 48px rgba(255,72,60,0.45)" }}
-                  whileTap={{ scale:0.97 }}
-                  onClick={() => navigate("/register")}
-                  style={{
-                    position:"relative", overflow:"hidden",
-                    display:"flex", alignItems:"center", gap:8,
-                    padding:"12px 24px", borderRadius:12,
-                    background:"linear-gradient(135deg,#FF5252,#FF8C00)",
-                    color:"#fff", fontWeight:700, fontSize:14,
-                    border:"none", cursor:"pointer",
-                  }}
-                >
-                  <motion.div
-                    style={{ position:"absolute", inset:0, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.22),transparent)" }}
-                    animate={{ x:["-180%","180%"] }}
-                    transition={{ duration:2.2, repeat:Infinity, ease:"linear" }}
-                  />
-                  <span style={{ position:"relative", zIndex:1 }}>{s.cta}</span>
-                  <ArrowRight size={15} style={{ position:"relative", zIndex:1 }} />
-                </motion.button>
-              </motion.div>
+        /* ── CENTRE: text mask + tiles ── */
+        #th7 .centre {
+          flex: 1;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+          padding: 0 clamp(1.5rem,4vw,4rem);
+        }
 
-              {/* Stats */}
-              <motion.div variants={item} style={{
-                display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14,
-                paddingTop:16, borderTop:"1px solid rgba(255,255,255,0.06)",
-              }}>
-                {s.stats.map(({ icon: Icon, value, label }) => (
-                  <div key={label} style={{ display:"flex", flexDirection:"column", gap:3 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                      <div style={{
-                        width:26, height:26, borderRadius:7,
-                        background:"rgba(255,72,60,0.15)",
-                        display:"flex", alignItems:"center", justifyContent:"center",
-                      }}>
-                        <Icon size={13} style={{ color:"#FF5252" }} />
-                      </div>
-                      <span style={{ fontSize:22, fontWeight:800, color:"#fff" }}>{value}</span>
-                    </div>
-                    <span style={{ fontSize:11, color:"#5C6470", fontWeight:500, paddingLeft:32 }}>{label}</span>
-                  </div>
-                ))}
-              </motion.div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        /* GIANT MASKED TEXT — image shows through letters */
+        #th7 .mask-word {
+          font-family: 'Oswald', sans-serif;
+          font-weight: 700;
+          font-size: clamp(5.5rem,16vw,18rem);
+          text-transform: uppercase;
+          letter-spacing: -.01em;
+          line-height: 1;
+          text-align: center;
+          /* image mask trick */
+          background-size: cover;
+          background-position: center;
+          background-attachment: fixed;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          position: relative;
+          z-index: 3;
+          user-select: none;
+          transition: background-image .01s;
+          /* fallback color if clip not supported */
+          color: #fff;
+        }
 
-        {/* ─── RIGHT: IMAGE ─── */}
-        <div style={{ position:"relative", display:"flex", alignItems:"center", justifyContent:"flex-end" }}>
+        #th7 .sub-word {
+          font-family: 'Oswald', sans-serif;
+          font-weight: 700;
+          font-size: clamp(1.5rem,3.5vw,4rem);
+          text-transform: uppercase;
+          letter-spacing: .08em;
+          color: rgba(255,255,255,.18);
+          text-align: center;
+          margin-bottom: .3rem;
+          display: block;
+        }
 
-          {/* Rings */}
-          {[430, 360, 285].map((size, i) => (
-            <motion.div key={size}
-              style={{
-                position:"absolute",
-                width:size, height:size, borderRadius:"50%",
-                border:`1px dashed rgba(255,72,60,${0.07 + i * 0.035})`,
-                pointerEvents:"none",
-              }}
-              animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
-              transition={{ duration:38 + i * 12, repeat:Infinity, ease:"linear" }}
-            />
-          ))}
+        #th7 .text-stack {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          z-index: 3;
+        }
 
-          {/* Card */}
-          <AnimatePresence mode="wait">
-            <motion.div key={`card-${slide}`}
-              initial={{ opacity:0, scale:0.84, x:60 }}
-              animate={{ opacity:1, scale:1,    x:0  }}
-              exit={{   opacity:0, scale:0.89,  x:-44 }}
-              transition={{ duration:0.85, ease:[0.22,1,0.36,1] }}
-            >
-              <motion.div style={{ x:px, y:py }}>
-                <motion.div
-                  whileHover={{ scale:1.02 }}
-                  transition={{ type:"spring", stiffness:170, damping:24 }}
-                  style={{
-                    position:"relative",
-                    width:360, height:460,
-                    borderRadius:32,
-                    overflow:"hidden",
-                    boxShadow:"0 32px 80px rgba(0,0,0,0.75), 0 0 0 1.5px rgba(255,72,60,0.28)",
-                  }}
-                >
-                  {/* Photo */}
-                  <AnimatePresence mode="wait">
-                    <motion.img
-                      key={s.image}
-                      src={s.image}
-                      alt="food"
-                      initial={{ scale:1.14, opacity:0, filter:"blur(14px)" }}
-                      animate={{ scale:1,    opacity:1, filter:"blur(0px)"  }}
-                      exit={{   scale:1.07,  opacity:0, filter:"blur(7px)"  }}
-                      transition={{ duration:0.85, ease:"easeOut" }}
-                      style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}
-                    />
-                  </AnimatePresence>
+        /* red underline bar */
+        #th7 .red-bar {
+          width: clamp(40px, 8vw, 80px);
+          height: 3px;
+          background: ${R};
+          margin: .6rem auto 0;
+          box-shadow: 0 0 16px rgba(255,0,0,.6);
+        }
 
-                  {/* Overlay */}
-                  <div style={{
-                    position:"absolute", inset:0,
-                    background:"linear-gradient(180deg,rgba(0,0,0,0.04) 0%,rgba(0,0,0,0.72) 100%)",
-                  }}/>
+        /* ── TILES STRIP ── */
+        #th7 .tiles {
+          position: absolute;
+          right: clamp(1.5rem,4vw,4rem);
+          top: 50%;
+          transform: translateY(-50%);
+          display: flex;
+          flex-direction: column;
+          gap: .75rem;
+          z-index: 5;
+        }
+        #th7 .tile {
+          width: clamp(70px,9vw,110px);
+          height: clamp(52px,6.5vw,80px);
+          overflow: hidden;
+          position: relative;
+          cursor: pointer;
+          border: 2px solid transparent;
+          transition: border-color .3s, transform .3s;
+        }
+        #th7 .tile.active { border-color: ${R}; box-shadow: 0 0 16px rgba(255,0,0,.4); }
+        #th7 .tile:hover { transform: scale(1.06); }
+        #th7 .tile img {
+          width: 100%; height: 100%;
+          object-fit: cover;
+          filter: brightness(.5) saturate(.6);
+          transition: filter .3s;
+        }
+        #th7 .tile.active img, #th7 .tile:hover img {
+          filter: brightness(.75) saturate(1);
+        }
+        #th7 .tile-num {
+          position: absolute;
+          bottom: 3px; right: 5px;
+          font-family: 'Oswald', sans-serif;
+          font-size: .55rem; font-weight: 700;
+          color: rgba(255,255,255,.5);
+          letter-spacing: .08em;
+        }
 
-                  {/* Live orders chip */}
-                  <motion.div
-                    initial={{ opacity:0, x:-14 }}
-                    animate={{ opacity:1, x:0 }}
-                    transition={{ delay:0.5 }}
-                    style={{
-                      position:"absolute", top:16, left:16,
-                      display:"flex", alignItems:"center", gap:6,
-                      padding:"7px 12px", borderRadius:12,
-                      background:"rgba(8,12,20,0.80)", backdropFilter:"blur(14px)",
-                      border:"1px solid rgba(255,255,255,0.10)",
-                    }}
-                  >
-                    <motion.span
-                      animate={{ opacity:[1,0.2,1], scale:[1,1.4,1] }}
-                      transition={{ duration:1.4, repeat:Infinity }}
-                      style={{ width:7, height:7, borderRadius:"50%", background:"#4CAF50", display:"block" }}
-                    />
-                    <span style={{ color:"#fff", fontSize:12, fontWeight:600 }}>{s.orders}</span>
-                  </motion.div>
+        /* left info column */
+        #th7 .info-col {
+          position: absolute;
+          left: clamp(1.5rem,4vw,4rem);
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 5;
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+          max-width: 200px;
+        }
+        #th7 .ic-num {
+          font-family: 'Oswald', sans-serif;
+          font-size: clamp(3rem,5vw,5rem);
+          font-weight: 700;
+          color: transparent;
+          -webkit-text-stroke: 1px rgba(255,255,255,.08);
+          line-height: 1;
+          letter-spacing: -.02em;
+        }
+        #th7 .ic-label {
+          font-size: .6rem; font-weight: 500;
+          letter-spacing: .18em; text-transform: uppercase;
+          color: rgba(255,255,255,.25);
+          border-left: 2px solid ${R};
+          padding-left: .7rem;
+          line-height: 1.4;
+        }
+        #th7 .ic-desc {
+          font-size: clamp(.68rem,.95vw,.8rem);
+          font-weight: 300;
+          color: rgba(255,255,255,.32);
+          line-height: 1.7;
+        }
 
-                  {/* 0% chip */}
-                  <motion.div
-                    initial={{ opacity:0, x:14 }}
-                    animate={{ opacity:1, x:0 }}
-                    transition={{ delay:0.65 }}
-                    style={{
-                      position:"absolute", top:16, right:16,
-                      padding:"6px 12px", borderRadius:10, textAlign:"center",
-                      background:"rgba(255,72,60,0.22)", backdropFilter:"blur(12px)",
-                      border:"1px solid rgba(255,72,60,0.38)",
-                    }}
-                  >
-                    <div style={{ color:"#FF8A80", fontSize:13, fontWeight:800, lineHeight:1 }}>0% Fee</div>
-                    <div style={{ color:"#A0AAB4", fontSize:10, marginTop:2 }}>30 days</div>
-                  </motion.div>
+        /* ── BOTTOM BAR ── */
+        #th7 .bottom {
+          position: relative; z-index: 20;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 clamp(2rem,4vw,4.5rem) clamp(1.5rem,3vh,2.5rem);
+          flex-shrink: 0;
+          gap: 1rem;
+        }
 
-                  {/* Earnings card */}
-                  <motion.div
-                    initial={{ opacity:0, y:24 }}
-                    animate={{ opacity:1, y:0 }}
-                    transition={{ delay:0.8, type:"spring", stiffness:110 }}
-                    style={{
-                      position:"absolute", bottom:14, left:14, right:14,
-                      padding:"14px 16px", borderRadius:20,
-                      background:"rgba(8,12,20,0.86)", backdropFilter:"blur(18px)",
-                      border:"1px solid rgba(255,255,255,0.09)",
-                    }}
-                  >
-                    <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between" }}>
-                      <div>
-                        <p style={{ color:"#5C6470", fontSize:11, margin:"0 0 3px", fontWeight:500 }}>Today's Earnings</p>
-                        <p style={{ color:"#fff", fontSize:26, fontWeight:900, margin:0, letterSpacing:"-0.5px" }}>{s.earnings}</p>
-                        <div style={{ display:"flex", alignItems:"center", gap:5, marginTop:5 }}>
-                          <span style={{
-                            fontSize:11, fontWeight:700,
-                            padding:"2px 7px", borderRadius:999,
-                            background:"rgba(76,175,80,0.2)", color:"#81C784",
-                          }}>{s.growth}</span>
-                          <span style={{ color:"#5C6470", fontSize:11 }}>vs yesterday</span>
-                        </div>
-                      </div>
-                      {/* Bar chart */}
-                      <div style={{ display:"flex", alignItems:"flex-end", gap:3 }}>
-                        {BARS.map((h, i) => (
-                          <motion.div key={i}
-                            initial={{ scaleY:0 }}
-                            animate={{ scaleY:1 }}
-                            transition={{ delay:1.05 + i * 0.07, duration:0.4, ease:"easeOut" }}
-                            style={{
-                              width:6, height:h * 0.3,
-                              background: i === 6 ? "#FF5252" : "rgba(255,255,255,0.14)",
-                              borderRadius:3, transformOrigin:"bottom",
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          </AnimatePresence>
+        /* CTA left */
+        #th7 .cta-left {
+          display: flex; align-items: center; gap: 1rem;
+        }
+        #th7 .btn-main {
+          display: inline-flex; align-items: center; gap: .55rem;
+          background: ${R};
+          color: #fff;
+          font-size: .65rem; font-weight: 600;
+          letter-spacing: .16em; text-transform: uppercase;
+          padding: .82rem 1.8rem;
+          position: relative; overflow: hidden;
+          transition: box-shadow .3s, transform .2s;
+        }
+        #th7 .btn-main::after {
+          content: ''; position: absolute; inset: 0;
+          background: rgba(255,255,255,.13);
+          transform: translateX(-110%) skewX(-15deg);
+          transition: transform .45s;
+        }
+        #th7 .btn-main:hover::after { transform: translateX(120%) skewX(-15deg); }
+        #th7 .btn-main:hover { box-shadow: 0 8px 28px rgba(255,0,0,.5); transform: translateY(-2px); }
+        #th7 .btn-ghost {
+          font-size: .62rem; font-weight: 400;
+          letter-spacing: .12em; text-transform: uppercase;
+          color: rgba(255,255,255,.25);
+          border-bottom: 1px solid rgba(255,255,255,.1);
+          padding-bottom: 2px;
+          transition: color .25s, border-color .25s;
+        }
+        #th7 .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,.5); }
 
-          {/* Orbiting emojis */}
-          {[
-            { emoji:"🍕", deg:0,   r:220, dur:22 },
-            { emoji:"🍔", deg:130, r:220, dur:28 },
-            { emoji:"🍜", deg:250, r:220, dur:20 },
-          ].map(({ emoji, deg, r, dur }) => (
-            <motion.div key={emoji}
-              style={{ position:"absolute", pointerEvents:"none", zIndex:20 }}
-              animate={{ rotate:360 }}
-              transition={{ duration:dur, repeat:Infinity, ease:"linear" }}
-            >
-              <motion.span
-                style={{
-                  display:"flex", alignItems:"center", justifyContent:"center",
-                  width:36, height:36, borderRadius:"50%", fontSize:16,
-                  background:"rgba(255,72,60,0.13)", backdropFilter:"blur(8px)",
-                  border:"1px solid rgba(255,72,60,0.22)",
-                  position:"absolute",
-                  left: Math.cos((deg * Math.PI) / 180) * r - 18,
-                  top:  Math.sin((deg * Math.PI) / 180) * r - 18,
-                }}
-                animate={{ rotate:-360 }}
-                transition={{ duration:dur, repeat:Infinity, ease:"linear" }}
-              >
-                {emoji}
-              </motion.span>
-            </motion.div>
-          ))}
+        /* dots center */
+        #th7 .dots-wrap {
+          display: flex; flex-direction: column; align-items: center; gap: .5rem;
+        }
+        #th7 .dots {
+          display: flex; gap: .5rem;
+        }
+        #th7 .dot {
+          height: 3px; border-radius: 2px;
+          transition: all .4s cubic-bezier(.22,1,.36,1);
+          cursor: pointer;
+        }
+        #th7 .prog-bar {
+          width: 100px; height: 1px;
+          background: rgba(255,255,255,.08);
+          position: relative; overflow: hidden;
+        }
+        #th7 .prog-fill {
+          position: absolute; inset: 0 auto 0 0;
+          background: ${R}; box-shadow: 0 0 6px ${R};
+          transition: width .025s linear;
+        }
+
+        /* arrows right */
+        #th7 .arrows { display: flex; gap: .5rem; }
+        #th7 .arr {
+          width: 40px; height: 40px;
+          border-radius: 50%;
+          border: 1px solid rgba(255,255,255,.1) !important;
+          color: rgba(255,255,255,.35);
+          display: flex; align-items: center; justify-content: center;
+          font-size: .9rem;
+          transition: all .25s;
+        }
+        #th7 .arr:hover { background: ${R}; border-color: ${R} !important; color: #fff; }
+
+        /* ── KEYFRAMES ── */
+        @keyframes th7-blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+        @keyframes th7-wordIn {
+          from { opacity: 0; transform: scale(.92); filter: blur(8px); }
+          to   { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+        @keyframes th7-wordOut {
+          from { opacity: 1; transform: scale(1); filter: blur(0); }
+          to   { opacity: 0; transform: scale(1.06); filter: blur(8px); }
+        }
+        @keyframes th7-subIn {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes th7-tileIn {
+          from { opacity: 0; transform: translateX(20px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes th7-infoIn {
+          from { opacity: 0; transform: translateX(-20px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes th7-barGrow {
+          from { width: 0; }
+          to   { width: clamp(40px, 8vw, 80px); }
+        }
+
+        #th7 .word-in  { animation: th7-wordIn  .7s cubic-bezier(.22,1,.36,1) .0s both; }
+        #th7 .word-out { animation: th7-wordOut .4s ease both; }
+        #th7 .sub-in   { animation: th7-subIn   .6s ease .08s both; }
+        #th7 .bar-in   { animation: th7-barGrow .7s cubic-bezier(.22,1,.36,1) .2s both; }
+        #th7 .tile-in0 { animation: th7-tileIn  .5s ease .1s both; }
+        #th7 .tile-in1 { animation: th7-tileIn  .5s ease .2s both; }
+        #th7 .tile-in2 { animation: th7-tileIn  .5s ease .3s both; }
+        #th7 .info-in  { animation: th7-infoIn  .6s ease .15s both; }
+        #th7 .btn-in   { animation: th7-subIn   .5s ease .3s both; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 820px) {
+          #th7 .tiles { display: none; }
+          #th7 .info-col { display: none; }
+          #th7 .mask-word { font-size: clamp(4rem,18vw,9rem); }
+          #th7 .sub-word { font-size: clamp(1.2rem,5vw,2.5rem); }
+        }
+        @media (max-width: 480px) {
+          #th7 .topbar { padding: 1.2rem 1.2rem 0; }
+          #th7 .bottom { padding: 0 1.2rem 1.2rem; }
+          #th7 .mask-word { font-size: clamp(3rem,18vw,7rem); }
+          #th7 .prog-bar { display: none; }
+          #th7 .btn-ghost { display: none; }
+        }
+      `}</style>
+
+      {/* BG */}
+      <div className="bg">
+        <img key={`bg-${key}`} src={s.img} alt="" className={phase === "idle" ? "z" : ""} />
+      </div>
+      <div className="noise" />
+
+      {/* TOP BAR */}
+      <div className="topbar">
+       
+        <div className="topbar-right">
+          <div className="tb-cat" key={`tc-${key}`}>
+            <div className="tb-dot" />
+            {s.cat}
+          </div>
         </div>
       </div>
 
-      {/* ── Slide indicators ── */}
-      <div style={{
-        position:"absolute", bottom:22, left:"50%", transform:"translateX(-50%)",
-        display:"flex", gap:8, zIndex:20, alignItems:"center",
-      }}>
-        {SLIDES.map((_, i) => (
-          <button key={i} onClick={() => goTo(i)}
-            style={{
-              position:"relative", overflow:"hidden", borderRadius:999,
-              width: i === slide ? 38 : 8, height:8, border:"none", cursor:"pointer",
-              background: i === slide ? "rgba(255,72,60,0.35)" : "rgba(255,255,255,0.16)",
-              transition:"width 0.38s ease, background 0.3s",
-              padding:0,
-            }}
+      {/* CENTRE */}
+      <div className="centre">
+
+        {/* LEFT INFO */}
+        <div className="info-col info-in" key={`ic-${key}`}>
+          <div className="ic-num">{s.id}</div>
+          <div className="ic-label">{s.cat}</div>
+          <p className="ic-desc">{s.desc}</p>
+        </div>
+
+        {/* TEXT MASK */}
+        <div className="text-stack">
+          <span className="sub-word sub-in" key={`sw-${key}`}>{s.sub}</span>
+          <div
+            className={`mask-word ${isOut ? "word-out" : "word-in"}`}
+            key={`mw-${key}`}
+            style={{ backgroundImage: `url(${s.img})` }}
           >
-            {i === slide && (
-              <div style={{
-                position:"absolute", inset:0,
-                background:"#FF5252", borderRadius:999,
-                width:`${progress}%`,
-                transition:"width 0.1s linear",
-              }}/>
-            )}
-          </button>
-        ))}
+            {s.word}
+          </div>
+          <div className="red-bar bar-in" key={`rb-${key}`} />
+        </div>
+
+        {/* RIGHT TILES */}
+        <div className="tiles" key={`tl-${key}`}>
+          {s.tiles.map((t, i) => (
+            <div
+              key={i}
+              className={`tile tile-in${i} ${i === 0 ? "active" : ""}`}
+              onClick={() => go((cur + i + 1) % SLIDES.length)}
+            >
+              <img src={t} alt="" />
+              <span className="tile-num">0{(cur + i + 1) % SLIDES.length + 1}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Watermark */}
-      <div style={{
-        position:"absolute", bottom:22, right:24,
-        color:"rgba(255,255,255,0.07)", fontSize:10,
-        fontWeight:900, letterSpacing:"0.28em",
-      }}>
-        {siteName.toUpperCase()}
+      {/* BOTTOM */}
+      <div className="bottom">
+      
+
+        <div className="dots-wrap">
+          <div className="dots">
+            {SLIDES.map((_, i) => (
+              <button key={i} className="dot" onClick={() => go(i)}
+                style={{
+                  width: i === cur ? "2rem" : ".45rem",
+                  background: i === cur ? R : "rgba(255,255,255,.22)",
+                }}
+              />
+            ))}
+          </div>
+          <div className="prog-bar">
+            <div className="prog-fill" style={{ width: `${prog}%` }} />
+          </div>
+        </div>
+
+        <div className="arrows">
+          <button className="arr" onClick={() => go((cur - 1 + SLIDES.length) % SLIDES.length)}>←</button>
+          <button className="arr" onClick={() => go((cur + 1) % SLIDES.length)}>→</button>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

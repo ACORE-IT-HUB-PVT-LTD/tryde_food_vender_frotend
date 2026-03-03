@@ -1,59 +1,79 @@
-import React from "react";
-import { ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
 
-export default function FinalCTA() {
-  const navigate = useNavigate();
+function FinalCTA() {
+  const bgImage = "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=1920&auto=format&fit=crop&q=85";
 
   return (
-    <section 
-      className="relative h-[480px] md:h-[580px] lg:h-[680px] w-full flex items-center justify-center overflow-hidden font-['Poppins']"
+    <section
+      className="relative min-h-[60vh] flex items-center justify-center overflow-hidden"
+      style={{
+        backgroundColor: '#fff1f1',
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
     >
-      {/* Background */}
-      <div className="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1686836715835-65af22ea5cd4?w=1920&auto=format&fit=crop&q=85"
-          alt="Modern restaurant interior"
-          className="w-full h-full object-cover scale-105 brightness-[0.52] contrast-[1.05]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black/88" />
-      </div>
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/70"></div>
 
-      {/* Content */}
-      <div className="relative z-10 text-center px-6 sm:px-10 max-w-5xl mx-auto">
-        {/* Badge */}
-        <div className="mb-8 md:mb-10">
-        
+      {/* Bottom fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+
+      {/* Main wrapper */}
+      <div className="relative z-10 w-full max-w-6xl px-5 sm:px-8 md:px-10 lg:px-12 py-16">
+        <div className="flex flex-col md:flex-row items-center md:items-stretch justify-between gap-10 lg:gap-16">
+
+          {/* LEFT — Two big lines */}
+          <div className="flex flex-col justify-center md:w-5/12">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
+              Premium Flavors
+            </h1>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight drop-shadow-lg mt-1">
+              Join <span className="text-red-500">Tryde Plate</span>
+            </h1>
+          </div>
+
+          {/* Vertical divider (desktop only) */}
+          <div className="hidden md:block w-px bg-white/20 self-stretch"></div>
+
+          {/* RIGHT — Subheading, content, button */}
+          <div className="flex flex-col justify-center md:w-5/12 text-center md:text-left">
+            <p className="text-lg sm:text-xl font-semibold text-white mb-3 drop-shadow-md">
+              Grow Your Business, On Your Terms
+            </p>
+
+            <p className="text-sm sm:text-base text-gray-300 leading-relaxed mb-7 drop-shadow-md">
+              A vendor platform that values both taste and growth.
+              Join today — reach thousands of customers, get fast payouts,
+              update your menu with ease, and manage real-time orders,
+              all in one place.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-4">
+              <a
+                href="#"
+                className="group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 via-red-600 to-red-500 hover:from-orange-600 hover:via-orange-700 hover:to-orange-600 text-white font-semibold text-sm md:text-base px-7 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-w-[180px]"
+              >
+                List Now
+                <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
+              </a>
+
+              <a
+                href="#"
+                className="group inline-flex items-center justify-center gap-2 bg-white/15 backdrop-blur-md border border-white/40 hover:border-white/70 text-white font-semibold text-sm md:text-base px-7 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-w-[180px]"
+              >
+                Learn More
+                <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
+              </a>
+            </div>
+          </div>
+
         </div>
-
-        {/* Main Heading - Vendor focused */}
-        <h1 className="text-white font-extrabold leading-tight mb-10 md:mb-12">
-          <div className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl">
-            GROW YOUR RESTAURANT
-          </div>
-          <div className="mt-3 flex items-center justify-center gap-4 text-4xl sm:text-5xl md:text-6xl lg:text-5xl">
-            <span className="text-[#FF5252]">ON TRYDE</span>
-          
-          </div>
-        </h1>
-
-        {/* Sub text - clear value for vendors */}
-        <p className="text-white/95 text-lg sm:text-xl md:text-2xl mb-10 md:mb-12 max-w-3xl mx-auto font-medium">
-          Zero commission for first 30 days • More customers • Easy orders • Fast payouts
-        </p>
-
-        {/* Simple clean button */}
-        <button
-          onClick={() => navigate("/register")}
-          className="inline-flex items-center gap-3 px-10 py-4 md:px-14 md:py-5 
-                     text-white text-base md:text-lg font-semibold
-                     bg-[#FF5252] hover:bg-red-600 
-                     rounded-full transition-colors duration-200 shadow-md"
-        >
-          Register Your Restaurant Now
-          <ArrowRight size={22} />
-        </button>
       </div>
     </section>
   );
 }
+
+export default FinalCTA;

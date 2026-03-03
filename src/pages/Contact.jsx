@@ -53,12 +53,12 @@ export default function ContactUs() {
       {/* Navbar */}
       <Navbar siteName={siteName} primaryColor={primaryColor} />
 
-      {/* Hero Section */}
-      <section className="relative min-h-[70vh] sm:min-h-[85vh] flex items-center bg-gradient-to-br from-[#FF5252] via-[#ff4d4d] to-[#d32f2f] text-white overflow-hidden">
-        {/* Decorative Blobs */}
-        <div className="absolute inset-0 opacity-30 pointer-events-none">
-          <div className="absolute -top-20 -left-20 sm:-top-40 sm:-left-40 w-[300px] xs:w-[400px] sm:w-[500px] md:w-[600px] lg:w-[800px] h-[300px] xs:h-[400px] sm:h-[500px] md:h-[600px] lg:h-[800px] bg-white/40 rounded-full blur-3xl animate-pulse-slow" />
-          <div className="absolute -bottom-32 -right-16 sm:-bottom-60 sm:-right-60 w-[400px] xs:w-[500px] sm:w-[600px] md:w-[700px] lg:w-[900px] h-[400px] xs:h-[500px] sm:h-[600px] md:h-[700px] lg:h-[900px] bg-white/30 rounded-full blur-3xl animate-pulse-slow delay-1000" />
+      {/* Hero Section – light theme like About Us */}
+      <section className="relative min-h-[70vh] sm:min-h-[85vh] flex items-center bg-gradient-to-br from-red-50 via-white to-red-50 text-gray-900 overflow-hidden pt-20 sm:pt-24 lg:pt-28">
+        {/* Decorative Blobs – soft red tint */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute -top-20 -left-20 sm:-top-40 sm:-left-40 w-[300px] xs:w-[400px] sm:w-[500px] md:w-[600px] lg:w-[800px] h-[300px] xs:h-[400px] sm:h-[500px] md:h-[600px] lg:h-[800px] bg-[#FF5252]/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-32 -right-16 sm:-bottom-60 sm:-right-60 w-[400px] xs:w-[500px] sm:w-[600px] md:w-[700px] lg:w-[900px] h-[400px] xs:h-[500px] sm:h-[600px] md:h-[700px] lg:h-[900px] bg-[#FF5252]/5 rounded-full blur-3xl animate-pulse delay-1000" />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 xs:px-5 sm:px-8 lg:px-12 py-12 xs:py-14 sm:py-16 md:py-20 grid lg:grid-cols-2 gap-8 xs:gap-10 lg:gap-16 items-center z-10">
@@ -69,22 +69,22 @@ export default function ContactUs() {
             className="text-center lg:text-left"
           >
             <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight">
-              Get in <span className="text-black">Touch</span>
+              Get in <span className="text-[#FF5252]">Touch</span>
             </h1>
-            <p className="mt-4 xs:mt-5 sm:mt-6 text-base xs:text-lg sm:text-xl md:text-2xl max-w-xl mx-auto lg:mx-0 opacity-95">
+            <p className="mt-4 xs:mt-5 sm:mt-6 text-base xs:text-lg sm:text-xl md:text-2xl max-w-xl mx-auto lg:mx-0 text-gray-700">
               Have questions about joining Tryde? Want to add your restaurant or become a vendor? We'd love to hear from you. Our team is ready to help you start delivering food online and grow your business.
             </p>
 
             <div className="mt-6 xs:mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 xs:gap-4 sm:gap-6 justify-center lg:justify-start">
               <a
                 href="#contact-form"
-                className="bg-black text-white px-6 xs:px-8 sm:px-10 py-3 xs:py-4 sm:py-5 rounded-2xl font-bold text-sm xs:text-base sm:text-lg shadow-2xl hover:bg-gray-900 transition-all duration-300 hover:scale-105 active:scale-95"
+                className="bg-[#FF5252] text-white px-6 xs:px-8 sm:px-10 py-3 xs:py-4 sm:py-5 rounded-2xl font-bold text-sm xs:text-base sm:text-lg shadow-xl hover:bg-red-600 transition-all duration-300 hover:scale-105 active:scale-95"
               >
                 Send Message
               </a>
               <a
                 href="tel:+918889990000"
-                className="border-2 border-white text-white px-6 xs:px-8 sm:px-10 py-3 xs:py-4 sm:py-5 rounded-2xl font-bold text-sm xs:text-base sm:text-lg hover:bg-white hover:text-[#FF5252] transition-all duration-300 hover:scale-105 active:scale-95"
+                className="border-2 border-[#FF5252] text-[#FF5252] px-6 xs:px-8 sm:px-10 py-3 xs:py-4 sm:py-5 rounded-2xl font-bold text-sm xs:text-base sm:text-lg hover:bg-[#FF5252] hover:text-white transition-all duration-300 hover:scale-105 active:scale-95"
               >
                 Call Us Now
               </a>
@@ -101,7 +101,7 @@ export default function ContactUs() {
               <img
                 src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
                 alt="Contact us - Vendor support team at Tryde"
-                className="rounded-3xl shadow-2xl border-8 border-white/25 object-cover h-[400px] md:h-[480px] lg:h-[520px] w-full"
+                className="rounded-3xl shadow-2xl border-8 border-white/40 object-cover h-[400px] md:h-[480px] lg:h-[520px] w-full"
               />
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -161,12 +161,12 @@ export default function ContactUs() {
                 key={i}
                 href={item.link}
                 variants={fadeInUp}
-                className="bg-gradient-to-br from-gray-50 to-white p-5 xs:p-6 sm:p-8 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group border border-gray-100"
+                className="bg-gray-50 p-5 xs:p-6 sm:p-8 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group border border-gray-100 text-center"
               >
                 <item.icon className="text-[#FF5252] text-4xl xs:text-5xl sm:text-6xl mx-auto mb-4 xs:mb-5 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-2 xs:mb-3 text-center">{item.title}</h3>
-                <p className="text-gray-800 text-sm xs:text-base sm:text-lg font-semibold text-center">{item.info}</p>
-                <p className="text-gray-600 text-xs xs:text-sm sm:text-base text-center mt-1 xs:mt-2">{item.subInfo}</p>
+                <h3 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-2 xs:mb-3">{item.title}</h3>
+                <p className="text-gray-800 text-sm xs:text-base sm:text-lg font-semibold">{item.info}</p>
+                <p className="text-gray-600 text-xs xs:text-sm sm:text-base mt-1 xs:mt-2">{item.subInfo}</p>
               </motion.a>
             ))}
           </motion.div>
@@ -174,7 +174,7 @@ export default function ContactUs() {
       </section>
 
       {/* Contact Form Section */}
-      <section id="contact-form" className="py-12 xs:py-16 sm:py-20 md:py-28 bg-gradient-to-br from-gray-50 to-white">
+      <section id="contact-form" className="py-12 xs:py-16 sm:py-20 md:py-28 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 lg:px-10">
           <motion.div
             initial="hidden"
@@ -274,7 +274,7 @@ export default function ContactUs() {
                       value={formData.message}
                       onChange={handleChange}
                       required
-                      rows="4" // Adjusted for better mobile view
+                      rows="5"
                       className="w-full px-4 xs:px-5 py-3 xs:py-4 border-2 border-gray-200 rounded-xl focus:border-[#FF5252] focus:outline-none transition-all resize-none text-sm xs:text-base sm:text-lg"
                       placeholder="Tell us more about your restaurant or vendor inquiry..."
                     />
@@ -282,7 +282,7 @@ export default function ContactUs() {
 
                   <button
                     type="submit"
-                    className="w-full bg-[#FF5252] text-white px-6 xs:px-8 py-4 xs:py-5 rounded-xl text-base xs:text-lg sm:text-xl font-bold shadow-xl hover:bg-[#e63946] transition-all duration-300 hover:scale-105 active:scale-95"
+                    className="w-full bg-[#FF5252] text-white px-6 xs:px-8 py-4 xs:py-5 rounded-xl text-base xs:text-lg sm:text-xl font-bold shadow-xl hover:bg-red-600 transition-all duration-300 hover:scale-105 active:scale-95"
                   >
                     Send Message
                   </button>
@@ -299,7 +299,7 @@ export default function ContactUs() {
               className="space-y-6 xs:space-y-8"
             >
               {/* Google Maps */}
-              <div className="rounded-3xl overflow-hidden shadow-2xl h-56 xs:h-64 sm:h-80 lg:h-[320px]">
+              <div className="rounded-3xl overflow-hidden shadow-2xl h-56 xs:h-64 sm:h-80 lg:h-[320px] border border-gray-200">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3771.8936555937196!2d72.87765431490193!3d19.01441978712079!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7cee2e0c7e1a9%3A0x5e3e3e3e3e3e3e3e!2sMumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1234567890"
                   width="100%"
@@ -336,8 +336,8 @@ export default function ContactUs() {
               </div>
 
               {/* Social Media */}
-              <div className="bg-gradient-to-br from-[#FF5252] to-[#e63946] p-6 xs:p-8 rounded-3xl shadow-xl text-white">
-                <h3 className="text-xl xs:text-2xl sm:text-3xl font-bold mb-5 xs:mb-6">Follow Us</h3>
+              <div className="bg-gradient-to-br from-red-50 to-pink-50 p-6 xs:p-8 rounded-3xl shadow-xl border border-red-100">
+                <h3 className="text-xl xs:text-2xl sm:text-3xl font-bold text-gray-900 mb-5 xs:mb-6">Follow Us</h3>
                 <div className="flex gap-4 xs:gap-5">
                   {[
                     { icon: FaFacebookF, link: "#" },
@@ -348,7 +348,7 @@ export default function ContactUs() {
                     <a
                       key={i}
                       href={social.link}
-                      className="w-12 xs:w-14 h-12 xs:h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:text-[#FF5252] transition-all duration-300 hover:scale-110 group"
+                      className="w-12 xs:w-14 h-12 xs:h-14 bg-white rounded-full flex items-center justify-center text-[#FF5252] hover:bg-[#FF5252] hover:text-white transition-all duration-300 hover:scale-110 shadow-sm"
                     >
                       <social.icon className="text-xl xs:text-2xl" />
                     </a>
@@ -391,7 +391,7 @@ export default function ContactUs() {
           >
             <a
               href="/register"
-              className="inline-block bg-[#FF5252] text-white px-8 xs:px-10 sm:px-12 py-4 xs:py-5 sm:py-6 rounded-2xl text-base xs:text-lg sm:text-xl font-bold shadow-xl hover:bg-[#e63946] transition-all duration-300 hover:scale-105 active:scale-95 animate-pulse-slow"
+              className="inline-block bg-[#FF5252] text-white px-8 xs:px-10 sm:px-12 py-4 xs:py-5 sm:py-6 rounded-2xl text-base xs:text-lg sm:text-xl font-bold shadow-xl hover:bg-red-600 transition-all duration-300 hover:scale-105 active:scale-95"
             >
               Start Your Journey Today
             </a>

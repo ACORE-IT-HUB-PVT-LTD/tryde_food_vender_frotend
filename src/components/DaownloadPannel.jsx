@@ -1,6 +1,6 @@
 // src/components/DownloadPanel.jsx
 import React from "react";
-import { FaApple, FaGooglePlay, FaCheckCircle, FaStar, FaUtensils, FaUser } from "react-icons/fa";
+import { FaApple, FaGooglePlay, FaCheckCircle, FaStar, FaUtensils } from "react-icons/fa";
 import { motion } from "framer-motion";
 import phoneImg from "../assets/phoneomg.png";
 
@@ -19,13 +19,9 @@ export default function DownloadPanel() {
   };
 
   return (
-    <section className="relative w-full py-20 md:py-28 lg:py-36 bg-gradient-to-b from-orange-50/60 via-white to-orange-50/30 overflow-hidden">
-      {/* Background accents */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_30%,rgba(249,115,22,0.08),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_75%,rgba(249,115,22,0.06),transparent_55%)]" />
-      </div>
-
+    <section 
+      className="relative w-full py-20 md:py-28 lg:py-36 bg-gradient-to-b from-gray-50 to-white font-['Poppins'] overflow-hidden"
+    >
       <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 z-10">
         <motion.div
           className="grid lg:grid-cols-2 gap-12 xl:gap-20 items-center"
@@ -60,9 +56,9 @@ export default function DownloadPanel() {
                   key={idx}
                   variants={fadeUp}
                   whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.25 } }}
-                  className="group flex items-start gap-4 bg-white border border-orange-100 hover:border-orange-300 rounded-2xl p-6 shadow-sm hover:shadow transition-all duration-300"
+                  className="group flex items-start gap-4 bg-white border border-gray-200 hover:border-[#FF5252]/70 rounded-2xl p-6 shadow-sm hover:shadow transition-all duration-300"
                 >
-                  <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center text-[#FF5252] group-hover:scale-110 transition-transform">
+                  <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-[#FF5252] group-hover:scale-110 transition-transform">
                     <item.icon className="text-xl" />
                   </div>
                   <p className="font-semibold text-gray-800 text-base leading-relaxed">{item.text}</p>
@@ -109,9 +105,6 @@ export default function DownloadPanel() {
             className="relative flex justify-center items-center mt-12 lg:mt-0"
             variants={fadeUp}
           >
-            {/* Glow blob */}
-            <div className="absolute w-80 h-80 rounded-full bg-gradient-to-br from-orange-300/40 to-red-300/30 blur-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-
             {/* Phone image */}
             <motion.div
               className="relative z-10"
@@ -129,7 +122,7 @@ export default function DownloadPanel() {
 
               {/* Floating badge — New Order */}
               <motion.div
-                className="absolute top-10 -right-6 sm:-right-10 bg-white rounded-2xl px-3 py-2 shadow-xl border border-orange-100 flex items-center gap-2"
+                className="absolute top-10 -right-6 sm:-right-10 bg-white rounded-2xl px-3 py-2 shadow-xl border border-gray-200 flex items-center gap-2"
                 initial={{ opacity: 0, scale: 0.7, y: 10 }}
                 whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.5, type: "spring" }}
@@ -146,7 +139,7 @@ export default function DownloadPanel() {
 
               {/* Floating badge — Rating */}
               <motion.div
-                className="absolute bottom-16 -left-6 sm:-left-10 bg-white rounded-2xl px-3 py-2 shadow-xl border border-yellow-100 flex items-center gap-2"
+                className="absolute bottom-16 -left-6 sm:-left-10 bg-white rounded-2xl px-3 py-2 shadow-xl border border-gray-200 flex items-center gap-2"
                 initial={{ opacity: 0, scale: 0.7, y: -10 }}
                 whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.5, type: "spring" }}
@@ -163,7 +156,7 @@ export default function DownloadPanel() {
 
               {/* Floating badge — Revenue */}
               <motion.div
-                className="absolute top-1/2 -right-8 sm:-right-14 bg-white rounded-2xl px-3 py-2 shadow-xl border border-green-100 flex items-center gap-2"
+                className="absolute top-1/2 -right-8 sm:-right-14 bg-white rounded-2xl px-3 py-2 shadow-xl border border-gray-200 flex items-center gap-2"
                 initial={{ opacity: 0, scale: 0.7, x: 10 }}
                 whileInView={{ opacity: 1, scale: 1, x: 0 }}
                 transition={{ delay: 1.4, duration: 0.5, type: "spring" }}
