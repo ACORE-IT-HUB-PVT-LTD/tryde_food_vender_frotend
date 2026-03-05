@@ -238,14 +238,14 @@ const Sidebar = ({ onHoverChange }) => {
               Reviews
             </span>
           </NavLink>
-
-          <NavLink to="/dashboard/offers" className={navClass}>
+{/* <NavLink to="/dashboard/offers" className={navClass}>
             <GiftIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
             <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
               ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
               Offers
             </span>
-          </NavLink>
+          </NavLink> */}
+         
 
           <NavLink to="/dashboard/support" className={navClass}>
             <LifebuoyIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />

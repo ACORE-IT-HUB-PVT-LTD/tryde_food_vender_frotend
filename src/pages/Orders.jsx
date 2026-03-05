@@ -38,19 +38,17 @@ const ACTION_META = {
 };
 
 // ─── APIs ─────────────────────────────────────────────────────────────────────
-// 1. GET /orders/vendor/orders?page=1&limit=10
+// ✅ VITE_BASE_URL = https://api.tryde.in/kitchen
+// So final URL = https://api.tryde.in/kitchen/orders/vendor/orders ✅
 const apiGetOrders = (page = 1) =>
   axiosInstance.get(`/orders/vendor/orders?page=${page}&limit=10`, { withCredentials: true });
 
-// 2. GET /orders/vendor/orders/:orderId
-const apiGetOrderById=(orderId) =>
+const apiGetOrderById = (orderId) =>
   axiosInstance.get(`/orders/vendor/orders/${orderId}`, { withCredentials: true });
 
-// 3. POST /orders/:orderId/accept
 const apiAcceptOrder = (orderId) =>
   axiosInstance.post(`/orders/${orderId}/accept`, {}, { withCredentials: true });
 
-// 4. PATCH /orders/:orderId/statusready
 const apiMarkReady = (orderId) =>
   axiosInstance.patch(`/orders/${orderId}/statusready`, { status: "READY" }, { withCredentials: true });
 
@@ -123,143 +121,84 @@ const ActionButtons = ({ order, updatingId, onAction }) => {
   );
 };
 
-
+// ─── New Order Popup ──────────────────────────────────────────────────────────
 const NewOrderPopup = ({ order, onClose, onAction, updatingId }) => {
   if (!order) return null;
-
   const addr = order.delivery_address || {};
   const busy = updatingId === order.id;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-[popIn_.25s_ease]">
-
-        {/* Header */}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="px-5 py-4 flex items-center justify-between bg-amber-500">
           <div>
-            <p className="text-white font-bold text-sm">
-              🔔 New Order Received
-            </p>
-            <p className="text-amber-100 text-xs font-mono">
-              #{order.order_id}
-            </p>
+            <p className="text-white font-bold text-sm">🔔 New Order Received</p>
+            <p className="text-amber-100 text-xs font-mono">#{order.order_id}</p>
           </div>
-
-          <button
-            onClick={onClose}
-            className="text-white hover:bg-white/20 p-2 rounded-lg transition"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="text-white hover:bg-white/20 p-2 rounded-lg transition">✕</button>
         </div>
-
         <div className="p-5 space-y-4">
-
-          {/* Customer Info */}
           <div className="flex gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center font-bold text-sm">
               {(order.user?.name || "U")[0].toUpperCase()}
             </div>
-
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900 text-sm truncate">
                 {addr.name || order.user?.name || `User #${order.user_id}`}
               </p>
-              <p className="text-xs text-gray-500">
-                {addr.phone || order.user?.phone || "—"}
-              </p>
-
+              <p className="text-xs text-gray-500">{addr.phone || order.user?.phone || "—"}</p>
               {(addr.addressLine1 || addr.city) && (
                 <p className="text-xs text-gray-400 mt-1 line-clamp-2">
-                  📍 {[addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.pincode]
-                    .filter(Boolean)
-                    .join(", ")}
+                  📍 {[addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.pincode].filter(Boolean).join(", ")}
                 </p>
               )}
             </div>
           </div>
-
           <hr />
-
-          {/* Items */}
           {order.items?.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 mb-2 uppercase">
-                Items Ordered
-              </p>
-
+              <p className="text-xs font-semibold text-gray-400 mb-2 uppercase">Items Ordered</p>
               <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                 {order.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between items-center bg-gray-50 border rounded-lg px-3 py-2"
-                  >
+                  <div key={item.id} className="flex justify-between items-center bg-gray-50 border rounded-lg px-3 py-2">
                     <div className="flex gap-2 min-w-0">
-                      <span className="bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded">
-                        {item.quantity}×
-                      </span>
-
+                      <span className="bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded">{item.quantity}×</span>
                       <span className="text-sm font-medium text-gray-800 truncate">
-                        {item.dish_name || `Item #${item.id}`}
+                        {item.dish?.name || item.dish_name || `Item #${item.id}`}
                       </span>
                     </div>
-
-                    <span className="text-sm font-bold text-red-500">
-                      ₹{fmt(item.total_price)}
-                    </span>
+                    <span className="text-sm font-bold text-red-500">₹{fmt(item.total_price)}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
-
-          {/* Summary */}
           <div className="grid grid-cols-3 gap-2 text-center text-xs">
             <div className="bg-gray-50 border rounded-lg p-2">
               <p className="text-gray-400 uppercase text-[10px]">Payment</p>
-              <span className="font-bold text-gray-700">
-                {order.payment_mode || "COD"}
-              </span>
+              <span className="font-bold text-gray-700">{order.payment_mode || "COD"}</span>
             </div>
-
             <div className="bg-gray-50 border rounded-lg p-2">
               <p className="text-gray-400 uppercase text-[10px]">Status</p>
-              <span className={`font-bold ${
-                order.payment_status === "PAID"
-                  ? "text-green-600"
-                  : "text-amber-600"
-              }`}>
+              <span className={`font-bold ${order.payment_status === "PAID" ? "text-green-600" : "text-amber-600"}`}>
                 {order.payment_status || "PENDING"}
               </span>
             </div>
-
             <div className="bg-red-50 border border-red-200 rounded-lg p-2">
               <p className="text-gray-400 uppercase text-[10px]">Total</p>
-              <p className="text-lg font-extrabold text-red-500">
-                ₹{fmt(order.total_amount)}
-              </p>
+              <p className="text-lg font-extrabold text-red-500">₹{fmt(order.total_amount)}</p>
             </div>
           </div>
-
-          {/* Buttons */}
           <div className="flex gap-3 pt-2">
-            <button
-              disabled={busy}
-              onClick={() => onAction(order, "REJECTED")}
-              className="flex-1 py-2.5 rounded-lg border border-red-300 text-red-600 font-semibold hover:bg-red-50 transition disabled:opacity-50"
-            >
+            <button disabled={busy} onClick={() => onAction(order, "REJECTED")}
+              className="flex-1 py-2.5 rounded-lg border border-red-300 text-red-600 font-semibold hover:bg-red-50 transition disabled:opacity-50">
               Reject
             </button>
-
-            <button
-              disabled={busy}
-              onClick={() => onAction(order, "ACCEPTED")}
-              className="flex-1 py-2.5 rounded-lg bg-green-500 text-white font-semibold hover:opacity-90 transition disabled:opacity-50"
-            >
+            <button disabled={busy} onClick={() => onAction(order, "ACCEPTED")}
+              className="flex-1 py-2.5 rounded-lg bg-green-500 text-white font-semibold hover:opacity-90 transition disabled:opacity-50">
               Accept Order
             </button>
           </div>
-
         </div>
       </div>
     </div>
@@ -270,7 +209,7 @@ const NewOrderPopup = ({ order, onClose, onAction, updatingId }) => {
 const OrderDetailModal = ({ orderId, open, onClose }) => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!open || !orderId) return;
@@ -286,22 +225,29 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
   const m = detail ? (STATUS_META[detail.order_status] || STATUS_META.CREATED) : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.55)" }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
         {m && <div style={{ height: 5, background: m.dot, flexShrink: 0 }} />}
+
         <div className="flex items-start justify-between px-6 pt-5 pb-3 flex-shrink-0">
           <div>
             <h2 className="text-lg font-extrabold text-gray-900 tracking-tight">Order Details</h2>
             {detail && <p className="text-xs text-gray-400 font-mono mt-0.5">{detail.order_id}</p>}
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
         <div className="px-6 pb-6 overflow-y-auto flex-1 space-y-4">
-          {loading && [...Array(4)].map((_, i) => <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />)}
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{error}</div>}
+          {loading && [...Array(4)].map((_, i) => (
+            <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+          ))}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{error}</div>
+          )}
 
           {detail && (
             <>
@@ -314,7 +260,9 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
               {/* Customer */}
               <div className="p-3 rounded-xl border border-red-100" style={{ background: "rgba(255,82,82,0.04)" }}>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Customer</p>
-                <p className="text-sm font-bold text-gray-800">{addr.name || detail.user?.name || `User #${detail.user_id}`}</p>
+                <p className="text-sm font-bold text-gray-800">
+                  {addr.name || detail.user?.name || `User #${detail.user_id}`}
+                </p>
                 <p className="text-xs text-gray-500 mt-0.5">📞 {addr.phone || detail.user?.phone || "—"}</p>
                 {detail.user?.email && <p className="text-xs text-gray-400 mt-0.5">✉️ {detail.user.email}</p>}
               </div>
@@ -329,23 +277,28 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
                 </div>
               )}
 
-              {/* Item data from the api */}
+              {/* Items */}
               {detail.items?.length > 0 && (
                 <div>
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Items</p>
                   <div className="space-y-1.5">
                     {detail.items.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                      <div key={item.id}
+                        className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="w-6 h-6 rounded bg-gray-300 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                          {item.quantity}×
+                            {item.quantity}×
                           </span>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-800 truncate">{item.dish_name || `Dish ${item.dish_id}`}</p>
-                            <p className="text-xs text-gray-400">₹{fmt(item.unit_price)} each</p>
+                            <p className="text-sm font-semibold text-gray-800 truncate">
+                              {item.dish_name || item.dish?.name || `Dish #${item.dish_id}`}
+                            </p>
+                            <p className="text-xs text-gray-400">₹{fmt(item.unit_price || item.price)} each</p>
                           </div>
                         </div>
-                        <span className="text-sm font-bold ml-2 flex-shrink-0" style={{ color: BRAND }}>₹{fmt(item.total_price)}</span>
+                        <span className="text-sm font-bold ml-2 flex-shrink-0" style={{ color: BRAND }}>
+                          ₹{fmt(item.total_price)}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -366,11 +319,34 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
                     {detail.payment_status}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-xl text-center" style={{ background: "rgba(255,82,82,0.06)", border: "1px solid rgba(255,82,82,0.15)" }}>
+                <div className="p-2.5 rounded-xl text-center"
+                  style={{ background: "rgba(255,82,82,0.06)", border: "1px solid rgba(255,82,82,0.15)" }}>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Total</p>
                   <p className="text-xl font-extrabold" style={{ color: BRAND }}>₹{fmt(detail.total_amount)}</p>
                 </div>
               </div>
+
+              {/* Driver */}
+              {detail.driver && (
+                <div className="p-3 rounded-xl border border-blue-100 bg-blue-50">
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Driver</p>
+                  <div className="flex items-center gap-3">
+                    {detail.driver.profile_image ? (
+                      <img src={detail.driver.profile_image} alt={detail.driver.name}
+                        className="w-9 h-9 rounded-full object-cover border-2 border-white shadow" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-blue-400 text-white flex items-center justify-center font-bold text-sm">
+                        {detail.driver.name[0].toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">{detail.driver.name}</p>
+                      <p className="text-xs text-gray-500">📞 {detail.driver.phone}</p>
+                      <p className="text-xs text-gray-400 uppercase">{detail.driver.vehicle_number} · {detail.driver.vehicle_type}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* OTP */}
               {detail.pickup_otp && (
@@ -380,12 +356,35 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
                   &nbsp;{detail.otp_verified ? "✅ Verified" : "⏳ Awaiting verification"}
                 </div>
               )}
+
+              {/* Price Breakdown */}
+              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 space-y-1.5">
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Price Breakdown</p>
+                {[
+                  { label: "Item Total",      val: detail.total_amount },
+                  { label: "Delivery Charge", val: detail.delivery_charge },
+                  { label: "Platform Fee",    val: detail.platform_fee },
+                  { label: "GST",             val: detail.gst_amount },
+                ].map(({ label, val }) => (
+                  <div key={label} className="flex justify-between text-xs text-gray-600">
+                    <span>{label}</span>
+                    <span className="font-semibold">₹{fmt(val)}</span>
+                  </div>
+                ))}
+                <div className="border-t border-gray-200 pt-1.5 flex justify-between text-sm font-extrabold" style={{ color: BRAND }}>
+                  <span>Customer Payable</span>
+                  <span>₹{fmt(detail.customer_payable)}</span>
+                </div>
+              </div>
             </>
           )}
         </div>
 
-        <div className="px-6 pb-4 flex justify-end flex-shrink-0 border-t border-gray-50 pt-3">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-100 transition-colors">Close</button>
+        <div className="px-6 pb-4 flex justify-end flex-shrink-0 border-t border-gray-100 pt-3">
+          <button onClick={onClose}
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-100 transition-colors">
+            Close
+          </button>
         </div>
       </div>
     </div>
@@ -396,30 +395,27 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
 export default function Orders() {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab]= useState(0);
-  const [orders, setOrders]= useState([]);
-  const [loading, setLoading]= useState(false);
-  const [error, setError]= useState(null);
-  const [actionError, setActionError] = useState(null);
-  const [updatingId, setUpdatingId]   = useState(null);
+  const [activeTab, setActiveTab]         = useState(0);
+  const [orders, setOrders]               = useState([]);
+  const [loading, setLoading]             = useState(false);
+  const [error, setError]                 = useState(null);
+  const [actionError, setActionError]     = useState(null);
+  const [updatingId, setUpdatingId]       = useState(null);
   const [detailOrderId, setDetailOrderId] = useState(null);
   const [newOrderPopup, setNewOrderPopup] = useState(null);
-  const [page, setPage]= useState(1);
-  const [totalOrders, setTotalOrders]= useState(0);
-  const [search, setSearch]= useState("");
+  const [page, setPage]                   = useState(1);
+  const [totalOrders, setTotalOrders]     = useState(0);
+  const [search, setSearch]               = useState("");
   const prevIds = useRef(new Set());
   const LIMIT = 10;
   const totalPages = Math.ceil(totalOrders / LIMIT);
 
-  // ── 1. Fetch Orders ────────────────────────────────────────────────────────
   const fetchOrders = useCallback(async (pg = 1) => {
     setLoading(true);
     setError(null);
     try {
       const res = await apiGetOrders(pg);
       const payload = res.data;
-
-      // ✅ API response: { data: [...], total_orders: N }
       const list  = Array.isArray(payload.data) ? payload.data : Array.isArray(payload) ? payload : [];
       const total = payload.total_orders ?? list.length;
 
@@ -439,11 +435,9 @@ export default function Orders() {
 
   useEffect(() => { fetchOrders(page); }, [fetchOrders, page]);
 
-  // ── 2. NATS Real-time──────────────────────────────────────────────────────
   const handleNats = useCallback((subject, data) => {
     console.log("📨 NATS:", subject, data);
 
-    // ✅ Naya order aaya — API se full data fetch karo
     if (subject === "order.created") {
       apiGetOrderById(data.orderId)
         .then((res) => {
@@ -458,97 +452,55 @@ export default function Orders() {
           setTotalOrders((prev) => prev + 1);
         })
         .catch(() => fetchOrders(1));
-    }
-
-    // ✅ Driver assign hua — otp_verified check ke baad tracking button dikhega
-    else if (subject === "driver.assigned") {
+    } else if (subject === "driver.assigned") {
       if (data.orderId) {
         setOrders((prev) =>
-          prev.map((o) =>
-            o.order_id === data.orderId
-              ? { ...o, driver_assigned: true }
-              : o
-          )
+          prev.map((o) => o.order_id === data.orderId ? { ...o, driver_assigned: true } : o)
         );
       }
-    }
-
-    // ✅ OTP verify hua — tracking button enable karo
-    else if (subject === "order.status.updated") {
+    } else if (subject === "order.status.updated") {
       const newStatus = data.status || data.order_status;
       if (data.orderId) {
         setOrders((prev) =>
           prev.map((o) =>
             o.order_id === data.orderId
-              ? {
-                  ...o,
-                  ...(newStatus && { order_status: newStatus }),
-                  // ✅ OTP verified aaya to update karo
-                  ...(data.otp_verified !== undefined && { otp_verified: data.otp_verified }),
-                }
+              ? { ...o, ...(newStatus && { order_status: newStatus }), ...(data.otp_verified !== undefined && { otp_verified: data.otp_verified }) }
               : o
           )
         );
       }
-    }
-
-    // ✅ Order accepted
-    else if (subject === "order.accepted") {
+    } else if (subject === "order.accepted") {
       if (data.orderId) {
         setOrders((prev) =>
-          prev.map((o) =>
-            o.order_id === data.orderId
-              ? { ...o, order_status: "ACCEPTED" }
-              : o
-          )
+          prev.map((o) => o.order_id === data.orderId ? { ...o, order_status: "ACCEPTED" } : o)
         );
       }
-    }
-
-    // ✅ Order delivered
-    else if (subject === "order.delivered") {
+    } else if (subject === "order.delivered") {
       if (data.orderId) {
         setOrders((prev) =>
-          prev.map((o) =>
-            o.order_id === data.orderId
-              ? { ...o, order_status: "DELIVERED" }
-              : o
-          )
+          prev.map((o) => o.order_id === data.orderId ? { ...o, order_status: "DELIVERED" } : o)
         );
       }
     }
-
   }, [fetchOrders]);
 
-  useNats([
-    "order.created",
-    "order.accepted",
-    "order.status.updated",
-    "order.delivered",
-    "driver.assigned",
-  ], handleNats);
+  useNats(["order.created", "order.accepted", "order.status.updated", "order.delivered", "driver.assigned"], handleNats);
 
-  // ── 3. Action Handler ──────────────────────────────────────────────────────
   const handleAction = async (order, nextStatus) => {
     setUpdatingId(order.id);
     setActionError(null);
     try {
-      // ✅ POST /orders/:orderId/accept — response: { status: "ACCEPTED", otp: 4177 }
       if (nextStatus === "ACCEPTED") {
         const res = await apiAcceptOrder(order.order_id);
         console.log("Accept response:", res.data);
       }
-      // ✅ PATCH /orders/:orderId/statusready — body: { status: "READY" }
       if (nextStatus === "READY") {
         await apiMarkReady(order.order_id);
       }
-
-      // Local state update
       setOrders((prev) =>
         prev.map((o) => o.id === order.id ? { ...o, order_status: nextStatus } : o)
       );
       if (newOrderPopup?.id === order.id) setNewOrderPopup(null);
-
     } catch (err) {
       setActionError(err?.response?.data?.message || "Action failed. Please try again.");
     } finally {
@@ -556,9 +508,7 @@ export default function Orders() {
     }
   };
 
-  // ── 4. Filter + Search ─────────────────────────────────────────────────────
   const activeKey = TAB_CONFIG[activeTab].key;
-
   const searchedOrders = activeKey === "ALL" && search.trim()
     ? orders.filter((o) =>
         o.order_id?.toLowerCase().includes(search.toLowerCase()) ||
@@ -567,22 +517,13 @@ export default function Orders() {
         o.delivery_address?.phone?.includes(search)
       )
     : orders;
+  const filteredOrders = activeKey === "ALL" ? searchedOrders : orders.filter((o) => o.order_status === activeKey);
+  const getCount = (key) => key === "ALL" ? orders.length : orders.filter((o) => o.order_status === key).length;
 
-  const filteredOrders = activeKey === "ALL"
-    ? searchedOrders
-    : orders.filter((o) => o.order_status === activeKey);
-
-  const getCount = (key) =>
-    key === "ALL"
-      ? orders.length
-      : orders.filter((o) => o.order_status === key).length;
-
-  // ── 5. Render ──────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
 
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Orders Dashboard</h1>
           <p className="text-sm text-gray-400 mt-0.5">
@@ -590,7 +531,6 @@ export default function Orders() {
           </p>
         </div>
 
-        {/* Errors */}
         {error && (
           <div className="mb-4 flex items-center justify-between bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
             <span>{error}</span>
@@ -628,7 +568,7 @@ export default function Orders() {
           </div>
         </div>
 
-        {/* Search Bar - Sirf ALL tab pe */}
+        {/* Search */}
         {activeKey === "ALL" && (
           <div className="mb-4">
             <div className="relative">
@@ -636,10 +576,7 @@ export default function Orders() {
                 width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
               </svg>
-              <input
-                type="text"
-                value={search}
-                onChange={(e)=>setSearch(e.target.value)}
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by order ID, customer name, phone..."
                 className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100"
               />
@@ -657,7 +594,7 @@ export default function Orders() {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  {["Order ID","Customer","Items","Payment","Total","Status","Time","Actions"].map((h) => (
+                  {["Order ID", "Customer", "Items", "Payment", "Total", "Status", "Time", "Actions"].map((h) => (
                     <th key={h} className={`py-3.5 px-4 text-xs font-bold uppercase tracking-wider text-gray-400 ${h === "Actions" ? "text-right" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
@@ -668,18 +605,21 @@ export default function Orders() {
                     <tr key={i} className="border-b border-gray-50">
                       {[...Array(8)].map((_, j) => (
                         <td key={j} className="py-4 px-4">
-                          <div className="h-4 bg-gray-100 rounded animate-pulse" style={{ width: `${45 + Math.random()*45}%` }} />
+                          <div className="h-4 bg-gray-100 rounded animate-pulse" style={{ width: `${45 + Math.random() * 45}%` }} />
                         </td>
                       ))}
                     </tr>
                   ))
-                ):filteredOrders.length === 0 ? (
+                ) : filteredOrders.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-16 text-center">
                       <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,82,82,0.08)", transform: "rotate(-6deg)" }}>
+                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                          style={{ background: "rgba(255,82,82,0.08)", transform: "rotate(-6deg)" }}>
                           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FF5252" strokeWidth="1.5">
-                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" />
+                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <path d="M16 10a4 4 0 01-8 0" />
                           </svg>
                         </div>
                         <div>
@@ -698,15 +638,12 @@ export default function Orders() {
                     const m     = STATUS_META[order.order_status] || STATUS_META.CREATED;
                     const addr  = order.delivery_address || {};
                     const isNew = order.order_status === "CREATED";
-
-                    // ✅ Tracking button — driver pickup ke baad (otp_verified = true)
                     const showTracking = order.otp_verified === true || order.driver_assigned === true;
 
                     return (
-                      <tr key={order.id} className="border-b border-gray-50 transition-colors"
+                      <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                         style={{ borderLeft: `3px solid ${m.dot}`, background: isNew ? "rgba(245,158,11,0.04)" : undefined }}>
 
-                        {/* Order ID */}
                         <td className="py-3.5 px-4">
                           <span className="font-mono text-xs font-bold text-gray-700 block">{order.order_id}</span>
                           {isNew && (
@@ -714,7 +651,6 @@ export default function Orders() {
                           )}
                         </td>
 
-                        {/* Customer */}
                         <td className="py-3.5 px-4">
                           <span className="text-sm font-semibold text-gray-800 block">
                             {addr.name || order.user?.name || `User #${order.user_id}`}
@@ -725,24 +661,22 @@ export default function Orders() {
                           )}
                         </td>
 
-                        {/* Items - ✅ dish_name use kar rahe hain */}
                         <td className="py-3.5 px-4" style={{ maxWidth: 180 }}>
                           {order.items?.length > 0 ? (
                             <div className="space-y-0.5">
                               {order.items.slice(0, 2).map((item) => (
                                 <p key={item.id} className="text-xs text-gray-600 truncate">
                                   <span className="font-bold text-gray-800">{item.quantity}×</span>{" "}
-                                  {item.dish?.name || `Item #${item.id}`}
+                                  {item.dish?.name || item.dish_name || `Item #${item.id}`}
                                 </p>
                               ))}
-                              {order.items?.length > 2 && (
+                              {order.items.length > 2 && (
                                 <p className="text-xs text-gray-400">+{order.items.length - 2} more</p>
                               )}
                             </div>
                           ) : <span className="text-xs text-gray-400">—</span>}
                         </td>
 
-                        {/* Payment */}
                         <td className="py-3.5 px-4">
                           <div className="flex flex-col gap-1">
                             <span className={`text-xs font-bold px-2 py-0.5 rounded w-fit ${order.payment_mode === "ONLINE" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>
@@ -754,47 +688,43 @@ export default function Orders() {
                           </div>
                         </td>
 
-                        {/* Total */}
                         <td className="py-3.5 px-4">
                           <span className="text-base font-extrabold" style={{ color: BRAND }}>₹{fmt(order.total_amount)}</span>
                         </td>
 
-                        {/* Status */}
                         <td className="py-3.5 px-4">
                           <StatusBadge status={order.order_status} />
                         </td>
 
-                        {/* Time */}
                         <td className="py-3.5 px-4">
                           <span className="text-xs text-gray-400 whitespace-nowrap">{formatTime(order.created_at)}</span>
                         </td>
 
-                        {/* Actions */}
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5 flex-wrap">
-
-                            {/* Info button */}
-                            <button onClick={() => setDetailOrderId(order.order_id)} title="View details"
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                            {/* ✅ View Order Button */}
+                            <button
+                              onClick={() => setDetailOrderId(order.order_id)}
+                              title="View Order Details"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
                               </svg>
+                              View
                             </button>
 
-                            {/* Kitchen action buttons */}
                             <ActionButtons order={order} updatingId={updatingId} onAction={handleAction} />
 
-                            {/* ✅ Tracking button - OTP verify hone ke baad dikhega */}
                             {showTracking && (
                               <button
                                 onClick={() => navigate(`/tracking?orderId=${order.order_id}`)}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white flex-shrink-0 hover:opacity-90 transition-opacity"
                                 style={{ background: "#0ea5e9" }}
                                 title="Track Order">
-                                📍Track
+                                📍 Track
                               </button>
                             )}
-
                           </div>
                         </td>
                       </tr>
@@ -805,7 +735,6 @@ export default function Orders() {
             </table>
           </div>
 
-          {/* Pagination - Sirf ALL tab pe */}
           {activeKey === "ALL" && totalPages > 1 && (
             <div className="flex items-center justify-between px-5 py-3.5 border-t border-gray-100 bg-gray-50/60">
               <p className="text-xs text-gray-400">
@@ -814,24 +743,29 @@ export default function Orders() {
               </p>
               <div className="flex items-center gap-1">
                 <button disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">← Prev</button>
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  ← Prev
+                </button>
                 {[...Array(Math.min(totalPages, 7))].map((_, i) => {
                   const pg = i + 1;
                   return (
                     <button key={pg} onClick={() => setPage(pg)}
                       style={page === pg ? { background: BRAND, borderColor: BRAND, color: "#fff" } : {}}
-                      className="w-8 h-8 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">{pg}</button>
+                      className="w-8 h-8 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+                      {pg}
+                    </button>
                   );
                 })}
                 <button disabled={page >= totalPages || loading} onClick={() => setPage((p) => p + 1)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Next →</button>
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  Next →
+                </button>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* New Order Popup */}
       {newOrderPopup && (
         <NewOrderPopup
           order={newOrderPopup}
@@ -841,7 +775,6 @@ export default function Orders() {
         />
       )}
 
-      {/* Detail Modal */}
       <OrderDetailModal
         orderId={detailOrderId}
         open={Boolean(detailOrderId)}
@@ -850,5 +783,3 @@ export default function Orders() {
     </div>
   );
 }
-
-

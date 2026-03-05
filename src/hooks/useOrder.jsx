@@ -12,11 +12,12 @@ const useOrder = () => {
       setError(null);
 
       try {
+        // ✅ baseURL already has /kitchen — so just /orders/vendor/orders
         const result = await axiosInstance.get(
           "/orders/vendor/orders",
           { withCredentials: true }
         );
-        console.log("data here orders=>",result.data.data);
+        console.log("data here orders=>", result.data.data);
         setAllOrders(result.data.data);
       } catch (err) {
         console.error(err);
