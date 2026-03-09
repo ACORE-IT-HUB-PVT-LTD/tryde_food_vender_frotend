@@ -30,7 +30,7 @@ function FinalCTA() {
               Premium Flavors
             </h1>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight drop-shadow-lg mt-1">
-              Join <span className="text-red-500">Tryde Plate</span>
+               <span className="text-[#FF5252]"> Join Tryde Plate</span>
             </h1>
           </div>
 
@@ -54,7 +54,7 @@ function FinalCTA() {
             <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-4">
               <a
                 href="#"
-                className="group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 via-red-600 to-red-500 hover:from-orange-600 hover:via-orange-700 hover:to-orange-600 text-white font-semibold text-sm md:text-base px-7 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-w-[180px]"
+                className="group inline-flex items-center justify-center gap-2 bg-[#FF5252] hover:bg-[#e63939] text-white font-semibold text-sm md:text-base px-7 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-w-[180px]"
               >
                 List Now
                 <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
@@ -62,7 +62,7 @@ function FinalCTA() {
 
               <a
                 href="#"
-                className="group inline-flex items-center justify-center gap-2 bg-white/15 backdrop-blur-md border border-white/40 hover:border-white/70 text-white font-semibold text-sm md:text-base px-7 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-w-[180px]"
+                className="group inline-flex items-center justify-center gap-2 bg-[#FF5252] hover:bg-[#e63939] text-white font-semibold text-sm md:text-base px-7 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-w-[180px]"
               >
                 Learn More
                 <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
