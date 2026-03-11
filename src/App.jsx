@@ -13,6 +13,7 @@ import WhyPartner from "./components/WhyPartner";
 import FinalCTA from "./components/FinalCTA";
 import GetStarted from "./components/GetStarted";
 import Achievements from "./components/Achievements";
+import VenderProfile from "./components/VenderProfile";
 
 // Auth
 import Login from "./pages/Login";
@@ -42,12 +43,12 @@ import Contact from "./pages/Contact";
 import GetRestaurant from "./context/getRestaurant";
 import GetAllCategories from "./context/GetAllCategories";
 
-// Public Layout - Simple wrapper for public pages
+// Public Layout
 function PublicLayout() {
   return <Outlet />;
 }
 
-// Auth Layout - Wrapper for login/register pages
+// Auth Layout
 function AuthLayout() {
   return (
     <main className="min-h-screen">
@@ -61,21 +62,20 @@ const isAuthenticated = () => {
   return !!localStorage.getItem("token");
 };
 
-// Protected Route - Redirect to login if not authenticated
+// Protected Route
 function RequireAuth() {
   return isAuthenticated() ? <Outlet /> : <Navigate to="/login" replace />;
 }
 
-// Redirect if already logged in (for login/register pages)
+// Redirect if already logged in
 function RedirectIfAuthenticated() {
   return isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Outlet />;
 }
 
-
 function App() {
   return (
     <Routes>
-      {/* Root redirect to home */}
+      {/* Root redirect */}
       <Route path="/" element={<Navigate to="/home" replace />} />
 
       {/* ==================== PUBLIC ROUTES ==================== */}
@@ -89,12 +89,12 @@ function App() {
         <Route path="/finalcta" element={<FinalCTA />} />
         <Route path="/getstartedagin" element={<GetStarted />} />
         <Route path="/achievements" element={<Achievements />} />
-        <Route path="/about-us" element={<AboutUs />}></Route>
-        <Route path="/contact-us" element={<Contact />}></Route>
+        <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/contact-us" element={<Contact />} />
+        {/* ✅ REMOVED: /venderprofile from here — moved inside dashboard */}
       </Route>
 
       {/* ==================== AUTH ROUTES ==================== */}
-      {/* Redirect to dashboard if already logged in */}
       <Route element={<RedirectIfAuthenticated />}>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
@@ -103,7 +103,6 @@ function App() {
         </Route>
       </Route>
 
-
       {/* ==================== RESET PASSWORD (PUBLIC) ==================== */}
       <Route element={<AuthLayout />}>
         <Route path="/reset-password/:token" element={<ResetPassword />} />
@@ -111,20 +110,26 @@ function App() {
 
       {/* ==================== PROTECTED DASHBOARD ROUTES ==================== */}
       <Route element={<RequireAuth />}>
-        <Route path="/dashboard" element={
-          <GetRestaurant>
-            <GetAllCategories>
-              <VendorLayout />
-            </GetAllCategories>
-          </GetRestaurant>
-        }>
+        <Route
+          path="/dashboard"
+          element={
+            <GetRestaurant>
+              <GetAllCategories>
+                <VendorLayout />
+              </GetAllCategories>
+            </GetRestaurant>
+          }
+        >
           {/* Dashboard Home */}
           <Route index element={<Dashboard />} />
 
           {/* Restaurant Profile */}
           <Route path="profile" element={<RestaurantProfile />} />
 
-          {/* Menu Management with nested routes */}
+          {/* ✅ My Profile — inside dashboard so header+sidebar show */}
+          <Route path="venderprofile" element={<VenderProfile />} />
+
+          {/* Menu Management */}
           <Route path="menu">
             <Route index element={<MenuManagement />} />
             <Route path="category" element={<AddCategory />} />
@@ -132,30 +137,30 @@ function App() {
             <Route path="item" element={<AddFoodItem />} />
           </Route>
 
-          {/* Orders Management */}
+          {/* Orders */}
           <Route path="orders" element={<Orders />} />
 
           {/* Live Tracking */}
           <Route path="tracking" element={<LiveTracking />} />
 
-          {/* Earnings & Analytics */}
+          {/* Earnings */}
           <Route path="earnings" element={<Earnings />} />
 
-          {/* Customer Reviews */}
+          {/* Reviews */}
           <Route path="reviews" element={<Reviews />} />
 
-          {/* Offers & Promotions */}
+          {/* Offers */}
           <Route path="offers" element={<Offers />} />
 
           {/* Notifications */}
           <Route path="notifications" element={<Notifications />} />
 
-          {/* Support & Help */}
+          {/* Support */}
           <Route path="support" element={<Support />} />
         </Route>
       </Route>
 
-      {/* ==================== 404 NOT FOUND ==================== */}
+      {/* ==================== 404 ==================== */}
       <Route
         path="*"
         element={
@@ -164,7 +169,7 @@ function App() {
               <h1 className="text-6xl font-bold text-gray-800 mb-4">404</h1>
               <p className="text-xl text-gray-600 mb-6">Page Not Found</p>
               <button
-                onClick={() => window.location.href = '/home'}
+                onClick={() => (window.location.href = "/home")}
                 className="px-6 py-3 bg-[#FF5252] text-white rounded-lg font-semibold hover:bg-[#e03e3e] transition"
               >
                 Go to Home

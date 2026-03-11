@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
-// Icons
 import {
   HomeIcon,
   UserIcon,
@@ -10,7 +9,6 @@ import {
   MapIcon,
   CurrencyDollarIcon,
   StarIcon,
-  GiftIcon,
   LifebuoyIcon,
   ChevronDownIcon,
   XMarkIcon,
@@ -19,6 +17,7 @@ import { LuLogOut } from "react-icons/lu";
 import { BiCategoryAlt } from "react-icons/bi";
 import { FaUtensils } from "react-icons/fa";
 import { RiFileList3Line } from "react-icons/ri";
+import { MdOutlineAccountCircle } from "react-icons/md";
 
 const Sidebar = ({ onHoverChange }) => {
   const location = useLocation();
@@ -26,16 +25,9 @@ const Sidebar = ({ onHoverChange }) => {
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
   const [menuOpen, setMenuOpen] = useState(
     location.pathname.startsWith("/dashboard/menu")
   );
-
-  const handleLogout = () => {
-    localStorage.clear();
-    setIsMobileOpen(false);
-    navigate("/login");
-  };
 
   const navClass = ({ isActive }) =>
     `group/item relative flex items-center gap-4 px-4 py-3 mx-2 rounded-xl text-[15px] font-medium transition-all duration-200
@@ -43,6 +35,8 @@ const Sidebar = ({ onHoverChange }) => {
       ? "bg-gradient-to-r from-[#FF5252] to-[#FF6B6B] text-white shadow-lg shadow-red-500/30"
       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
     }`;
+
+  const spanClass = `whitespace-nowrap overflow-hidden transition-opacity duration-300`;
 
   return (
     <>
@@ -54,7 +48,6 @@ const Sidebar = ({ onHoverChange }) => {
         <Bars3Icon className="h-6 w-6 text-gray-700" />
       </button>
 
-      {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
@@ -62,266 +55,166 @@ const Sidebar = ({ onHoverChange }) => {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         onMouseEnter={() => onHoverChange?.(true)}
         onMouseLeave={() => onHoverChange?.(false)}
         className={`
-          fixed left-0
-          z-40
-          bg-white border-r border-gray-200 
+          fixed left-0 z-40
+          bg-white border-r border-gray-200
           flex flex-col
           font-['Poppins']
           transition-all duration-300 ease-in-out
           overflow-hidden
-          
-          /* Desktop: Collapsed by default, expand on hover - positioned below header with gap */
           hidden md:flex
           top-20
           h-[calc(100vh-5rem)]
           w-20 hover:w-60
           group
-          
-          /* Mobile: Full sidebar without hover dependency */
           ${isMobileOpen ? "!flex !w-72 !top-0 !h-full" : ""}
         `}
         style={{ scrollbarWidth: "none" }}
       >
         {/* Mobile Header */}
-        <div className={`md:hidden flex items-center justify-between p-4 border-b border-gray-200 ${!isMobileOpen && 'hidden'}`}>
-          <div className="flex items-center gap-3">
-          </div>
-          <button
-            onClick={() => setIsMobileOpen(false)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
+        <div className={`md:hidden flex items-center justify-between p-4 border-b border-gray-200 ${!isMobileOpen && "hidden"}`}>
+          <div />
+          <button onClick={() => setIsMobileOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <XMarkIcon className="h-5 w-5 text-gray-600" />
           </button>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 flex flex-col gap-1.5 py-4 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+
+          {/* Dashboard */}
           <NavLink to="/dashboard" end className={navClass}>
             <HomeIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-            {/* Mobile: Always show text | Desktop: Show on hover */}
-            <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
-              ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+            <span className={`${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
               Dashboard
             </span>
           </NavLink>
 
+          {/* ── Profile (original — restaurant profile) ── */}
           <NavLink to="/dashboard/profile" className={navClass}>
             <UserIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-            <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
-              ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+            <span className={`${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
               Profile
+            </span>
+          </NavLink>
+
+          {/* ── My Profile (vendor personal profile) ── */}
+          <NavLink
+            to="/dashboard/venderprofile"
+            className={navClass}
+            onClick={() => setIsMobileOpen(false)}
+          >
+            <MdOutlineAccountCircle className="h-5 w-5 min-w-[20px] flex-shrink-0" />
+            <span className={`${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+              My Profile
             </span>
           </NavLink>
 
           {/* Menu Dropdown */}
           <div>
-            {/* Menu Dropdown */}
-            <NavLink
-              to="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setMenuOpen(!menuOpen);
-              }}
-              className={`group relative flex items-center gap-4 px-4 py-3 mx-2 rounded-xl text-[15px] font-medium transition-all duration-200
-      ${location.pathname.startsWith("/dashboard/menu")
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className={`w-[calc(100%-1rem)] mx-2 group relative flex items-center gap-4 px-4 py-3 rounded-xl text-[15px] font-medium transition-all duration-200
+                ${location.pathname.startsWith("/dashboard/menu")
                   ? "bg-gradient-to-r from-[#FF5252] to-[#FF6B6B] text-white shadow-lg shadow-red-500/30"
                   : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}
             >
               <Bars3Icon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-
-              <span
-                className={`flex-1 whitespace-nowrap overflow-hidden transition-opacity duration-300
-        ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-              >
+              <span className={`flex-1 ${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
                 Menu
               </span>
-
               <ChevronDownIcon
                 className={`h-4 w-4 transition-transform duration-300
-        ${menuOpen ? "rotate-180" : ""}
-        ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                  ${menuOpen ? "rotate-180" : ""}
+                  ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
               />
-            </NavLink>
+            </button>
 
-            {/* Submenu */}
-            <div
-              className={`overflow-hidden transition-all duration-300 ${menuOpen ? "max-h-60 opacity-100" : "max-h-0 opacity-0"}`}
-            >
-              <div
-                className={`ml-8 mr-2 mt-1 flex flex-col gap-1 transition-opacity duration-300
-        ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-              >
-                {/* Category */}
-                <NavLink
-                  to="/dashboard/menu/category"
-                  className={({ isActive }) =>
-                    `flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                      ? "bg-red-50 text-[#FF5252]"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`
-                  }
-                >
-                  <BiCategoryAlt className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-                  <span>Category</span>
+            <div className={`overflow-hidden transition-all duration-300 ${menuOpen ? "max-h-60 opacity-100" : "max-h-0 opacity-0"}`}>
+              <div className={`ml-8 mr-2 mt-1 flex flex-col gap-1 ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                <NavLink to="/dashboard/menu/category"
+                  className={({ isActive }) => `flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? "bg-red-50 text-[#FF5252]" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}>
+                  <BiCategoryAlt className="h-5 w-5 min-w-[20px] flex-shrink-0" /><span>Category</span>
                 </NavLink>
-
-                {/* Sub Category */}
-                <NavLink
-                  to="/dashboard/menu/sub-category"
-                  className={({ isActive }) =>
-                    `flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                      ? "bg-red-50 text-[#FF5252]"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`
-                  }
-                >
-                  <FaUtensils className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-                  <span>Sub Category</span>
+                <NavLink to="/dashboard/menu/sub-category"
+                  className={({ isActive }) => `flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? "bg-red-50 text-[#FF5252]" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}>
+                  <FaUtensils className="h-5 w-5 min-w-[20px] flex-shrink-0" /><span>Sub Category</span>
                 </NavLink>
-
-                {/* Item */}
-                <NavLink
-                  to="/dashboard/menu/item"
-                  className={({ isActive }) =>
-                    `flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                      ? "bg-red-50 text-[#FF5252]"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`
-                  }
-                >
-                  <RiFileList3Line className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-                  <span>Item</span>
+                <NavLink to="/dashboard/menu/item"
+                  className={({ isActive }) => `flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? "bg-red-50 text-[#FF5252]" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}>
+                  <RiFileList3Line className="h-5 w-5 min-w-[20px] flex-shrink-0" /><span>Item</span>
                 </NavLink>
               </div>
             </div>
           </div>
 
-
-
-
-
-
+          {/* Orders */}
           <NavLink to="/dashboard/orders" className={navClass}>
             <ShoppingBagIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-            <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
-              ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-              Orders
-            </span>
+            <span className={`${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>Orders</span>
           </NavLink>
 
+          {/* Tracking */}
           <NavLink to="/dashboard/tracking" className={navClass}>
             <MapIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-            <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
-              ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-              Tracking
-            </span>
+            <span className={`${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>Tracking</span>
           </NavLink>
 
+          {/* Earnings */}
           <NavLink to="/dashboard/earnings" className={navClass}>
             <CurrencyDollarIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-            <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
-              ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-              Earnings
-            </span>
+            <span className={`${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>Earnings</span>
           </NavLink>
 
+          {/* Reviews */}
           <NavLink to="/dashboard/reviews" className={navClass}>
             <StarIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-            <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
-              ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-              Reviews
-            </span>
+            <span className={`${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>Reviews</span>
           </NavLink>
-{/* <NavLink to="/dashboard/offers" className={navClass}>
-            <GiftIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-            <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
-              ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-              Offers
-            </span>
-          </NavLink> */}
-         
 
+          {/* Support */}
           <NavLink to="/dashboard/support" className={navClass}>
             <LifebuoyIcon className="h-5 w-5 min-w-[20px] flex-shrink-0" />
-            <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
-              ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-              Support
-            </span>
+            <span className={`${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>Support</span>
           </NavLink>
+
         </nav>
 
-        {/* Logout Button */}
+        {/* Bottom: Logout */}
         <div className="border-t border-gray-200 p-3">
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="
-              w-full flex items-center gap-4
-              px-4 py-3 rounded-xl
-              transition-all duration-200
-              text-red-600 hover:bg-red-500 hover:text-white
-              font-medium cursor-pointer
-            "
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 text-red-600 hover:bg-red-500 hover:text-white font-medium cursor-pointer"
           >
             <LuLogOut size={20} className="min-w-[20px] flex-shrink-0" />
-            <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 
-              ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-              Logout
-            </span>
+            <span className={`${spanClass} ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>Logout</span>
           </button>
-
-
 
           {showLogoutConfirm && (
             <>
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] animate-fadeIn"
-                onClick={() => setShowLogoutConfirm(false)}
-              ></div>
-
-              {/* Modal */}
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
+                onClick={() => setShowLogoutConfirm(false)} />
               <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] w-[90%] max-w-md">
-                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden animate-scaleIn">
-
-                  {/* Header */}
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
                   <div className="bg-gradient-to-r from-[#FF5252] to-[#e03e3e] p-6 text-center">
-                    <div className="w-16 h-16 mx-auto mb-3 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center">
                       <LuLogOut className="text-white w-8 h-8" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white">
-                      Confirm Logout
-                    </h3>
+                    <h3 className="text-2xl font-bold text-white">Confirm Logout</h3>
                   </div>
-
-                  {/* Body */}
                   <div className="p-6 text-center">
-                    <p className="text-gray-700 text-lg mb-6">
-                      Are you sure you want to logout?
-                    </p>
-
+                    <p className="text-gray-700 text-lg mb-6">Are you sure you want to logout?</p>
                     <div className="flex gap-3">
-                      {/* Cancel */}
-                      <button
-                        onClick={() => setShowLogoutConfirm(false)}
-                        className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 hover:shadow-md"
-                      >
+                      <button onClick={() => setShowLogoutConfirm(false)}
+                        className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all">
                         Cancel
                       </button>
-
-                      {/* Confirm Logout */}
-                      <button
-                        onClick={() => {
-                          localStorage.removeItem("token");
-                          window.location.href = "/login";
-                        }}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-[#FF5252] to-[#e03e3e] hover:from-[#e03e3e] hover:to-[#c62828] text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-105"
-                      >
+                      <button onClick={() => { localStorage.removeItem("token"); window.location.href = "/login"; }}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-[#FF5252] to-[#e03e3e] text-white font-semibold rounded-xl transition-all hover:shadow-lg transform hover:scale-105">
                         Logout
                       </button>
                     </div>
@@ -331,11 +224,7 @@ const Sidebar = ({ onHoverChange }) => {
             </>
           )}
 
-
-
-          {/* Footer */}
-          <div className={`text-xs text-gray-400 text-center mt-3 transition-opacity duration-300
-            ${isMobileOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          <div className={`text-xs text-gray-400 text-center mt-3 ${isMobileOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-300`}>
             © 2026 YourApp
           </div>
         </div>

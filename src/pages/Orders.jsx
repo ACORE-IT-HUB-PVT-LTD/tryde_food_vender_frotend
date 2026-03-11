@@ -37,11 +37,17 @@ const ACTION_META = {
   READY:     { label: "Mark Ready",      bg: "#10b981" },
 };
 
+const TRACKING_STEPS = [
+  { key: "CREATED",   label: "Placed",    emoji: "🛍️" },
+  { key: "ACCEPTED",  label: "Accepted",  emoji: "✅" },
+  { key: "PREPARING", label: "Preparing", emoji: "👨‍🍳" },
+  { key: "READY",     label: "Ready",     emoji: "📦" },
+  { key: "DELIVERED", label: "Delivered", emoji: "🎉" },
+];
+
 // ─── APIs ─────────────────────────────────────────────────────────────────────
-// ✅ VITE_BASE_URL = https://api.tryde.in/kitchen
-// So final URL = https://api.tryde.in/kitchen/orders/vendor/orders ✅
 const apiGetOrders = (page = 1) =>
-  axiosInstance.get(`/orders/vendor/orders?page=${page}&limit=10`, { withCredentials: true });
+  axiosInstance.get(`/orders/vendor/orders?page=${page}&limit=50`, { withCredentials: true });
 
 const apiGetOrderById = (orderId) =>
   axiosInstance.get(`/orders/vendor/orders/${orderId}`, { withCredentials: true });
@@ -140,7 +146,7 @@ const NewOrderPopup = ({ order, onClose, onAction, updatingId }) => {
         <div className="p-5 space-y-4">
           <div className="flex gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center font-bold text-sm">
-              {(order.user?.name || "U")[0].toUpperCase()}
+              {(addr.name || order.user?.name || "U")[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900 text-sm truncate">
@@ -206,29 +212,50 @@ const NewOrderPopup = ({ order, onClose, onAction, updatingId }) => {
 };
 
 // ─── Order Detail Modal ───────────────────────────────────────────────────────
-const OrderDetailModal = ({ orderId, open, onClose }) => {
+// Now receives `orderData` from parent (already fetched orders list) as initial data
+// and also fetches fresh detail from API
+const OrderDetailModal = ({ orderId, orderData, open, onClose }) => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!open || !orderId) return;
-    setLoading(true); setError(null); setDetail(null);
+    // Use orderData from parent immediately (no blank flash)
+    if (orderData) setDetail(orderData);
+    setLoading(true);
+    setError(null);
     apiGetOrderById(orderId)
-      .then((r) => setDetail(r.data.data))
-      .catch((e) => setError(e?.response?.data?.message || "Failed to load details"))
+      .then((r) => {
+        const fetched = r.data?.data || r.data;
+        if (fetched) setDetail(fetched);
+      })
+      .catch((e) => {
+        // If API fails but we already have orderData, don't show error
+        if (!orderData) setError(e?.response?.data?.message || "Failed to load details");
+      })
       .finally(() => setLoading(false));
   }, [open, orderId]);
 
+  // Reset on close
+  useEffect(() => { if (!open) { setDetail(null); setError(null); } }, [open]);
+
   if (!open) return null;
-  const addr = detail?.delivery_address || {};
-  const m = detail ? (STATUS_META[detail.order_status] || STATUS_META.CREATED) : null;
+
+  const addr   = detail?.delivery_address || {};
+  const user   = detail?.user || {};
+  const driver = detail?.driver;
+  const m      = detail ? (STATUS_META[detail.order_status] || STATUS_META.CREATED) : null;
+
+  // Show OTP when status is ACCEPTED, PREPARING, or READY
+  const showOtp = detail && ["ACCEPTED", "PREPARING", "READY", "DELIVERED"].includes(detail.order_status);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.55)" }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
         {m && <div style={{ height: 5, background: m.dot, flexShrink: 0 }} />}
 
+        {/* Header */}
         <div className="flex items-start justify-between px-6 pt-5 pb-3 flex-shrink-0">
           <div>
             <h2 className="text-lg font-extrabold text-gray-900 tracking-tight">Order Details</h2>
@@ -242,42 +269,98 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
         </div>
 
         <div className="px-6 pb-6 overflow-y-auto flex-1 space-y-4">
-          {loading && [...Array(4)].map((_, i) => (
+
+          {/* Skeleton while loading without initial data */}
+          {loading && !detail && [...Array(4)].map((_, i) => (
             <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
           ))}
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">{error}</div>
           )}
 
           {detail && (
             <>
+              {/* Status + Time */}
               <div className="flex items-center justify-between">
                 <StatusBadge status={detail.order_status} />
                 <span className="text-xs text-gray-400">{formatTime(detail.created_at)}</span>
               </div>
+
+              {/* ── OTP Banner (shown when ACCEPTED and beyond) ── */}
+              {showOtp && detail.pickup_otp && (
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-400 text-white flex items-center justify-center text-lg">
+                    🔑
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-0.5">Pickup OTP</p>
+                    <p className="font-mono font-black text-3xl tracking-[0.25em] text-amber-700 leading-none">
+                      {detail.pickup_otp}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${detail.otp_verified ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                      {detail.otp_verified ? "✅ Verified" : "⏳ Pending"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <hr className="border-gray-100" />
 
-              {/* Customer */}
+              {/* ── Customer / User Info ── */}
               <div className="p-3 rounded-xl border border-red-100" style={{ background: "rgba(255,82,82,0.04)" }}>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Customer</p>
-                <p className="text-sm font-bold text-gray-800">
-                  {addr.name || detail.user?.name || `User #${detail.user_id}`}
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">📞 {addr.phone || detail.user?.phone || "—"}</p>
-                {detail.user?.email && <p className="text-xs text-gray-400 mt-0.5">✉️ {detail.user.email}</p>}
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Customer</p>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    {(addr.name || user.name || "U")[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-800">
+                      {addr.name || user.name || `User #${detail.user_id}`}
+                    </p>
+                    {/* Phone: prefer delivery address phone, fallback user.phone */}
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      📞 {addr.phone || user.phone || "—"}
+                    </p>
+                    {/* Email from user object */}
+                    {user.email && (
+                      <p className="text-xs text-gray-400 mt-0.5">✉️ {user.email}</p>
+                    )}
+                    {/* User ID + verification */}
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {user.id && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+                          UID #{user.id}
+                        </span>
+                      )}
+                      {user.is_verified && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-600">
+                          ✓ Verified
+                        </span>
+                      )}
+                      {user.gender && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 capitalize">
+                          {user.gender}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Address */}
+              {/* ── Delivery Address ── */}
               {(addr.addressLine1 || addr.city) && (
                 <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Delivery Address</p>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    {[addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.pincode].filter(Boolean).join(", ")}
+                    📍 {[addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.pincode].filter(Boolean).join(", ")}
                   </p>
                 </div>
               )}
 
-              {/* Items */}
+              {/* ── Items ── */}
               {detail.items?.length > 0 && (
                 <div>
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Items</p>
@@ -305,7 +388,7 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
                 </div>
               )}
 
-              {/* Payment */}
+              {/* ── Payment Info ── */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="p-2.5 rounded-xl border border-gray-100 bg-gray-50">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Mode</p>
@@ -326,38 +409,68 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
                 </div>
               </div>
 
-              {/* Driver */}
-              {detail.driver && (
+              {/* ── Driver Info ── */}
+              {driver ? (
                 <div className="p-3 rounded-xl border border-blue-100 bg-blue-50">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Driver</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Delivery Partner</p>
                   <div className="flex items-center gap-3">
-                    {detail.driver.profile_image ? (
-                      <img src={detail.driver.profile_image} alt={detail.driver.name}
-                        className="w-9 h-9 rounded-full object-cover border-2 border-white shadow" />
+                    {driver.profile_image ? (
+                      <img src={driver.profile_image} alt={driver.name}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-white shadow" />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-blue-400 text-white flex items-center justify-center font-bold text-sm">
-                        {detail.driver.name[0].toUpperCase()}
+                      <div className="w-10 h-10 rounded-full bg-blue-400 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        {(driver.name || "D")[0].toUpperCase()}
                       </div>
                     )}
-                    <div>
-                      <p className="text-sm font-bold text-gray-800">{detail.driver.name}</p>
-                      <p className="text-xs text-gray-500">📞 {detail.driver.phone}</p>
-                      <p className="text-xs text-gray-400 uppercase">{detail.driver.vehicle_number} · {detail.driver.vehicle_type}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-800">{driver.name}</p>
+                      <p className="text-xs text-gray-500">📞 {driver.phone}</p>
+                      {driver.email && <p className="text-xs text-gray-400">✉️ {driver.email}</p>}
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 uppercase">
+                          🏍 {driver.vehicle_type}
+                        </span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 uppercase">
+                          {driver.vehicle_number}
+                        </span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${driver.status === "ONLINE" ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"}`}>
+                          ● {driver.status}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+                  {/* Driver status for this order */}
+                  {detail.driver_status && (
+                    <div className="mt-2 pt-2 border-t border-blue-100">
+                      <p className="text-[10px] text-gray-400">
+                        Assignment: <span className={`font-bold ${detail.driver_status === "ASSIGNED" ? "text-blue-600" : "text-gray-500"}`}>{detail.driver_status}</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* No driver assigned yet */
+                <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm">🛵</div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-500">No Driver Assigned Yet</p>
+                    <p className="text-[10px] text-gray-400">
+                      Status: <span className="font-semibold">{detail.driver_status || "NOT_ASSIGNED"}</span>
+                    </p>
                   </div>
                 </div>
               )}
 
-              {/* OTP */}
-              {detail.pickup_otp && (
-                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-700">
-                  Pickup OTP:&nbsp;
-                  <span className="font-mono font-black text-base tracking-widest">{detail.pickup_otp}</span>
-                  &nbsp;{detail.otp_verified ? "✅ Verified" : "⏳ Awaiting verification"}
+              {/* ── Delivery OTP (if present) ── */}
+              {detail.delivery_otp && (
+                <div className="p-3 rounded-xl bg-green-50 border border-green-200 text-xs font-semibold text-green-700">
+                  Delivery OTP:&nbsp;
+                  <span className="font-mono font-black text-base tracking-widest">{detail.delivery_otp}</span>
+                  &nbsp;{detail.delivery_otp_verified ? "✅ Delivered" : "⏳ Awaiting delivery"}
                 </div>
               )}
 
-              {/* Price Breakdown */}
+              {/* ── Price Breakdown ── */}
               <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 space-y-1.5">
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Price Breakdown</p>
                 {[
@@ -391,6 +504,409 @@ const OrderDetailModal = ({ orderId, open, onClose }) => {
   );
 };
 
+// ─── Track Order Modal ────────────────────────────────────────────────────────
+const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
+  const [trackData, setTrackData] = useState(null);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (!open || !orderId) return;
+    // Use parent orderData immediately
+    if (orderData) setTrackData({ order: orderData, driver: orderData.driver });
+    setLoading(true);
+    setError(null);
+
+    apiGetOrderById(orderId)
+      .then((r) => {
+        const order = r.data?.data || r.data;
+        if (!order) throw new Error("No data");
+        setTrackData({ order, driver: order.driver });
+      })
+      .catch((e) => {
+        if (!orderData) setError(e?.response?.data?.message || "Failed to load tracking info");
+      })
+      .finally(() => setLoading(false));
+  }, [open, orderId, refreshKey]);
+
+  useEffect(() => { if (!open) { setTrackData(null); setError(null); } }, [open]);
+
+  const handleNats = useCallback((subject, msg) => {
+    if (subject === "order.details.response") {
+      if (msg.order?.order_id === orderId || msg.order?.id) {
+        setTrackData({ order: msg.order, driver: msg.driver || msg.order?.driver || null });
+        setLoading(false);
+      }
+      return;
+    }
+    if (subject === "order.status.updated" && msg.orderId === orderId) {
+      setTrackData((prev) =>
+        prev ? { ...prev, order: { ...prev.order, order_status: msg.status || prev.order.order_status } } : prev
+      );
+    }
+    if (subject === "driver.location.updated" && msg.orderId === orderId) {
+      setTrackData((prev) =>
+        prev ? { ...prev, driver: { ...(prev.driver || {}), current_latitude: msg.latitude, current_longitude: msg.longitude } } : prev
+      );
+    }
+  }, [orderId]);
+
+  useNats(["order.details.response", "order.status.updated", "driver.location.updated"], handleNats);
+
+  if (!open) return null;
+
+  const order      = trackData?.order;
+  const driver     = trackData?.driver || order?.driver;
+  const addr       = order?.delivery_address || {};
+  const user       = order?.user || {};
+
+  const isRejected  = order?.order_status === "REJECTED";
+  const isDelivered = order?.order_status === "DELIVERED";
+  const stepIdx     = TRACKING_STEPS.findIndex((s) => s.key === order?.order_status);
+  const progressPct = stepIdx < 0 ? 0 : (stepIdx / (TRACKING_STEPS.length - 1)) * 100;
+
+  const mapsUrl = order?.delivery_latitude && order?.delivery_longitude
+    ? `https://www.google.com/maps/dir/?api=1&origin=${order.pickup_latitude},${order.pickup_longitude}&destination=${order.delivery_latitude},${order.delivery_longitude}`
+    : null;
+
+  const driverMapsUrl = driver?.current_latitude && driver?.current_longitude
+    ? `https://www.google.com/maps?q=${driver.current_latitude},${driver.current_longitude}`
+    : null;
+
+  // Show OTP in track modal too when accepted+
+  const showOtp = order && ["ACCEPTED", "PREPARING", "READY", "DELIVERED"].includes(order.order_status);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.65)" }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[92vh] flex flex-col">
+
+        {/* Header */}
+        <div className="px-6 py-4 flex items-center justify-between flex-shrink-0"
+          style={{ background: "linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)" }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-lg">📍</div>
+            <div>
+              <p className="text-white font-extrabold text-sm tracking-tight">Live Order Tracking</p>
+              <p className="text-sky-100 text-xs font-mono mt-0.5">{orderId}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setRefreshKey((k) => k + 1)} title="Refresh"
+              className="text-white hover:bg-white/20 p-2 rounded-xl transition-colors">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M23 4v6h-6M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+              </svg>
+            </button>
+            <button onClick={onClose} className="text-white hover:bg-white/20 p-2 rounded-xl transition-colors">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="overflow-y-auto flex-1 p-5 space-y-4">
+
+          {loading && !trackData && (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-4 flex items-center justify-between">
+              <span>{error}</span>
+              <button onClick={() => setRefreshKey((k) => k + 1)}
+                className="ml-3 text-xs font-bold underline text-red-600 hover:text-red-800">Retry</button>
+            </div>
+          )}
+
+          {order && (
+            <>
+              {/* Status + Time */}
+              <div className="flex items-center justify-between">
+                <StatusBadge status={order.order_status} />
+                <span className="text-xs text-gray-400">{formatTime(order.created_at)}</span>
+              </div>
+
+              {/* ── OTP Banner ── */}
+              {showOtp && order.pickup_otp && (
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-400 text-white flex items-center justify-center text-lg">
+                    🔑
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-0.5">Pickup OTP</p>
+                    <p className="font-mono font-black text-3xl tracking-[0.25em] text-amber-700 leading-none">
+                      {order.pickup_otp}
+                    </p>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${order.otp_verified ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                    {order.otp_verified ? "✅ Verified" : "⏳ Pending"}
+                  </span>
+                </div>
+              )}
+
+              {/* ── Customer Info Card ── */}
+              <div className="p-4 rounded-2xl border border-red-100" style={{ background: "rgba(255,82,82,0.04)" }}>
+                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest mb-3">Customer</p>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    {(addr.name || user.name || "U")[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-800">
+                      {addr.name || user.name || `User #${order.user_id}`}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">📞 {addr.phone || user.phone || "—"}</p>
+                    {user.email && <p className="text-xs text-gray-400 mt-0.5">✉️ {user.email}</p>}
+                    {(addr.addressLine1 || addr.city) && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        📍 {[addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.pincode].filter(Boolean).join(", ")}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {user.id && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+                          UID #{user.id}
+                        </span>
+                      )}
+                      {user.is_verified && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-600">
+                          ✓ Verified
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Tracking Timeline ── */}
+              {!isRejected && (
+                <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl p-4 border border-sky-100">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-sky-500 mb-4">Order Journey</p>
+                  <div className="relative flex items-start justify-between">
+                    <div className="absolute top-4 left-0 right-0 px-5 pointer-events-none">
+                      <div className="relative h-1 bg-sky-200 rounded-full overflow-hidden">
+                        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                          style={{ width: `${progressPct}%`, background: "linear-gradient(90deg, #0ea5e9, #38bdf8)" }} />
+                      </div>
+                    </div>
+                    {TRACKING_STEPS.map((step, idx) => {
+                      const done   = stepIdx >= idx;
+                      const active = stepIdx === idx;
+                      return (
+                        <div key={step.key} className="flex flex-col items-center gap-1.5 z-10 flex-1">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all duration-300 ${active ? "scale-110 shadow-md shadow-sky-200" : ""}`}
+                            style={{
+                              background:  done ? (active ? "#0ea5e9" : "#e0f2fe") : "#fff",
+                              borderColor: done ? "#0ea5e9" : "#bae6fd",
+                              color:       done ? (active ? "#fff" : "#0369a1") : "#94a3b8",
+                            }}>
+                            {done && !active ? (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            ) : (
+                              <span>{step.emoji}</span>
+                            )}
+                          </div>
+                          <p className={`text-[9px] font-bold text-center leading-tight ${done ? "text-sky-700" : "text-gray-400"}`}>
+                            {step.label}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {isDelivered && (
+                    <div className="mt-4 text-center py-2 rounded-xl bg-emerald-100 text-emerald-700 text-xs font-bold">
+                      🎉 Order successfully delivered!
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isRejected && (
+                <div className="bg-red-50 border border-red-200 rounded-2xl p-5 text-center">
+                  <p className="text-4xl mb-2">❌</p>
+                  <p className="font-bold text-red-700 text-sm">Order was Cancelled</p>
+                  {order.cancel_reason && (
+                    <p className="text-xs text-red-500 mt-1">Reason: {order.cancel_reason}</p>
+                  )}
+                </div>
+              )}
+
+              {/* ── Route Overview ── */}
+              {(order.pickup_latitude || order.delivery_latitude) && (
+                <div className="rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                      <div className="w-3 h-3 rounded-full bg-orange-400 border-2 border-white shadow" />
+                      <div className="w-0.5 h-6 bg-dashed bg-gray-300" style={{ borderLeft: "2px dashed #d1d5db" }} />
+                      <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow" />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div>
+                        <p className="text-[10px] text-gray-400 uppercase font-bold">Pickup</p>
+                        <p className="text-xs font-semibold text-gray-700 truncate">Restaurant</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400 uppercase font-bold">Delivery</p>
+                        <p className="text-xs font-semibold text-gray-700 truncate">
+                          {addr.name ? `${addr.name} · ` : ""}{[addr.addressLine1, addr.city].filter(Boolean).join(", ")}
+                        </p>
+                      </div>
+                    </div>
+                    {mapsUrl && (
+                      <a href={mapsUrl} target="_blank" rel="noreferrer"
+                        className="flex-shrink-0 flex flex-col items-center gap-1 px-3 py-2 rounded-xl bg-sky-100 hover:bg-sky-200 transition-colors text-sky-700">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                        </svg>
+                        <p className="text-[9px] font-bold">Navigate</p>
+                      </a>
+                    )}
+                  </div>
+                  {(order.restaurant_to_customer_km || order.driver_distance_km || order.total_trip_km) && (
+                    <div className="grid grid-cols-3 divide-x divide-gray-100 border-t border-gray-100">
+                      {[
+                        { label: "To Customer", val: order.restaurant_to_customer_km },
+                        { label: "Driver Trip",  val: order.driver_distance_km },
+                        { label: "Total Route",  val: order.total_trip_km },
+                      ].map(({ label, val }) => (
+                        <div key={label} className="px-3 py-2.5 text-center">
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">{label}</p>
+                          <p className="text-sm font-extrabold text-gray-700 mt-0.5">
+                            {val ? `${parseFloat(val).toFixed(1)} km` : "—"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Driver Card ── */}
+              {driver ? (
+                <div className="p-4 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-sky-50">
+                  <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mb-3">Delivery Partner</p>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-shrink-0">
+                      {driver.profile_image ? (
+                        <img src={driver.profile_image} alt={driver.name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-sky-500 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                          {(driver.name || "D")[0].toUpperCase()}
+                        </div>
+                      )}
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${driver.status === "ONLINE" ? "bg-green-400" : "bg-gray-400"}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-800">{driver.name}</p>
+                      <p className="text-xs text-gray-500">📞 {driver.phone}</p>
+                      {driver.email && <p className="text-xs text-gray-400">✉️ {driver.email}</p>}
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-600 uppercase">
+                          🏍 {driver.vehicle_type}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-600 uppercase">
+                          {driver.vehicle_number}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${order.driver_status === "ASSIGNED" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>
+                        {order.driver_status || driver.status}
+                      </span>
+                      {driverMapsUrl && (
+                        <a href={driverMapsUrl} target="_blank" rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-600 hover:text-sky-800 bg-sky-100 hover:bg-sky-200 px-2.5 py-1 rounded-lg transition-colors">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                          </svg>
+                          Live Location
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-lg">🛵</div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-500">No Driver Assigned Yet</p>
+                    <p className="text-xs text-gray-400">
+                      Status: <span className="font-semibold">{order.driver_status || "NOT_ASSIGNED"}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* ── OTPs ── */}
+              <div className="flex gap-3 flex-wrap">
+                {order.pickup_otp && (
+                  <div className="flex-1 min-w-[140px] p-3.5 rounded-2xl bg-amber-50 border border-amber-200">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-1">Pickup OTP</p>
+                    <p className="font-mono font-black text-3xl tracking-[0.2em] text-amber-700">{order.pickup_otp}</p>
+                    <p className="text-[10px] text-amber-500 mt-1">
+                      {order.otp_verified ? "✅ Verified by driver" : "⏳ Awaiting pickup"}
+                    </p>
+                  </div>
+                )}
+                {order.delivery_otp && (
+                  <div className="flex-1 min-w-[140px] p-3.5 rounded-2xl bg-green-50 border border-green-200">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-green-600 mb-1">Delivery OTP</p>
+                    <p className="font-mono font-black text-3xl tracking-[0.2em] text-green-700">{order.delivery_otp}</p>
+                    <p className="text-[10px] text-green-500 mt-1">
+                      {order.delivery_otp_verified ? "✅ Delivered" : "⏳ Awaiting delivery"}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Payment Summary ── */}
+              <div className="rounded-2xl border border-gray-100 overflow-hidden">
+                <div className="grid grid-cols-4 divide-x divide-gray-100">
+                  {[
+                    { label: "Mode",    val: order.payment_mode || "COD",       cls: "text-gray-700" },
+                    { label: "Payment", val: order.payment_status || "PENDING", cls: order.payment_status === "PAID" ? "text-green-600" : "text-amber-600" },
+                    { label: "Total",   val: `₹${fmt(order.total_amount)}`,      cls: "text-gray-700" },
+                    { label: "Payable", val: `₹${fmt(order.customer_payable)}`,  cls: "font-extrabold", style: { color: BRAND } },
+                  ].map(({ label, val, cls, style }) => (
+                    <div key={label} className="px-3 py-3 text-center bg-gray-50">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</p>
+                      <p className={`text-xs font-bold ${cls}`} style={style}>{val}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-4 pt-3 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+          <p className="text-[10px] text-gray-400 flex items-center gap-1">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            Live via NATS
+          </p>
+          <button onClick={onClose}
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-100 transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Orders Component ────────────────────────────────────────────────────
 export default function Orders() {
   const navigate = useNavigate();
@@ -402,34 +918,38 @@ export default function Orders() {
   const [actionError, setActionError]     = useState(null);
   const [updatingId, setUpdatingId]       = useState(null);
   const [detailOrderId, setDetailOrderId] = useState(null);
+  const [detailOrderData, setDetailOrderData] = useState(null); // ← full order object for modal
   const [newOrderPopup, setNewOrderPopup] = useState(null);
   const [page, setPage]                   = useState(1);
   const [totalOrders, setTotalOrders]     = useState(0);
   const [search, setSearch]               = useState("");
+  const [trackOrderId, setTrackOrderId]   = useState(null);
+  const [trackOrderData, setTrackOrderData] = useState(null); // ← full order object for track modal
   const prevIds = useRef(new Set());
   const LIMIT = 10;
   const totalPages = Math.ceil(totalOrders / LIMIT);
 
   const fetchOrders = useCallback(async (pg = 1) => {
-    setLoading(true);
+    if (pg === 1) setLoading(true);
     setError(null);
     try {
       const res = await apiGetOrders(pg);
       const payload = res.data;
-      const list  = Array.isArray(payload.data) ? payload.data : Array.isArray(payload) ? payload : [];
+      const list = Array.isArray(payload.data) ? payload.data : Array.isArray(payload) ? payload : [];
       const total = payload.total_orders ?? list.length;
 
       if (pg === 1 && prevIds.current.size > 0) {
         const newOnes = list.filter((o) => o.order_status === "CREATED" && !prevIds.current.has(o.id));
         if (newOnes.length > 0) setNewOrderPopup(newOnes[0]);
       }
+
       prevIds.current = new Set(list.map((o) => o.id));
       setOrders(list);
       setTotalOrders(total);
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to load orders.");
     } finally {
-      setLoading(false);
+      if (pg === 1) setLoading(false);
     }
   }, []);
 
@@ -441,7 +961,7 @@ export default function Orders() {
     if (subject === "order.created") {
       apiGetOrderById(data.orderId)
         .then((res) => {
-          const newOrder = res.data.data;
+          const newOrder = res.data?.data || res.data;
           if (!newOrder) return;
           setOrders((prev) => {
             const exists = prev.find((o) => o.order_id === data.orderId);
@@ -506,6 +1026,18 @@ export default function Orders() {
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  // ── Open Detail Modal: pass full order object for instant display ──
+  const openDetailModal = (order) => {
+    setDetailOrderId(order.order_id);
+    setDetailOrderData(order);
+  };
+
+  // ── Open Track Modal: pass full order object for instant display ──
+  const openTrackModal = (order) => {
+    setTrackOrderId(order.order_id);
+    setTrackOrderData(order);
   };
 
   const activeKey = TAB_CONFIG[activeTab].key;
@@ -638,7 +1170,6 @@ export default function Orders() {
                     const m     = STATUS_META[order.order_status] || STATUS_META.CREATED;
                     const addr  = order.delivery_address || {};
                     const isNew = order.order_status === "CREATED";
-                    const showTracking = order.otp_verified === true || order.driver_assigned === true;
 
                     return (
                       <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
@@ -694,6 +1225,7 @@ export default function Orders() {
 
                         <td className="py-3.5 px-4">
                           <StatusBadge status={order.order_status} />
+                          {order.pickup_otp || "no otp"}
                         </td>
 
                         <td className="py-3.5 px-4">
@@ -702,9 +1234,10 @@ export default function Orders() {
 
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                            {/* ✅ View Order Button */}
+
+                            {/* View button — passes full order object */}
                             <button
-                              onClick={() => setDetailOrderId(order.order_id)}
+                              onClick={() => openDetailModal(order)}
                               title="View Order Details"
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -714,17 +1247,19 @@ export default function Orders() {
                               View
                             </button>
 
-                            <ActionButtons order={order} updatingId={updatingId} onAction={handleAction} />
+                            {/* Track button — passes full order object */}
+                            <button
+                              onClick={() => openTrackModal(order)}
+                              title="Track Order"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border border-sky-200 text-sky-600 hover:bg-sky-50 hover:border-sky-400 transition-colors flex-shrink-0">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <circle cx="12" cy="12" r="3" />
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                              </svg>
+                              Track
+                            </button>
 
-                            {showTracking && (
-                              <button
-                                onClick={() => navigate(`/tracking?orderId=${order.order_id}`)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white flex-shrink-0 hover:opacity-90 transition-opacity"
-                                style={{ background: "#0ea5e9" }}
-                                title="Track Order">
-                                📍 Track
-                              </button>
-                            )}
+                            <ActionButtons order={order} updatingId={updatingId} onAction={handleAction} />
                           </div>
                         </td>
                       </tr>
@@ -766,6 +1301,7 @@ export default function Orders() {
         </div>
       </div>
 
+      {/* New Order Popup */}
       {newOrderPopup && (
         <NewOrderPopup
           order={newOrderPopup}
@@ -775,10 +1311,20 @@ export default function Orders() {
         />
       )}
 
+      {/* Order Detail Modal — now receives orderData for instant display */}
       <OrderDetailModal
         orderId={detailOrderId}
+        orderData={detailOrderData}
         open={Boolean(detailOrderId)}
-        onClose={() => setDetailOrderId(null)}
+        onClose={() => { setDetailOrderId(null); setDetailOrderData(null); }}
+      />
+
+      {/* Track Order Modal — now receives orderData for instant display */}
+      <TrackOrderModal
+        orderId={trackOrderId}
+        orderData={trackOrderData}
+        open={Boolean(trackOrderId)}
+        onClose={() => { setTrackOrderId(null); setTrackOrderData(null); }}
       />
     </div>
   );
