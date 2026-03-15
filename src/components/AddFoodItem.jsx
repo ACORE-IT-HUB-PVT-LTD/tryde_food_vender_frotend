@@ -1,944 +1,9 @@
-// import React, { useContext, useEffect, useState } from "react";
-// import {
-//   Dialog, DialogTitle, DialogContent, DialogActions, Button,
-//   Typography, TextField, Box, CircularProgress, Select, MenuItem,
-//   FormControl, InputLabel, Chip, Switch, FormControlLabel, Grid,
-//   Alert, IconButton, Table, TableBody, TableCell, TableContainer,
-//   TableHead, TableRow, Paper, Pagination, Stack, Divider,
-// } from "@mui/material";
-// import EditIcon from "@mui/icons-material/Edit";
-// import DeleteIcon from "@mui/icons-material/Delete";
-// import AddIcon from "@mui/icons-material/Add";
-// import RestaurantIcon from "@mui/icons-material/Restaurant";
-// import AccessTimeIcon from "@mui/icons-material/AccessTime";
-// import CloseIcon from "@mui/icons-material/Close";
-// import { IoMdCamera, IoMdRestaurant } from "react-icons/io";
-// import { FaRegStar, FaPepperHot, FaLeaf, FaDrumstickBite } from "react-icons/fa";
-// import { MdVisibility } from "react-icons/md";
-
-// import axiosInstance from "../api/axiosInstance";
-// import { RestaurantContext } from "../context/getRestaurant";
-// import { CategoriesContext } from "../context/GetAllCategories";
-
-// const AddFoodItem = () => {
-//   const { restaurant } = useContext(RestaurantContext);
-//   const { categories } = useContext(CategoriesContext);
-
-//   const [allCategories, setAllCategories] = useState([]);
-//   const [subCategories, setSubCategories] = useState([]);
-
-//   const [allMenuItems, setAllMenuItems] = useState([]);
-//   const [displayedMenuItems, setDisplayedMenuItems] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [filterCategory, setFilterCategory] = useState("all");
-
-//   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
-
-//   // Modal & form states
-//   const [openModal, setOpenModal] = useState(false);
-//   const [mode, setMode] = useState("add");
-
-//   // ─── View Detail Modal ───
-//   const [openViewModal, setOpenViewModal] = useState(false);
-//   const [viewItem, setViewItem] = useState(null);
-//   const [viewLoading, setViewLoading] = useState(false);
-
-//   const [name, setName] = useState("");
-//   const [description, setDescription] = useState("");
-//   const [selectedCategory, setSelectedCategory] = useState("");
-//   const [selectedSubCategory, setSelectedSubCategory] = useState("");
-//   const [price, setPrice] = useState("");
-//   const [offerPrice, setOfferPrice] = useState("");
-//   const [foodType, setFoodType] = useState("VEG");
-//   const [isAvailable, setIsAvailable] = useState(true);
-//   const [isBestseller, setIsBestseller] = useState(false);
-//   const [taxPercent, setTaxPercent] = useState("");
-//   const [packagingCharge, setPackagingCharge] = useState("");
-//   const [isCustomizable, setIsCustomizable] = useState(false);
-//   const [availableFrom, setAvailableFrom] = useState("");
-//   const [availableTo, setAvailableTo] = useState("");
-//   const [isSpicy, setIsSpicy] = useState(false);
-//   const [preparationTime, setPreparationTime] = useState("");
-//   const [image, setImage] = useState(null);
-//   const [currentImage, setCurrentImage] = useState("");
-//   const [editId, setEditId] = useState(null);
-//   const [errors, setErrors] = useState({});
-//   const [successMsg, setSuccessMsg] = useState("");
-//   const [errorMsg, setErrorMsg] = useState("");
-//   const [isSaving, setIsSaving] = useState(false);
-
-//   useEffect(() => {
-//     if (successMsg || errorMsg) {
-//       const t = setTimeout(() => { setSuccessMsg(""); setErrorMsg(""); }, 5000);
-//       return () => clearTimeout(t);
-//     }
-//   }, [successMsg, errorMsg]);
-
-//   const fetchAllCategoriesUnpaginated = async () => {
-//     if (!restaurant?.id) return;
-//     const token = localStorage.getItem("token");
-//     try {
-//       const first = await axiosInstance.get(`/categories/${restaurant.id}`, {
-//         params: { page: 1, limit: 100 },
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       const data = first.data.data || [];
-//       const pg = first.data.pagination || {};
-//       if (!pg.totalPages || pg.totalPages <= 1) { setAllCategories(data); return; }
-//       const rest = await Promise.all(
-//         Array.from({ length: pg.totalPages - 1 }, (_, i) =>
-//           axiosInstance.get(`/categories/${restaurant.id}`, {
-//             params: { page: i + 2, limit: 100 },
-//             headers: { Authorization: `Bearer ${token}` },
-//           }).then(r => r.data.data || []).catch(() => [])
-//         )
-//       );
-//       setAllCategories([...data, ...rest.flat()]);
-//     } catch {
-//       setAllCategories(categories || []);
-//     }
-//   };
-
-//   const fetchAllMenuItems = async (page = 1) => {
-//     try {
-//       setLoading(true);
-//       const token = localStorage.getItem("token");
-//       const res = await axiosInstance.get(`/menuitems/${restaurant.id}/menu-items`, {
-//         params: { page, limit: 10 },
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setAllMenuItems(res.data.data || []);
-//       setPagination(res.data.pagination || { total: 0, page: 1, limit: 10, totalPages: 1 });
-//     } catch (error) {
-//       setAllMenuItems([]);
-//       setErrorMsg(error?.response?.data?.message || error?.message || "Failed to fetch menu items.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (restaurant?.id) {
-//       fetchAllCategoriesUnpaginated();
-//       fetchAllMenuItems(1);
-//     }
-//   }, [restaurant?.id]);
-
-//   useEffect(() => {
-//     if (filterCategory === "all") {
-//       setDisplayedMenuItems(allMenuItems);
-//     } else {
-//       setDisplayedMenuItems(allMenuItems.filter(item => item.category_id === filterCategory));
-//     }
-//   }, [filterCategory, allMenuItems]);
-
-//   const fetchSubCategories = async (categoryId) => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       const res = await axiosInstance.get(`/subcategories/${categoryId}/sub-categories`, {
-//         params: { page: 1, limit: 100 },
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setSubCategories(res.data.data || res.data || []);
-//     } catch (error) {
-//       setSubCategories([]);
-//       setErrorMsg(error?.response?.data?.message || "Failed to fetch sub-categories.");
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (selectedCategory) {
-//       fetchSubCategories(selectedCategory);
-//     } else {
-//       setSubCategories([]);
-//       setSelectedSubCategory("");
-//     }
-//   }, [selectedCategory]);
-
-//   const resetForm = () => {
-//     setName(""); setDescription(""); setSelectedCategory(""); setSelectedSubCategory("");
-//     setPrice(""); setOfferPrice(""); setFoodType("VEG"); setIsAvailable(true);
-//     setIsBestseller(false); setTaxPercent(""); setPackagingCharge(""); setIsCustomizable(false);
-//     setAvailableFrom(""); setAvailableTo(""); setIsSpicy(false); setPreparationTime("");
-//     setImage(null); setCurrentImage(""); setEditId(null); setErrors({}); setMode("add");
-//   };
-
-//   const openAddModal = () => { resetForm(); setOpenModal(true); };
-//   const closeModal = () => { setOpenModal(false); resetForm(); };
-
-//   const validate = () => {
-//     const err = {};
-//     if (!name.trim()) err.name = "Food name is required";
-//     if (!selectedCategory) err.category = "Please select a category";
-//     if (!selectedSubCategory) err.subCategory = "Please select a sub-category";
-//     if (!price || Number(price) <= 0) err.price = "Valid price is required";
-//     setErrors(err);
-//     return Object.keys(err).length === 0;
-//   };
-
-//   const handleImageChange = (e) => {
-//     const file = e.target.files?.[0];
-//     if (!file) return;
-//     setImage(file);
-//     setCurrentImage(URL.createObjectURL(file));
-//     setErrors(prev => ({ ...prev, image: "" }));
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     if (!validate()) { setErrorMsg("Please fix the errors before submitting"); return; }
-//     if (!image && !currentImage) {
-//       setErrors({ image: "Image is required" });
-//       setErrorMsg("Please upload an image before submitting");
-//       return;
-//     }
-//     setIsSaving(true); setErrorMsg(""); setSuccessMsg("");
-
-//     const formData = new FormData();
-//     formData.append("name", name.trim());
-//     formData.append("description", description.trim());
-//     formData.append("category_id", selectedCategory);
-//     formData.append("sub_category_id", selectedSubCategory);
-//     formData.append("price", price);
-//     if (offerPrice) formData.append("offer_price", offerPrice);
-//     formData.append("food_type", foodType);
-//     formData.append("is_available", isAvailable);
-//     formData.append("is_bestseller", isBestseller);
-//     if (taxPercent) formData.append("tax_percent", taxPercent);
-//     if (packagingCharge) formData.append("packaging_charge", packagingCharge);
-//     formData.append("is_customizable", isCustomizable);
-//     if (availableFrom) formData.append("available_from", availableFrom);
-//     if (availableTo) formData.append("available_to", availableTo);
-//     formData.append("is_spicy", isSpicy);
-//     if (preparationTime) formData.append("preparation_time", preparationTime);
-//     if (image) formData.append("image", image);
-
-//     const token = localStorage.getItem("token");
-//     const config = { headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` } };
-
-//     try {
-//       if (mode === "add") {
-//         await axiosInstance.post(`/menuitems/restaurants/${restaurant?.id}/menu-items`, formData, config);
-//         setSuccessMsg("Menu item created successfully!");
-//         const newTotalPages = Math.ceil((pagination.total + 1) / pagination.limit);
-//         closeModal();
-//         await fetchAllMenuItems(newTotalPages);
-//       } else {
-//         await axiosInstance.put(`/menuitems/update/menu-items/${editId}`, formData, config);
-//         setSuccessMsg("Menu item updated successfully!");
-//         closeModal();
-//         await fetchAllMenuItems(pagination.page);
-//       }
-//     } catch (error) {
-//       setErrorMsg(error?.response?.data?.message || error?.response?.data?.error || "Failed to save menu item.");
-//     } finally {
-//       setIsSaving(false);
-//     }
-//   };
-
-//   const handleEdit = async (menuItem) => {
-//     try {
-//       setEditId(menuItem.id);
-//       const token = localStorage.getItem("token");
-//       const response = await axiosInstance.get(`/menuitems/viewsingle/${menuItem.id}`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       const data = response.data.data;
-//       setName(data.name);
-//       setDescription(data.description || "");
-//       setSelectedCategory(data.category_id);
-//       setSelectedSubCategory(data.sub_category_id);
-//       setPrice(data.price);
-//       setOfferPrice(data.offer_price || "");
-//       setFoodType(data.food_type || "VEG");
-//       setIsAvailable(data.is_available);
-//       setIsBestseller(data.is_bestseller);
-//       setTaxPercent(data.tax_percent || "");
-//       setPackagingCharge(data.packaging_charge || "");
-//       setIsCustomizable(data.is_customizable);
-//       setAvailableFrom(data.available_from || "");
-//       setAvailableTo(data.available_to || "");
-//       setIsSpicy(data.is_spicy);
-//       setPreparationTime(data.preparation_time || "");
-//       setCurrentImage(data.image || "");
-//       setImage(null);
-//       setMode("edit");
-//       setOpenModal(true);
-//       setErrors({});
-//     } catch (error) {
-//       setErrorMsg(error?.response?.data?.message || error?.message || "Failed to load menu item details.");
-//     }
-//   };
-
-//   // ─── View Detail Handler ───
-//   const handleViewDetail = async (menuItem) => {
-//     setViewLoading(true);
-//     setOpenViewModal(true);
-//     setViewItem(null);
-//     try {
-//       const token = localStorage.getItem("token");
-//       const response = await axiosInstance.get(`/menuitems/viewsingle/${menuItem.id}`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setViewItem(response.data.data);
-//     } catch (error) {
-//       setErrorMsg(error?.response?.data?.message || error?.message || "Failed to load item details.");
-//       setOpenViewModal(false);
-//     } finally {
-//       setViewLoading(false);
-//     }
-//   };
-
-//   const closeViewModal = () => {
-//     setOpenViewModal(false);
-//     setViewItem(null);
-//   };
-
-//   const handleDelete = async (id) => {
-//     if (!window.confirm("Are you sure you want to delete this menu item?")) return;
-//     try {
-//       const token = localStorage.getItem("token");
-//       const result = await axiosInstance.delete(`/menuitems/delete/${id}`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setSuccessMsg(result.data.message || "Menu item deleted successfully");
-//       const targetPage = allMenuItems.length === 1 && pagination.page > 1
-//         ? pagination.page - 1 : pagination.page;
-//       await fetchAllMenuItems(targetPage);
-//     } catch (error) {
-//       setErrorMsg(error?.response?.data?.message || "Failed to delete menu item");
-//     }
-//   };
-
-//   const handlePageChange = (_, newPage) => fetchAllMenuItems(newPage);
-
-//   const modalCategories = allCategories.length ? allCategories : (categories || []);
-
-//   const getCategoryName = (categoryId) =>
-//     allCategories.find(c => c.id === categoryId)?.name ||
-//     categories?.find(c => c.id === categoryId)?.name || "Unknown";
-
-//   const formatTime = (t) => {
-//     if (!t) return "—";
-//     const [h, m] = t.split(":");
-//     const hour = parseInt(h);
-//     return `${hour % 12 || 12}:${m} ${hour >= 12 ? "PM" : "AM"}`;
-//   };
-
-//   // ─── Detail Row helper ───
-//   const DetailRow = ({ label, value }) => (
-//     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", py: 1 }}>
-//       <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ minWidth: 140 }}>{label}</Typography>
-//       <Typography variant="body2" fontWeight={600} color="text.primary" textAlign="right">{value ?? "—"}</Typography>
-//     </Box>
-//   );
-
-//   if (!restaurant?.id) {
-//     return (
-//       <div className="flex items-center justify-center min-h-screen bg-white">
-//         <div className="bg-white backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-md text-center">
-//           <RestaurantIcon sx={{ fontSize: 64, color: "#FF5252", mb: 2 }} />
-//           <Typography variant="h5" className="font-bold text-gray-800 mb-2">Restaurant Required</Typography>
-//           <Typography variant="body1" className="text-gray-600">Please select or load a restaurant first to manage menu items.</Typography>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gray-50 font-['Poppins'] p-4 sm:p-6 lg:p-8">
-//       {successMsg && (
-//         <Alert severity="success" sx={{ mb: 3, maxWidth: "lg", mx: "auto" }} onClose={() => setSuccessMsg("")}>
-//           {successMsg}
-//         </Alert>
-//       )}
-//       {errorMsg && (
-//         <Alert severity="error" sx={{ mb: 3, maxWidth: "lg", mx: "auto" }} onClose={() => setErrorMsg("")}>
-//           {errorMsg}
-//         </Alert>
-//       )}
-
-//       <div className="max-w-7xl mx-auto">
-//         {/* Header */}
-//         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-//           <div>
-//             <Typography variant="h4" className="font-bold text-gray-800">Menu Items</Typography>
-//             <Typography variant="body2" className="text-gray-600">Manage your menu items and availability</Typography>
-//           </div>
-//           <Button variant="contained" startIcon={<AddIcon />} onClick={openAddModal}
-//             sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" }, borderRadius: "12px", px: 4, py: 1.2, fontWeight: 600 }}>
-//             Add Menu Item
-//           </Button>
-//         </div>
-
-//         {/* Filter */}
-//         <Paper sx={{ p: 3, mb: 4, borderRadius: "16px" }}>
-//           <FormControl size="small" sx={{ minWidth: 280 }}>
-//             <InputLabel>Filter by Category</InputLabel>
-//             <Select value={filterCategory} label="Filter by Category" onChange={e => setFilterCategory(e.target.value)}>
-//               <MenuItem value="all"><em>All Menu Items</em></MenuItem>
-//               {modalCategories.map(cat => (
-//                 <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-//               ))}
-//             </Select>
-//           </FormControl>
-//           {filterCategory !== "all" && (
-//             <Chip label={`Filtered: ${getCategoryName(filterCategory)}`}
-//               onDelete={() => setFilterCategory("all")} color="primary" sx={{ ml: 2 }} />
-//           )}
-//         </Paper>
-
-//         {/* List */}
-//         {loading ? (
-//           <Box display="flex" justifyContent="center" py={10}>
-//             <CircularProgress sx={{ color: "#FF5252" }} size={60} />
-//           </Box>
-//         ) : displayedMenuItems.length === 0 ? (
-//           <Paper sx={{ p: 6, textAlign: "center", borderRadius: "16px" }}>
-//             <IoMdRestaurant style={{ fontSize: 80, color: "#FF5252", opacity: 0.4, marginBottom: 16 }} />
-//             <Typography variant="h6" color="text.secondary" gutterBottom>No menu items found</Typography>
-//             <Typography color="text.secondary" sx={{ mb: 3 }}>
-//               {filterCategory === "all" ? "Add your first menu item to get started" : `No items in ${getCategoryName(filterCategory)}`}
-//             </Typography>
-//             <Button variant="contained" startIcon={<AddIcon />} onClick={openAddModal}
-//               sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" } }}>Add Menu Item</Button>
-//           </Paper>
-//         ) : (
-//           <Paper sx={{ borderRadius: "16px", overflow: "hidden", boxShadow: 3 }}>
-//             {/* Desktop Table */}
-//             <div className="hidden lg:block">
-//               <TableContainer>
-//                 <Table>
-//                   <TableHead sx={{ bgcolor: "#FF5252" }}>
-//                     <TableRow>
-//                       {["S.No", "Image", "Name & Description", "Category", "Type", "Price", "Time", "Status", "Tags", "Actions"].map((h, idx) => (
-//                         <TableCell key={h} align={idx === 9 ? "right" : "left"} sx={{ color: "white", fontWeight: "bold" }}>{h}</TableCell>
-//                       ))}
-//                     </TableRow>
-//                   </TableHead>
-//                   <TableBody>
-//                     {displayedMenuItems.map((item, i) => (
-//                       <TableRow key={item.id} hover>
-//                         <TableCell>{(pagination.page - 1) * pagination.limit + i + 1}</TableCell>
-//                         <TableCell>
-//                           {item.image ? (
-//                             <img src={item.image} alt={item.name}
-//                               style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8 }}
-//                               onError={e => e.target.src = "https://via.placeholder.com/80?text=No+Image"} />
-//                           ) : (
-//                             <Box sx={{ width: 80, height: 80, bgcolor: "grey.100", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", color: "text.secondary" }}>No image</Box>
-//                           )}
-//                         </TableCell>
-//                         <TableCell>
-//                           <Typography fontWeight="semibold" color="#FF5252" sx={{ fontSize: "1rem" }}>{item.name}</Typography>
-//                           {item.description && <Typography variant="body2" color="text.secondary" className="line-clamp-2">{item.description}</Typography>}
-//                         </TableCell>
-//                         <TableCell><Chip label={getCategoryName(item.category_id)} size="small" color="primary" /></TableCell>
-//                         <TableCell>
-//                           <Chip label={item.food_type} size="small"
-//                             sx={{ bgcolor: item.food_type === "VEG" ? "#10b981" : "#ef4444", color: "white", fontWeight: 600 }} />
-//                         </TableCell>
-//                         <TableCell>
-//                           {item.offer_price && <Typography variant="body2"><span style={{ color: "green", fontWeight: 600 }}>₹{item.offer_price}</span></Typography>}
-//                         </TableCell>
-//                         <TableCell>
-//                           {item.preparation_time
-//                             ? <Chip icon={<AccessTimeIcon sx={{ fontSize: 16 }} />} label={`${item.preparation_time} min`} size="small" sx={{ bgcolor: "#fbbf24", color: "white", fontWeight: 600 }} />
-//                             : <span className="text-gray-400">-</span>}
-//                         </TableCell>
-//                         <TableCell>
-//                           <Chip label={item.is_available ? "Available" : "Unavailable"} size="small"
-//                             color={item.is_available ? "success" : "default"} sx={{ fontWeight: 600 }} />
-//                         </TableCell>
-//                         <TableCell>
-//                           <Box display="flex" flexWrap="wrap" gap={0.5}>
-//                             {item.is_bestseller && <Chip label="Best" size="small" sx={{ bgcolor: "#fbbf24", color: "white", fontSize: "0.7rem", fontWeight: 600 }} />}
-//                             {item.is_spicy && <Chip label="Spicy" size="small" color="error" sx={{ fontSize: "0.7rem", fontWeight: 600 }} />}
-//                             {item.is_customizable && <Chip label="Custom" size="small" color="info" sx={{ fontSize: "0.7rem", fontWeight: 600 }} />}
-//                           </Box>
-//                         </TableCell>
-//                         <TableCell align="right">
-//                           {/* View Detail Button */}
-//                           <IconButton
-//                             onClick={() => handleViewDetail(item)}
-//                             size="small"
-//                             title="View Details"
-//                             sx={{ color: "#FF5252", "&:hover": { bgcolor: "#FF525215" } }}
-//                           >
-//                             <MdVisibility size={20} />
-//                           </IconButton>
-//                           <IconButton onClick={() => handleEdit(item)} size="small" color="primary"><EditIcon /></IconButton>
-//                           <IconButton onClick={() => handleDelete(item.id)} size="small" color="error"><DeleteIcon /></IconButton>
-//                         </TableCell>
-//                       </TableRow>
-//                     ))}
-//                   </TableBody>
-//                 </Table>
-//               </TableContainer>
-//             </div>
-
-//             {/* Mobile Cards */}
-//             <div className="lg:hidden space-y-4 p-4">
-//               {displayedMenuItems.map((item, i) => (
-//                 <Paper key={item.id} elevation={2} sx={{ borderRadius: "16px", p: 3 }}>
-//                   <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-//                     <Box flex={1}>
-//                       <Typography variant="caption" color="text.secondary">
-//                         {(pagination.page - 1) * pagination.limit + i + 1}
-//                       </Typography>
-//                       <Typography variant="h6" color="#FF5252" fontWeight="bold">{item.name}</Typography>
-//                       <Box display="flex" flexWrap="wrap" gap={1} mt={1}>
-//                         <Chip label={getCategoryName(item.category_id)} size="small" />
-//                         <Chip label={item.food_type} size="small"
-//                           sx={{ bgcolor: item.food_type === "VEG" ? "#10b981" : "#ef4444", color: "white" }} />
-//                         <Chip label={item.is_available ? "Available" : "Unavailable"} size="small"
-//                           color={item.is_available ? "success" : "default"} />
-//                         {item.preparation_time && (
-//                           <Chip icon={<AccessTimeIcon sx={{ fontSize: 14 }} />} label={`${item.preparation_time} min`}
-//                             size="small" sx={{ bgcolor: "#fbbf24", color: "white" }} />
-//                         )}
-//                       </Box>
-//                     </Box>
-//                     <Box display="flex" gap={0.5} ml={2}>
-//                       {/* View Detail Icon — Mobile */}
-//                       <IconButton
-//                         size="small"
-//                         title="View Details"
-//                         onClick={() => handleViewDetail(item)}
-//                         sx={{ color: "#FF5252", "&:hover": { bgcolor: "#FF525215" } }}
-//                       >
-//                         <MdVisibility size={18} />
-//                       </IconButton>
-//                       <IconButton size="small" onClick={() => handleEdit(item)}><EditIcon fontSize="small" /></IconButton>
-//                       <IconButton size="small" onClick={() => handleDelete(item.id)} color="error"><DeleteIcon fontSize="small" /></IconButton>
-//                     </Box>
-//                   </Box>
-//                   {item.description && <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{item.description}</Typography>}
-//                   <Box display="flex" justifyContent="space-between" alignItems="center"
-//                     sx={{ bgcolor: "grey.50", p: 2, borderRadius: 2, mb: 2 }}>
-//                     <Box>
-//                       {item.offer_price && <Typography variant="body2" color="green">Offer: ₹{item.offer_price}</Typography>}
-//                     </Box>
-//                     <Box display="flex" gap={0.5}>
-//                       {item.is_bestseller && <Chip label="⭐ Best" size="small" sx={{ bgcolor: "#fbbf24", color: "white" }} />}
-//                       {item.is_spicy && <Chip label="🌶️" size="small" color="error" />}
-//                       {item.is_customizable && <Chip label="Custom" size="small" color="info" />}
-//                     </Box>
-//                   </Box>
-//                   {item.image && (
-//                     <img src={item.image} alt={item.name}
-//                       style={{ width: "100%", height: 200, objectFit: "cover", borderRadius: 12 }}
-//                       onError={e => e.target.src = "https://via.placeholder.com/300x200?text=No+Image"} />
-//                   )}
-//                 </Paper>
-//               ))}
-//             </div>
-
-//             {/* Pagination Footer */}
-//             {pagination.totalPages > 1 && (
-//               <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: "center",
-//                 justifyContent: "space-between", px: 3, py: 2, borderTop: "1px solid #f0f0f0", gap: 1 }}>
-//                 <Typography variant="body2" color="text.secondary">
-//                   Showing{" "}
-//                   <strong>{(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)}</strong>
-//                   {" "}of <strong>{pagination.total}</strong> menu items
-//                 </Typography>
-//                 <Stack spacing={2}>
-//                   <Pagination count={pagination.totalPages} page={pagination.page} onChange={handlePageChange}
-//                     shape="rounded"
-//                     sx={{ "& .MuiPaginationItem-root.Mui-selected": { bgcolor: "#FF5252", color: "white", "&:hover": { bgcolor: "#e03e3e" } } }} />
-//                 </Stack>
-//               </Box>
-//             )}
-//           </Paper>
-//         )}
-//       </div>
-
-//       {/* ─── VIEW DETAIL MODAL ─── */}
-//       <Dialog
-//         open={openViewModal}
-//         onClose={closeViewModal}
-//         maxWidth="sm"
-//         fullWidth
-//         PaperProps={{ sx: { borderRadius: "20px", overflow: "hidden" } }}
-//       >
-//         {/* Header */}
-//         <DialogTitle sx={{ p: 0 }}>
-//           <Box sx={{ background: "linear-gradient(135deg, #FF5252 0%, #ff8080 100%)", px: 3, py: 2.5, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-//             <Box display="flex" alignItems="center" gap={1.5}>
-//               <MdVisibility size={22} color="white" />
-//               <Typography variant="h6" fontWeight={700} color="white">Menu Item Details</Typography>
-//             </Box>
-//             <IconButton onClick={closeViewModal} size="small" sx={{ color: "white", "&:hover": { bgcolor: "rgba(255,255,255,0.15)" } }}>
-//               <CloseIcon />
-//             </IconButton>
-//           </Box>
-//         </DialogTitle>
-
-//         <DialogContent sx={{ p: 0 }}>
-//           {viewLoading ? (
-//             <Box display="flex" justifyContent="center" alignItems="center" py={8}>
-//               <CircularProgress sx={{ color: "#FF5252" }} size={48} />
-//             </Box>
-//           ) : viewItem ? (
-//             <>
-//               {/* Food Image */}
-//               {viewItem.image ? (
-//                 <Box sx={{ position: "relative", width: "100%", height: 240, overflow: "hidden" }}>
-//                   <img
-//                     src={viewItem.image}
-//                     alt={viewItem.name}
-//                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
-//                     onError={e => e.target.src = "https://via.placeholder.com/400x240?text=No+Image"}
-//                   />
-//                   {/* Food Type Badge on image */}
-//                   <Box sx={{ position: "absolute", top: 12, left: 12 }}>
-//                     <Chip
-//                       icon={viewItem.food_type === "VEG"
-//                         ? <FaLeaf style={{ color: "white", fontSize: 13 }} />
-//                         : <FaDrumstickBite style={{ color: "white", fontSize: 13 }} />}
-//                       label={viewItem.food_type}
-//                       size="small"
-//                       sx={{ bgcolor: viewItem.food_type === "VEG" ? "#10b981" : "#ef4444", color: "white", fontWeight: 700, fontSize: "0.75rem" }}
-//                     />
-//                   </Box>
-//                   {/* Bestseller badge */}
-//                   {viewItem.is_bestseller && (
-//                     <Box sx={{ position: "absolute", top: 12, right: 12 }}>
-//                       <Chip label="⭐ Bestseller" size="small" sx={{ bgcolor: "#fbbf24", color: "white", fontWeight: 700 }} />
-//                     </Box>
-//                   )}
-//                 </Box>
-//               ) : (
-//                 <Box sx={{ width: "100%", height: 140, bgcolor: "#fff5f5", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 1 }}>
-//                   <IoMdRestaurant size={52} color="#FF525240" />
-//                   <Typography variant="body2" color="text.disabled">No image available</Typography>
-//                 </Box>
-//               )}
-
-//               {/* Content */}
-//               <Box sx={{ px: 3, pt: 2.5, pb: 1 }}>
-//                 {/* Name & Tags */}
-//                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-//                   <Typography variant="h5" fontWeight={800} color="#FF5252" sx={{ lineHeight: 1.3, flex: 1, mr: 1 }}>
-//                     {viewItem.name}
-//                   </Typography>
-//                   <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.5}>
-//                     <Chip
-//                       label={viewItem.is_available ? "Available" : "Unavailable"}
-//                       size="small"
-//                       color={viewItem.is_available ? "success" : "default"}
-//                       sx={{ fontWeight: 700 }}
-//                     />
-//                   </Box>
-//                 </Box>
-
-//                 {/* Tags row */}
-//                 <Box display="flex" flexWrap="wrap" gap={0.8} mb={2}>
-//                   {viewItem.is_spicy && (
-//                     <Chip icon={<FaPepperHot style={{ color: "white", fontSize: 11 }} />}
-//                       label="Spicy" size="small" color="error" sx={{ fontWeight: 600, fontSize: "0.72rem" }} />
-//                   )}
-//                   {viewItem.is_customizable && (
-//                     <Chip label="Customizable" size="small" color="info" sx={{ fontWeight: 600, fontSize: "0.72rem" }} />
-//                   )}
-//                   {viewItem.preparation_time && (
-//                     <Chip icon={<AccessTimeIcon sx={{ fontSize: 14 }} />}
-//                       label={`${viewItem.preparation_time} min`} size="small"
-//                       sx={{ bgcolor: "#fbbf24", color: "white", fontWeight: 600, fontSize: "0.72rem" }} />
-//                   )}
-//                 </Box>
-
-//                 {/* Description */}
-//                 {viewItem.description && (
-//                   <Box sx={{ bgcolor: "#fff8f8", border: "1px solid #ffe0e0", borderRadius: 2, px: 2, py: 1.5, mb: 2 }}>
-//                     <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ mb: 0.5 }}>Description</Typography>
-//                     <Typography variant="body2" color="text.primary" sx={{ lineHeight: 1.7 }}>{viewItem.description}</Typography>
-//                   </Box>
-//                 )}
-
-//                 <Divider sx={{ mb: 2 }} />
-
-//                 {/* Pricing Section */}
-//                 <Box sx={{ bgcolor: "#f9fafb", borderRadius: 2, px: 2, py: 1.5, mb: 2 }}>
-//                   <Typography variant="subtitle2" fontWeight={700} color="#FF5252" sx={{ mb: 1, textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.72rem" }}>
-//                     Pricing
-//                   </Typography>
-//                   <Grid container spacing={1}>
-//                     <Grid item xs={6}>
-//                       <Box sx={{ bgcolor: "white", borderRadius: 1.5, p: 1.5, border: "1px solid #f0f0f0", textAlign: "center" }}>
-//                         <Typography variant="caption" color="text.secondary" display="block">Price</Typography>
-//                         <Typography variant="h6" fontWeight={800} color="text.primary">
-//                           {viewItem.price ? `₹${viewItem.price}` : "—"}
-//                         </Typography>
-//                       </Box>
-//                     </Grid>
-//                     <Grid item xs={6}>
-//                       <Box sx={{ bgcolor: "white", borderRadius: 1.5, p: 1.5, border: "1px solid #f0f0f0", textAlign: "center" }}>
-//                         <Typography variant="caption" color="text.secondary" display="block">Offer Price</Typography>
-//                         <Typography variant="h6" fontWeight={800} color="green">
-//                           {viewItem.offer_price ? `₹${viewItem.offer_price}` : "—"}
-//                         </Typography>
-//                       </Box>
-//                     </Grid>
-//                     {(viewItem.tax_percent || viewItem.packaging_charge) && (
-//                       <>
-//                         {viewItem.tax_percent && (
-//                           <Grid item xs={6}>
-//                             <Box sx={{ bgcolor: "white", borderRadius: 1.5, p: 1.5, border: "1px solid #f0f0f0", textAlign: "center" }}>
-//                               <Typography variant="caption" color="text.secondary" display="block">Tax</Typography>
-//                               <Typography variant="body1" fontWeight={700}>{viewItem.tax_percent}%</Typography>
-//                             </Box>
-//                           </Grid>
-//                         )}
-//                         {viewItem.packaging_charge && (
-//                           <Grid item xs={6}>
-//                             <Box sx={{ bgcolor: "white", borderRadius: 1.5, p: 1.5, border: "1px solid #f0f0f0", textAlign: "center" }}>
-//                               <Typography variant="caption" color="text.secondary" display="block">Packaging</Typography>
-//                               <Typography variant="body1" fontWeight={700}>₹{viewItem.packaging_charge}</Typography>
-//                             </Box>
-//                           </Grid>
-//                         )}
-//                       </>
-//                     )}
-//                   </Grid>
-//                 </Box>
-
-//                 <Divider sx={{ mb: 2 }} />
-
-//                 {/* Other Details */}
-//                 <Box sx={{ bgcolor: "#f9fafb", borderRadius: 2, px: 2, py: 1.5, mb: 2 }}>
-//                   <Typography variant="subtitle2" fontWeight={700} color="#FF5252" sx={{ mb: 0.5, textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.72rem" }}>
-//                     Details
-//                   </Typography>
-//                   <DetailRow label="Category" value={getCategoryName(viewItem.category_id)} />
-//                   <Divider sx={{ opacity: 0.4 }} />
-//                   <DetailRow label="Food Type" value={viewItem.food_type} />
-//                   {(viewItem.available_from || viewItem.available_to) && (
-//                     <>
-//                       <Divider sx={{ opacity: 0.4 }} />
-//                       <DetailRow
-//                         label="Available Hours"
-//                         value={`${formatTime(viewItem.available_from)} – ${formatTime(viewItem.available_to)}`}
-//                       />
-//                     </>
-//                   )}
-//                   {viewItem.preparation_time && (
-//                     <>
-//                       <Divider sx={{ opacity: 0.4 }} />
-//                       <DetailRow label="Prep Time" value={`${viewItem.preparation_time} min`} />
-//                     </>
-//                   )}
-//                 </Box>
-//               </Box>
-//             </>
-//           ) : null}
-//         </DialogContent>
-
-//         <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid #eee", bgcolor: "white" }}>
-//           <Button
-//             onClick={() => { closeViewModal(); if (viewItem) handleEdit(viewItem); }}
-//             startIcon={<EditIcon />}
-//             variant="outlined"
-//             sx={{ borderColor: "#FF5252", color: "#FF5252", "&:hover": { borderColor: "#e03e3e", bgcolor: "#FF525208" }, borderRadius: "10px", fontWeight: 600 }}
-//           >
-//             Edit Item
-//           </Button>
-//           <Button
-//             onClick={closeViewModal}
-//             variant="contained"
-//             sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" }, borderRadius: "10px", fontWeight: 600, px: 3 }}
-//           >
-//             Close
-//           </Button>
-//         </DialogActions>
-//       </Dialog>
-
-//       {/* ─── ADD / EDIT MODAL ─── */}
-//       <Dialog open={openModal} onClose={closeModal} maxWidth="md" fullWidth scroll="paper" keepMounted
-//         PaperProps={{ sx: { borderRadius: "16px", overflow: "hidden" } }}>
-//         <DialogTitle sx={{ bgcolor: "#FF5252", color: "white", position: "sticky", top: 0, zIndex: 1 }}>
-//           <Box display="flex" alignItems="center" gap={2}>
-//             <RestaurantIcon />
-//             <span>{mode === "add" ? "Add New Menu Item" : "Edit Menu Item"}</span>
-//           </Box>
-//         </DialogTitle>
-
-//         <DialogContent sx={{ p: 0, overflow: "hidden" }}>
-//           <Box component="form" onSubmit={handleSubmit}
-//             sx={{ px: 3, pt: 3, pb: 2, display: "flex", flexDirection: "column", gap: 3,
-//               maxHeight: "65vh", overflowY: "auto", scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}>
-
-//             {/* Category & Sub-Category */}
-//             <Grid container spacing={2}>
-//               <Grid item xs={12} sm={6}>
-//                 <FormControl fullWidth error={!!errors.category}>
-//                   <InputLabel>Select Category *</InputLabel>
-//                   <Select value={selectedCategory} label="Select Category *"
-//                     onChange={e => { setSelectedCategory(e.target.value); setSelectedSubCategory(""); if (errors.category) setErrors(p => ({ ...p, category: "" })); }}
-//                     MenuProps={{ disablePortal: false, container: document.body, PaperProps: { sx: { maxHeight: 260, zIndex: 2000 } } }}>
-//                     {modalCategories.map(cat => (
-//                       <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-//                     ))}
-//                   </Select>
-//                   {errors.category && <Typography color="error" variant="caption">{errors.category}</Typography>}
-//                 </FormControl>
-//               </Grid>
-//               <Grid item xs={12} sm={6}>
-//                 <FormControl fullWidth error={!!errors.subCategory}>
-//                   <InputLabel>Select Sub-Category *</InputLabel>
-//                   <Select value={selectedSubCategory} label="Select Sub-Category *"
-//                     onChange={e => { setSelectedSubCategory(e.target.value); if (errors.subCategory) setErrors(p => ({ ...p, subCategory: "" })); }}
-//                     disabled={!selectedCategory}
-//                     MenuProps={{ disablePortal: false, container: document.body, PaperProps: { sx: { maxHeight: 260, zIndex: 2000 } } }}>
-//                     {subCategories.map(sc => (
-//                       <MenuItem key={sc.id} value={sc.id}>{sc.name}</MenuItem>
-//                     ))}
-//                   </Select>
-//                   {errors.subCategory && <Typography color="error" variant="caption">{errors.subCategory}</Typography>}
-//                 </FormControl>
-//               </Grid>
-//             </Grid>
-
-//             {/* Name & Food Type */}
-//             <Grid container spacing={2}>
-//               <Grid item xs={12} sm={6}>
-//                 <TextField label="Food Name *" value={name} fullWidth
-//                   onChange={e => { setName(e.target.value); if (errors.name) setErrors(p => ({ ...p, name: "" })); }}
-//                   error={!!errors.name} helperText={errors.name} />
-//               </Grid>
-//               <Grid item xs={12} sm={6}>
-//                 <FormControl fullWidth>
-//                   <InputLabel>Food Type</InputLabel>
-//                   <Select value={foodType} label="Food Type" onChange={e => setFoodType(e.target.value)}
-//                     MenuProps={{ disablePortal: false, container: document.body, PaperProps: { sx: { maxHeight: 260, zIndex: 2000 } } }}>
-//                     <MenuItem value="VEG">Veg</MenuItem>
-//                     <MenuItem value="NON_VEG">Non-Veg</MenuItem>
-//                     <MenuItem value="(veg,non-veg) BOTH">Both</MenuItem>
-//                   </Select>
-//                 </FormControl>
-//               </Grid>
-//             </Grid>
-
-//             {/* Description */}
-//             <TextField label="Description" value={description} onChange={e => setDescription(e.target.value)}
-//               multiline rows={3} fullWidth placeholder="Describe your delicious dish..." />
-
-//             {/* Pricing */}
-//             <Grid container spacing={2}>
-//               <Grid item xs={6} sm={3}>
-//                 <TextField label="Price (₹) *" type="number" value={price} fullWidth
-//                   onChange={e => { setPrice(e.target.value); if (errors.price) setErrors(p => ({ ...p, price: "" })); }}
-//                   error={!!errors.price} helperText={errors.price} inputProps={{ min: 0, step: "0.01" }} />
-//               </Grid>
-//               <Grid item xs={6} sm={3}>
-//                 <TextField label="Offer Price (₹)" type="number" value={offerPrice}
-//                   onChange={e => setOfferPrice(e.target.value)} fullWidth inputProps={{ min: 0, step: "0.01" }} />
-//               </Grid>
-//               <Grid item xs={6} sm={3}>
-//                 <TextField label="Tax %" type="number" value={taxPercent}
-//                   onChange={e => setTaxPercent(e.target.value)} fullWidth inputProps={{ min: 0, max: 100, step: "0.01" }} />
-//               </Grid>
-//               <Grid item xs={6} sm={3}>
-//                 <TextField label="Packaging (₹)" type="number" value={packagingCharge}
-//                   onChange={e => setPackagingCharge(e.target.value)} fullWidth inputProps={{ min: 0, step: "0.01" }} />
-//               </Grid>
-//             </Grid>
-
-//             {/* Times */}
-//             <Grid container spacing={2}>
-//               <Grid item xs={6} sm={4}>
-//                 <TextField label="Available From" type="time" value={availableFrom}
-//                   onChange={e => setAvailableFrom(e.target.value)} fullWidth InputLabelProps={{ shrink: true }} />
-//               </Grid>
-//               <Grid item xs={6} sm={4}>
-//                 <TextField label="Available To" type="time" value={availableTo}
-//                   onChange={e => setAvailableTo(e.target.value)} fullWidth InputLabelProps={{ shrink: true }} />
-//               </Grid>
-//               <Grid item xs={12} sm={4}>
-//                 <TextField label="Preparation Time (min)" type="number" value={preparationTime}
-//                   onChange={e => setPreparationTime(e.target.value)} fullWidth inputProps={{ min: 0 }} />
-//               </Grid>
-//             </Grid>
-
-//             {/* Toggles */}
-//             <Box>
-//               <Typography variant="subtitle2" gutterBottom fontWeight="semibold">Item Properties</Typography>
-//               <Grid container spacing={2}>
-//                 <Grid item xs={6} sm={3}>
-//                   <FormControlLabel control={<Switch checked={isAvailable} onChange={e => setIsAvailable(e.target.checked)} />} label="Available" />
-//                 </Grid>
-//                 <Grid item xs={6} sm={3}>
-//                   <FormControlLabel
-//                     control={<Switch checked={isBestseller} onChange={e => setIsBestseller(e.target.checked)} />}
-//                     label={<Box display="flex" alignItems="center" gap={0.5}><FaRegStar style={{ color: "#fbbf24" }} /><span>Bestseller</span></Box>} />
-//                 </Grid>
-//                 <Grid item xs={6} sm={3}>
-//                   <FormControlLabel control={<Switch checked={isCustomizable} onChange={e => setIsCustomizable(e.target.checked)} />} label="Customizable" />
-//                 </Grid>
-//                 <Grid item xs={6} sm={3}>
-//                   <FormControlLabel
-//                     control={<Switch checked={isSpicy} onChange={e => setIsSpicy(e.target.checked)} />}
-//                     label={<Box display="flex" alignItems="center" gap={0.5}><FaPepperHot style={{ color: "#ef4444" }} /><span>Spicy</span></Box>} />
-//                 </Grid>
-//               </Grid>
-//             </Box>
-
-//             {/* Image Upload */}
-//             <Box>
-//               <Typography variant="subtitle2" gutterBottom fontWeight="semibold">Food Image</Typography>
-//               <input type="file" accept="image/*" onChange={handleImageChange} id="food-image-upload" style={{ display: "none" }} />
-//               <label htmlFor="food-image-upload">
-//                 <Box sx={{ border: `2px dashed ${errors.image ? "#ef4444" : "#d1d5db"}`, borderRadius: "12px", height: 220,
-//                   display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
-//                   textAlign: "center", cursor: "pointer", bgcolor: "grey.50", transition: "all 0.2s ease",
-//                   "&:hover": { borderColor: "#FF5252", bgcolor: "grey.100" } }}>
-//                   <IoMdCamera size={52} style={{ color: "#9ca3af", marginBottom: 10 }} />
-//                   <Typography fontWeight={500}>
-//                     {image ? "Change image" : currentImage ? "Update image" : "Click to upload food image"}
-//                   </Typography>
-//                 </Box>
-//               </label>
-//               {errors.image && <Typography color="error" variant="caption" sx={{ mt: 1 }}>{errors.image}</Typography>}
-//               {currentImage && (
-//                 <Box sx={{ mt: 3, position: "relative", display: "inline-block" }}>
-//                   <img src={currentImage} alt="preview"
-//                     style={{ maxHeight: 200, maxWidth: "100%", borderRadius: 12, boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }} />
-//                   <IconButton size="small" color="error"
-//                     sx={{ position: "absolute", top: 8, right: 8, bgcolor: "white", boxShadow: 1 }}
-//                     onClick={() => { setImage(null); setCurrentImage(""); }}>
-//                     <DeleteIcon fontSize="small" />
-//                   </IconButton>
-//                 </Box>
-//               )}
-//             </Box>
-//           </Box>
-//         </DialogContent>
-
-//         <DialogActions sx={{ px: 3, py: 2, position: "sticky", bottom: 0, bgcolor: "white", borderTop: "1px solid #eee" }}>
-//           <Button onClick={closeModal} disabled={isSaving}>Cancel</Button>
-//           <Button variant="contained" onClick={handleSubmit} disabled={isSaving}
-//             sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" } }}
-//             startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : null}>
-//             {isSaving ? (mode === "add" ? "Creating..." : "Updating...") : (mode === "add" ? "Create" : "Update")}
-//           </Button>
-//         </DialogActions>
-//       </Dialog>
-//     </div>
-//   );
-// };
-
-// export default AddFoodItem;
-
-
-
 import React, { useContext, useEffect, useState } from "react";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions, Button,
-  Typography, TextField, Box, CircularProgress, Select, MenuItem,
-  FormControl, InputLabel, Chip, Switch, FormControlLabel, Grid,
-  Alert, IconButton, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Pagination, Stack, Divider,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  CircularProgress, Switch, FormControlLabel, Grid,
+  IconButton, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Paper, Pagination, Stack,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -950,11 +15,156 @@ import TuneIcon from "@mui/icons-material/Tune";
 import { IoMdCamera, IoMdRestaurant } from "react-icons/io";
 import { FaRegStar, FaPepperHot, FaLeaf, FaDrumstickBite, FaBolt } from "react-icons/fa";
 import { MdVisibility, MdToggleOn, MdToggleOff } from "react-icons/md";
+import {
+  UtensilsCrossed, ChefHat, Package, Tag, Clock, Flame,
+  BadgeCheck, Star, Zap, Sparkles, Filter, Search,
+  CheckCircle2, XCircle, AlertTriangle, X,
+} from "lucide-react";
 
 import axiosInstance from "../api/axiosInstance";
 import { RestaurantContext } from "../context/getRestaurant";
 import { CategoriesContext } from "../context/GetAllCategories";
 
+/* ─────────────── shared input class ─────────────── */
+const inputCls =
+  "w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-2.5 text-[13.5px] text-gray-700 placeholder-gray-400 outline-none focus:bg-white focus:border-[#E53935]/60 focus:ring-2 focus:ring-[#E53935]/10 transition-all duration-200";
+const selectCls = inputCls + " cursor-pointer";
+const labelCls = "text-[11px] font-black text-gray-400 uppercase tracking-[0.1em] mb-1.5 block";
+
+/* ─────────────── Toast ─────────────── */
+const Toast = ({ msg, type, onClose }) => {
+  if (!msg) return null;
+  const ok = type === "success";
+  return (
+    <div
+      className={`fixed top-5 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border max-w-sm ${
+        ok ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-[#E53935]"
+      }`}
+      style={{ animation: "slideRight 0.35s cubic-bezier(0.16,1,0.3,1)", fontFamily: "'Plus Jakarta Sans',sans-serif" }}
+    >
+      {ok ? <CheckCircle2 size={17} className="flex-shrink-0" /> : <AlertTriangle size={17} className="flex-shrink-0" />}
+      <p className="text-[13px] font-semibold flex-1">{msg}</p>
+      <button onClick={onClose} className="opacity-60 hover:opacity-100"><X size={14} /></button>
+    </div>
+  );
+};
+
+/* ─────────────── Section Title ─────────────── */
+const SectionTitle = ({ icon: Icon, children }) => (
+  <div className="flex items-center gap-2 mb-3">
+    <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#E53935] to-[#FF7043]" />
+    <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.12em] flex items-center gap-1.5">
+      {Icon && <Icon size={11} className="text-[#E53935]" />}
+      {children}
+    </p>
+  </div>
+);
+
+/* ─────────────── Tag Chip ─────────────── */
+const TagChip = ({ label, color, icon }) => (
+  <span
+    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-black text-white"
+    style={{ backgroundColor: color }}
+  >
+    {icon}{label}
+  </span>
+);
+
+/* ─────────────── Status Toggle Row ─────────────── */
+const StatusRow = ({ field, label, description, color, value, onToggle }) => (
+  <div
+    className="flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200"
+    style={{
+      borderColor: value ? `${color}60` : "#e5e7eb",
+      backgroundColor: value ? `${color}10` : "#f9fafb",
+    }}
+    onClick={() => onToggle(field)}
+  >
+    <div>
+      <p className="text-[13px] font-bold" style={{ color: value ? color : "#374151" }}>{label}</p>
+      <p className="text-[11px] text-gray-400 mt-0.5">{description}</p>
+    </div>
+    <div className="flex items-center gap-2">
+      <span
+        className="text-[10px] font-black px-2.5 py-1 rounded-lg text-white"
+        style={{ backgroundColor: value ? color : "#9ca3af" }}
+      >
+        {value ? "ON" : "OFF"}
+      </span>
+      <div style={{ color: value ? color : "#d1d5db" }}>
+        {value ? <MdToggleOn size={34} /> : <MdToggleOff size={34} />}
+      </div>
+    </div>
+  </div>
+);
+
+/* ─────────────── Menu Item Card (mobile) ─────────────── */
+const MenuCard = ({ item, index, pagination, getCategoryName, handleViewDetail, handleOpenStatusModal, handleEdit, handleDelete }) => (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300">
+    {item.image && (
+      <div className="relative h-44 overflow-hidden">
+        <img src={item.image} alt={item.name} className="w-full h-full object-cover"
+          onError={e => e.target.src = "https://via.placeholder.com/300x200?text=No+Image"} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
+          <TagChip
+            label={item.food_type}
+            color={item.food_type === "VEG" ? "#10b981" : "#ef4444"}
+            icon={item.food_type === "VEG" ? <FaLeaf size={9} /> : <FaDrumstickBite size={9} />}
+          />
+          {item.is_bestseller && <TagChip label="Bestseller" color="#f59e0b" icon="⭐" />}
+          {item.is_spicy && <TagChip label="Spicy" color="#ef4444" icon="🌶️" />}
+          {item.is_fast_delivery && <TagChip label="Fast" color="#06b6d4" icon={<Zap size={9}/>} />}
+        </div>
+        <div className="absolute top-3 right-3">
+          <span className={`text-[10.5px] font-black px-2.5 py-1 rounded-xl text-white ${item.is_available ? "bg-emerald-500" : "bg-gray-400"}`}>
+            {item.is_available ? "Available" : "Unavailable"}
+          </span>
+        </div>
+      </div>
+    )}
+    <div className="p-4">
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div>
+          <p className="text-[15px] font-black text-gray-900">{item.name}</p>
+          <p className="text-[11.5px] text-gray-400 font-medium">{getCategoryName(item.category_id)}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[16px] font-black text-[#E53935]">₹{item.price}</p>
+          {item.offer_price && <p className="text-[11.5px] text-emerald-600 font-bold">Offer ₹{item.offer_price}</p>}
+        </div>
+      </div>
+      {item.description && (
+        <p className="text-[12px] text-gray-500 line-clamp-2 mb-3">{item.description}</p>
+      )}
+      <div className="flex items-center justify-between">
+        {item.preparation_time ? (
+          <span className="flex items-center gap-1 text-[11.5px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">
+            <Clock size={11} />{item.preparation_time} min
+          </span>
+        ) : <span />}
+        <div className="flex gap-1">
+          <button onClick={() => handleViewDetail(item)} className="p-2 rounded-xl bg-red-50 text-[#E53935] hover:bg-red-100 transition-colors">
+            <MdVisibility size={16} />
+          </button>
+          <button onClick={() => handleOpenStatusModal(item)} className="p-2 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors">
+            <TuneIcon style={{ fontSize: 16 }} />
+          </button>
+          <button onClick={() => handleEdit(item)} className="p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+            <EditIcon style={{ fontSize: 16 }} />
+          </button>
+          <button onClick={() => handleDelete(item.id)} className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors">
+            <DeleteIcon style={{ fontSize: 16 }} />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════
+   MAIN COMPONENT
+═══════════════════════════════════════════════ */
 const AddFoodItem = () => {
   const { restaurant } = useContext(RestaurantContext);
   const { categories } = useContext(CategoriesContext);
@@ -966,30 +176,24 @@ const AddFoodItem = () => {
   const [loading, setLoading] = useState(false);
   const [filterCategory, setFilterCategory] = useState("all");
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
+  const [animateIn, setAnimateIn] = useState(false);
 
-  /* ── Add / Edit Modal ── */
   const [openModal, setOpenModal] = useState(false);
   const [mode, setMode] = useState("add");
 
-  /* ── View Detail Modal ── */
   const [openViewModal, setOpenViewModal] = useState(false);
   const [viewItem, setViewItem] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
 
-  /* ── Status Modal ── */
   const [openStatusModal, setOpenStatusModal] = useState(false);
   const [statusItem, setStatusItem] = useState(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [isSavingStatus, setIsSavingStatus] = useState(false);
   const [statusForm, setStatusForm] = useState({
-    is_active: true,
-    is_available: true,
-    is_recommended: false,
-    is_bestseller: false,
-    is_fast_delivery: false,
+    is_active: true, is_available: true, is_recommended: false,
+    is_bestseller: false, is_fast_delivery: false,
   });
 
-  /* ── Form Fields ── */
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -1019,7 +223,6 @@ const AddFoodItem = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  /* ── Auto-clear alerts ── */
   useEffect(() => {
     if (successMsg || errorMsg) {
       const t = setTimeout(() => { setSuccessMsg(""); setErrorMsg(""); }, 5000);
@@ -1027,7 +230,6 @@ const AddFoodItem = () => {
     }
   }, [successMsg, errorMsg]);
 
-  /* ── Fetch all categories ── */
   const fetchAllCategoriesUnpaginated = async () => {
     if (!restaurant?.id) return;
     const token = localStorage.getItem("token");
@@ -1053,7 +255,6 @@ const AddFoodItem = () => {
     }
   };
 
-  /* ── Fetch menu items ── */
   const fetchAllMenuItems = async (page = 1) => {
     try {
       setLoading(true);
@@ -1076,16 +277,15 @@ const AddFoodItem = () => {
     if (restaurant?.id) {
       fetchAllCategoriesUnpaginated();
       fetchAllMenuItems(1);
+      setTimeout(() => setAnimateIn(true), 80);
     }
   }, [restaurant?.id]);
 
-  /* ── Client-side filter ── */
   useEffect(() => {
     if (filterCategory === "all") setDisplayedMenuItems(allMenuItems);
     else setDisplayedMenuItems(allMenuItems.filter(item => item.category_id === filterCategory));
   }, [filterCategory, allMenuItems]);
 
-  /* ── Fetch subcategories ── */
   const fetchSubCategories = async (categoryId) => {
     try {
       const token = localStorage.getItem("token");
@@ -1105,7 +305,6 @@ const AddFoodItem = () => {
     else { setSubCategories([]); setSelectedSubCategory(""); }
   }, [selectedCategory]);
 
-  /* ── Reset form ── */
   const resetForm = () => {
     setName(""); setDescription(""); setSelectedCategory(""); setSelectedSubCategory("");
     setPrice(""); setOfferPrice(""); setFoodType("VEG"); setIsAvailable(true);
@@ -1119,7 +318,6 @@ const AddFoodItem = () => {
   const openAddModal = () => { resetForm(); setOpenModal(true); };
   const closeModal = () => { setOpenModal(false); resetForm(); };
 
-  /* ── Validate ── */
   const validate = () => {
     const err = {};
     if (!name.trim()) err.name = "Food name is required";
@@ -1138,7 +336,6 @@ const AddFoodItem = () => {
     setErrors(prev => ({ ...prev, image: "" }));
   };
 
-  /* ── Submit Add / Edit ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) { setErrorMsg("Please fix the errors before submitting"); return; }
@@ -1196,7 +393,6 @@ const AddFoodItem = () => {
     }
   };
 
-  /* ── Edit handler ── */
   const handleEdit = async (menuItem) => {
     try {
       setEditId(menuItem.id);
@@ -1205,42 +401,25 @@ const AddFoodItem = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = response.data.data;
-      setName(data.name || "");
-      setDescription(data.description || "");
-      setSelectedCategory(data.category_id || "");
-      setSelectedSubCategory(data.sub_category_id || "");
-      setPrice(data.price || "");
-      setOfferPrice(data.offer_price || "");
-      setFoodType(data.food_type || "VEG");
-      setIsAvailable(data.is_available ?? true);
-      setIsBestseller(data.is_bestseller ?? false);
-      setIsRecommended(data.is_recommended ?? false);
-      setIsFastDelivery(data.is_fast_delivery ?? false);
-      setIsActive(data.is_active ?? true);
-      setTaxPercent(data.tax_percent || "");
-      setPackagingCharge(data.packaging_charge || "");
-      setIsCustomizable(data.is_customizable ?? false);
-      setAvailableFrom(data.available_from || "");
-      setAvailableTo(data.available_to || "");
-      setIsSpicy(data.is_spicy ?? false);
-      setPreparationTime(data.preparation_time || "");
-      setStockQuantity(data.stock_quantity || "");
-      setCalories(data.calories || "");
-      setCurrentImage(data.image || "");
-      setImage(null);
-      setMode("edit");
-      setOpenModal(true);
-      setErrors({});
+      setName(data.name || ""); setDescription(data.description || "");
+      setSelectedCategory(data.category_id || ""); setSelectedSubCategory(data.sub_category_id || "");
+      setPrice(data.price || ""); setOfferPrice(data.offer_price || "");
+      setFoodType(data.food_type || "VEG"); setIsAvailable(data.is_available ?? true);
+      setIsBestseller(data.is_bestseller ?? false); setIsRecommended(data.is_recommended ?? false);
+      setIsFastDelivery(data.is_fast_delivery ?? false); setIsActive(data.is_active ?? true);
+      setTaxPercent(data.tax_percent || ""); setPackagingCharge(data.packaging_charge || "");
+      setIsCustomizable(data.is_customizable ?? false); setAvailableFrom(data.available_from || "");
+      setAvailableTo(data.available_to || ""); setIsSpicy(data.is_spicy ?? false);
+      setPreparationTime(data.preparation_time || ""); setStockQuantity(data.stock_quantity || "");
+      setCalories(data.calories || ""); setCurrentImage(data.image || ""); setImage(null);
+      setMode("edit"); setOpenModal(true); setErrors({});
     } catch (error) {
       setErrorMsg(error?.response?.data?.message || error?.message || "Failed to load menu item details.");
     }
   };
 
-  /* ── View Detail ── */
   const handleViewDetail = async (menuItem) => {
-    setViewLoading(true);
-    setOpenViewModal(true);
-    setViewItem(null);
+    setViewLoading(true); setOpenViewModal(true); setViewItem(null);
     try {
       const token = localStorage.getItem("token");
       const response = await axiosInstance.get(`/menuitems/viewsingle/${menuItem.id}`, {
@@ -1257,11 +436,8 @@ const AddFoodItem = () => {
 
   const closeViewModal = () => { setOpenViewModal(false); setViewItem(null); };
 
-  /* ── Status Modal ── */
   const handleOpenStatusModal = async (menuItem) => {
-    setStatusItem(menuItem);
-    setOpenStatusModal(true);
-    setStatusLoading(true);
+    setStatusItem(menuItem); setOpenStatusModal(true); setStatusLoading(true);
     try {
       const token = localStorage.getItem("token");
       const response = await axiosInstance.get(`/menuitems/viewsingle/${menuItem.id}`, {
@@ -1269,18 +445,14 @@ const AddFoodItem = () => {
       });
       const data = response.data.data;
       setStatusForm({
-        is_active: data.is_active ?? true,
-        is_available: data.is_available ?? true,
-        is_recommended: data.is_recommended ?? false,
-        is_bestseller: data.is_bestseller ?? false,
+        is_active: data.is_active ?? true, is_available: data.is_available ?? true,
+        is_recommended: data.is_recommended ?? false, is_bestseller: data.is_bestseller ?? false,
         is_fast_delivery: data.is_fast_delivery ?? false,
       });
     } catch {
       setStatusForm({
-        is_active: menuItem.is_active ?? true,
-        is_available: menuItem.is_available ?? true,
-        is_recommended: menuItem.is_recommended ?? false,
-        is_bestseller: menuItem.is_bestseller ?? false,
+        is_active: menuItem.is_active ?? true, is_available: menuItem.is_available ?? true,
+        is_recommended: menuItem.is_recommended ?? false, is_bestseller: menuItem.is_bestseller ?? false,
         is_fast_delivery: menuItem.is_fast_delivery ?? false,
       });
     } finally {
@@ -1289,21 +461,16 @@ const AddFoodItem = () => {
   };
 
   const closeStatusModal = () => { setOpenStatusModal(false); setStatusItem(null); };
-
-  const handleStatusToggle = (field) => {
-    setStatusForm(prev => ({ ...prev, [field]: !prev[field] }));
-  };
+  const handleStatusToggle = (field) => setStatusForm(prev => ({ ...prev, [field]: !prev[field] }));
 
   const handleSaveStatus = async () => {
     if (!statusItem) return;
     setIsSavingStatus(true);
     try {
       const token = localStorage.getItem("token");
-      await axiosInstance.patch(
-        `/menuitems/${statusItem.id}/statuses`,
-        statusForm,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axiosInstance.patch(`/menuitems/${statusItem.id}/statuses`, statusForm, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setSuccessMsg("Status updated successfully!");
       closeStatusModal();
       await fetchAllMenuItems(pagination.page);
@@ -1314,7 +481,6 @@ const AddFoodItem = () => {
     }
   };
 
-  /* ── Delete ── */
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this menu item?")) return;
     try {
@@ -1341,637 +507,680 @@ const AddFoodItem = () => {
     return `${hour % 12 || 12}:${m} ${hour >= 12 ? "PM" : "AM"}`;
   };
 
-  /* ── Detail Row ── */
-  const DetailRow = ({ label, value }) => (
-    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", py: 1 }}>
-      <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ minWidth: 140 }}>{label}</Typography>
-      <Typography variant="body2" fontWeight={600} color="text.primary" textAlign="right">{value ?? "—"}</Typography>
-    </Box>
-  );
-
-  /* ── Status Toggle Row ── */
-  const StatusRow = ({ field, label, description, color }) => (
-    <Box sx={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      p: 2, borderRadius: 2, border: "1px solid",
-      borderColor: statusForm[field] ? `${color}40` : "#f0f0f0",
-      bgcolor: statusForm[field] ? `${color}0D` : "grey.50",
-      transition: "all 0.25s ease",
-      cursor: "pointer",
-    }} onClick={() => handleStatusToggle(field)}>
-      <Box>
-        <Typography variant="body2" fontWeight={700} color={statusForm[field] ? color : "text.primary"}>{label}</Typography>
-        <Typography variant="caption" color="text.secondary">{description}</Typography>
-      </Box>
-      <Box display="flex" alignItems="center" gap={1}>
-        <Chip label={statusForm[field] ? "ON" : "OFF"} size="small"
-          sx={{ bgcolor: statusForm[field] ? color : "#9e9e9e", color: "white", fontWeight: 700, fontSize: "0.7rem", minWidth: 42 }} />
-        <Box sx={{ color: statusForm[field] ? color : "text.disabled", display: "flex", alignItems: "center" }}>
-          {statusForm[field] ? <MdToggleOn size={36} /> : <MdToggleOff size={36} />}
-        </Box>
-      </Box>
-    </Box>
-  );
-
+  /* ── No restaurant ── */
   if (!restaurant?.id) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md text-center">
-          <RestaurantIcon sx={{ fontSize: 64, color: "#FF5252", mb: 2 }} />
-          <Typography variant="h5" fontWeight="bold" mb={1}>Restaurant Required</Typography>
-          <Typography color="text.secondary">Please select or load a restaurant first to manage menu items.</Typography>
+      <div className="flex items-center justify-center min-h-screen bg-[#fafafa]"
+        style={{ fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-lg p-10 max-w-sm text-center">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#E53935] to-[#FF7043] flex items-center justify-center mx-auto mb-5 shadow-lg shadow-red-500/25">
+            <ChefHat size={36} className="text-white" />
+          </div>
+          <h2 className="text-[20px] font-black text-gray-900 mb-2">Restaurant Required</h2>
+          <p className="text-[13.5px] text-gray-500 leading-relaxed">Please select or load a restaurant first to manage menu items.</p>
         </div>
       </div>
     );
   }
 
-  /* ═══════════════════════════════ RENDER ═══════════════════════════════ */
+  /* ═══════════════════════════════════════════════
+     RENDER
+  ═══════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-gray-50 font-['Poppins'] p-4 sm:p-6 lg:p-8">
-      {successMsg && <Alert severity="success" sx={{ mb: 3, maxWidth: "lg", mx: "auto" }} onClose={() => setSuccessMsg("")}>{successMsg}</Alert>}
-      {errorMsg && <Alert severity="error" sx={{ mb: 3, maxWidth: "lg", mx: "auto" }} onClose={() => setErrorMsg("")}>{errorMsg}</Alert>}
+    <div
+      className="min-h-screen bg-[#fafafa] p-4 sm:p-6 lg:p-8"
+      style={{ fontFamily: "'Plus Jakarta Sans','DM Sans',sans-serif" }}
+    >
+      <Toast msg={successMsg} type="success" onClose={() => setSuccessMsg("")} />
+      <Toast msg={errorMsg} type="error" onClose={() => setErrorMsg("")} />
 
-      <div className="max-w-7xl mx-auto">
-        {/* ── Header ── */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div>
-            <Typography variant="h4" fontWeight="bold" color="text.primary">Menu Items</Typography>
-            <Typography variant="body2" color="text.secondary">Manage your menu items and availability</Typography>
+      <div
+        className="max-w-7xl mx-auto space-y-5"
+        style={{
+          opacity: animateIn ? 1 : 0,
+          transform: animateIn ? "translateY(0)" : "translateY(14px)",
+          transition: "all 0.5s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+
+        {/* ══════════════════ PAGE HEADER ══════════════════ */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#E53935] to-[#FF7043] flex items-center justify-center shadow-lg shadow-red-500/30">
+              <ChefHat size={22} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-[22px] font-black text-gray-900 tracking-tight leading-tight">Menu Items</h1>
+              <p className="text-[12.5px] text-gray-400 font-medium mt-0.5">Manage your restaurant's menu and availability</p>
+            </div>
           </div>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openAddModal}
-            sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" }, borderRadius: "12px", px: 4, py: 1.2, fontWeight: 600 }}>
-            Add Menu Item
-          </Button>
+          <button
+            onClick={openAddModal}
+            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#E53935] to-[#FF7043] text-white text-[13.5px] font-black rounded-xl shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-[1.03] active:scale-[0.97] transition-all"
+          >
+            <AddIcon style={{ fontSize: 18 }} />Add Menu Item
+          </button>
         </div>
 
-        {/* ── Filter ── */}
-        <Paper sx={{ p: 3, mb: 4, borderRadius: "16px" }}>
-          <FormControl size="small" sx={{ minWidth: 280 }}>
-            <InputLabel>Filter by Category</InputLabel>
-            <Select value={filterCategory} label="Filter by Category" onChange={e => setFilterCategory(e.target.value)}>
-              <MenuItem value="all"><em>All Menu Items</em></MenuItem>
-              {modalCategories.map(cat => <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>)}
-            </Select>
-          </FormControl>
+        {/* ══════════════════ STATS ROW ══════════════════ */}
+     
+
+        {/* ══════════════════ FILTER BAR ══════════════════ */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#E53935] to-[#FF7043] flex items-center justify-center">
+              <Filter size={14} className="text-white" />
+            </div>
+            <span className="text-[12px] font-black text-gray-500 uppercase tracking-wider">Filter</span>
+          </div>
+          <select
+            value={filterCategory}
+            onChange={e => setFilterCategory(e.target.value)}
+            className="rounded-xl border-2 border-gray-100 bg-gray-50 px-4 py-2 text-[13px] font-semibold text-gray-700 outline-none focus:border-[#E53935]/40 focus:ring-2 focus:ring-[#E53935]/10 transition-all min-w-[200px]"
+          >
+            <option value="all">All Menu Items</option>
+            {modalCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+          </select>
           {filterCategory !== "all" && (
-            <Chip label={`Filtered: ${getCategoryName(filterCategory)}`}
-              onDelete={() => setFilterCategory("all")} color="primary" sx={{ ml: 2 }} />
+            <span className="flex items-center gap-1.5 bg-red-50 border-2 border-red-100 text-[#E53935] text-[12px] font-black px-3 py-1.5 rounded-xl">
+              {getCategoryName(filterCategory)}
+              <button onClick={() => setFilterCategory("all")} className="opacity-60 hover:opacity-100 ml-0.5">
+                <X size={12} />
+              </button>
+            </span>
           )}
-        </Paper>
+          <span className="ml-auto text-[12px] font-bold text-gray-400">
+            {displayedMenuItems.length} of {pagination.total} items
+          </span>
+        </div>
 
-        {/* ── List ── */}
+        {/* ══════════════════ CONTENT ══════════════════ */}
         {loading ? (
-          <Box display="flex" justifyContent="center" py={10}><CircularProgress sx={{ color: "#FF5252" }} size={60} /></Box>
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="relative w-16 h-16">
+              <div className="absolute inset-0 rounded-full border-[3px] border-red-100 border-t-[#E53935] animate-spin" />
+              <div className="absolute inset-3 rounded-full bg-gradient-to-br from-[#E53935] to-[#FF7043] flex items-center justify-center">
+                <ChefHat size={14} className="text-white" />
+              </div>
+            </div>
+            <p className="text-[13px] font-bold text-gray-400">Loading menu items…</p>
+          </div>
         ) : displayedMenuItems.length === 0 ? (
-          <Paper sx={{ p: 6, textAlign: "center", borderRadius: "16px" }}>
-            <IoMdRestaurant style={{ fontSize: 80, color: "#FF5252", opacity: 0.4, marginBottom: 16 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>No menu items found</Typography>
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
-              {filterCategory === "all" ? "Add your first menu item to get started" : `No items in ${getCategoryName(filterCategory)}`}
-            </Typography>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={openAddModal}
-              sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" } }}>Add Menu Item</Button>
-          </Paper>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-14 text-center">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-100 flex items-center justify-center mx-auto mb-5">
+              <IoMdRestaurant size={40} color="#E53935" opacity={0.4} />
+            </div>
+            <h3 className="text-[17px] font-black text-gray-700 mb-2">No menu items found</h3>
+            <p className="text-[13px] text-gray-400 mb-6">
+              {filterCategory === "all" ? "Add your first menu item to get started" : `No items in "${getCategoryName(filterCategory)}"`}
+            </p>
+            <button
+              onClick={openAddModal}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#E53935] to-[#FF7043] text-white text-[13.5px] font-black rounded-xl shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all"
+            >
+              <AddIcon style={{ fontSize: 18 }} />Add Menu Item
+            </button>
+          </div>
         ) : (
-          <Paper sx={{ borderRadius: "16px", overflow: "hidden", boxShadow: 3 }}>
-
-            {/* Desktop Table */}
-            <div className="hidden lg:block">
-              <TableContainer>
-                <Table>
-                  <TableHead sx={{ bgcolor: "#FF5252" }}>
-                    <TableRow>
-                      {["S.No", "Image", "Name & Description", "Category", "Type", "Price", "Time", "Status", "Tags", "Actions"].map((h, idx) => (
-                        <TableCell key={h} align={idx === 9 ? "center" : "left"} sx={{ color: "white", fontWeight: "bold", whiteSpace: "nowrap" }}>{h}</TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {displayedMenuItems.map((item, i) => (
-                      <TableRow key={item.id} hover>
-                        <TableCell>{(pagination.page - 1) * pagination.limit + i + 1}</TableCell>
-                        <TableCell>
-                          {item.image ? (
-                            <img src={item.image} alt={item.name}
-                              style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8 }}
-                              onError={e => e.target.src = "https://via.placeholder.com/80?text=No+Image"} />
-                          ) : (
-                            <Box sx={{ width: 80, height: 80, bgcolor: "grey.100", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", color: "text.secondary" }}>No image</Box>
-                          )}
-                        </TableCell>
-                        <TableCell sx={{ maxWidth: 200 }}>
-                          <Typography fontWeight={600} color="#FF5252" sx={{ fontSize: "0.95rem" }}>{item.name}</Typography>
-                          {item.description && <Typography variant="body2" color="text.secondary" sx={{ overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{item.description}</Typography>}
-                        </TableCell>
-                        <TableCell><Chip label={getCategoryName(item.category_id)} size="small" color="primary" /></TableCell>
-                        <TableCell>
-                          <Chip label={item.food_type} size="small"
-                            sx={{ bgcolor: item.food_type === "VEG" ? "#10b981" : "#ef4444", color: "white", fontWeight: 600 }} />
-                        </TableCell>
-                        <TableCell>
-                          {item.price && <Typography variant="body2" fontWeight={700}>₹{item.price}</Typography>}
-                          {item.offer_price && <Typography variant="caption" color="green" fontWeight={600}>Offer: ₹{item.offer_price}</Typography>}
-                        </TableCell>
-                        <TableCell>
-                          {item.preparation_time
-                            ? <Chip icon={<AccessTimeIcon sx={{ fontSize: 14 }} />} label={`${item.preparation_time} min`} size="small" sx={{ bgcolor: "#fbbf24", color: "white", fontWeight: 600 }} />
-                            : <span className="text-gray-400 text-sm">—</span>}
-                        </TableCell>
-                        <TableCell>
-                          <Box display="flex" flexDirection="column" gap={0.5}>
-                            <Chip label={item.is_available ? "Available" : "Unavailable"} size="small"
-                              color={item.is_available ? "success" : "default"} sx={{ fontWeight: 600 }} />
-                            {item.is_active === false && <Chip label="Inactive" size="small" color="error" sx={{ fontWeight: 600 }} />}
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Box display="flex" flexWrap="wrap" gap={0.5}>
-                            {item.is_bestseller && <Chip label="⭐ Best" size="small" sx={{ bgcolor: "#fbbf24", color: "white", fontSize: "0.68rem", fontWeight: 600 }} />}
-                            {item.is_spicy && <Chip label="🌶️ Spicy" size="small" color="error" sx={{ fontSize: "0.68rem", fontWeight: 600 }} />}
-                            {item.is_customizable && <Chip label="Custom" size="small" color="info" sx={{ fontSize: "0.68rem", fontWeight: 600 }} />}
-                            {item.is_recommended && <Chip label="Rec" size="small" sx={{ bgcolor: "#8b5cf6", color: "white", fontSize: "0.68rem", fontWeight: 600 }} />}
-                            {item.is_fast_delivery && <Chip label="⚡ Fast" size="small" sx={{ bgcolor: "#06b6d4", color: "white", fontSize: "0.68rem", fontWeight: 600 }} />}
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box display="flex" alignItems="center" justifyContent="center" gap={0.2}>
-                            <IconButton onClick={() => handleViewDetail(item)} size="small" title="View Details"
-                              sx={{ color: "#FF5252", "&:hover": { bgcolor: "#FF525215" } }}>
-                              <MdVisibility size={20} />
-                            </IconButton>
-                            <IconButton onClick={() => handleOpenStatusModal(item)} size="small" title="Manage Status"
-                              sx={{ color: "#8b5cf6", "&:hover": { bgcolor: "#8b5cf615" } }}>
-                              <TuneIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton onClick={() => handleEdit(item)} size="small" color="primary" title="Edit"><EditIcon fontSize="small" /></IconButton>
-                            <IconButton onClick={() => handleDelete(item.id)} size="small" color="error" title="Delete"><DeleteIcon fontSize="small" /></IconButton>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
+          <>
+            {/* ─── Desktop Table ─── */}
+            <div className="hidden lg:block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gradient-to-r from-[#E53935] to-[#FF7043]">
+                    {["#", "Image", "Name & Description", "Category", "Type", "Price", "Time", "Status", "Tags", "Actions"].map((h, i) => (
+                      <th key={h} className={`px-4 py-3.5 text-[11px] font-black text-white uppercase tracking-wider ${i === 9 ? "text-center" : "text-left"} whitespace-nowrap`}>
+                        {h}
+                      </th>
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedMenuItems.map((item, i) => (
+                    <tr key={item.id} className="border-t border-gray-50 hover:bg-red-50/20 transition-colors duration-150 group">
+                      <td className="px-4 py-3 text-[12px] font-bold text-gray-400">
+                        {(pagination.page - 1) * pagination.limit + i + 1}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name}
+                            className="w-16 h-16 object-cover rounded-xl border border-gray-100"
+                            onError={e => e.target.src = "https://via.placeholder.com/80?text=No+Image"} />
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center">
+                            <IoMdRestaurant size={22} color="#d1d5db" />
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3" style={{ maxWidth: 200 }}>
+                        <p className="text-[13.5px] font-black text-gray-900 leading-tight">{item.name}</p>
+                        {item.description && (
+                          <p className="text-[11.5px] text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">{item.description}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 text-[11px] font-black">
+                          {getCategoryName(item.category_id)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-white text-[11px] font-black ${item.food_type === "VEG" ? "bg-emerald-500" : "bg-red-500"}`}>
+                          {item.food_type === "VEG" ? <FaLeaf size={9} /> : <FaDrumstickBite size={9} />}
+                          {item.food_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-[14px] font-black text-gray-900">₹{item.price}</p>
+                        {item.offer_price && (
+                          <p className="text-[11px] text-emerald-600 font-bold">₹{item.offer_price} offer</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.preparation_time ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-[11px] font-black">
+                            <Clock size={10} />{item.preparation_time}m
+                          </span>
+                        ) : <span className="text-gray-300 text-[13px]">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10.5px] font-black ${item.is_available ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-gray-100 text-gray-400"}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${item.is_available ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`} />
+                            {item.is_available ? "Available" : "Unavailable"}
+                          </span>
+                          {item.is_active === false && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-red-50 text-red-600 border border-red-200 text-[10.5px] font-black">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />Inactive
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {item.is_bestseller && <TagChip label="Best" color="#f59e0b" icon="⭐" />}
+                          {item.is_spicy && <TagChip label="Spicy" color="#ef4444" icon="🌶️" />}
+                          {item.is_customizable && <TagChip label="Custom" color="#3b82f6" />}
+                          {item.is_recommended && <TagChip label="Rec" color="#8b5cf6" />}
+                          {item.is_fast_delivery && <TagChip label="Fast" color="#06b6d4" icon={<Zap size={9}/>} />}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <button onClick={() => handleViewDetail(item)}
+                            className="p-2 rounded-xl bg-red-50 text-[#E53935] hover:bg-red-100 transition-colors" title="View">
+                            <MdVisibility size={16} />
+                          </button>
+                          <button onClick={() => handleOpenStatusModal(item)}
+                            className="p-2 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors" title="Status">
+                            <TuneIcon style={{ fontSize: 16 }} />
+                          </button>
+                          <button onClick={() => handleEdit(item)}
+                            className="p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" title="Edit">
+                            <EditIcon style={{ fontSize: 16 }} />
+                          </button>
+                          <button onClick={() => handleDelete(item.id)}
+                            className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors" title="Delete">
+                            <DeleteIcon style={{ fontSize: 16 }} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            {/* Mobile Cards */}
-            <div className="lg:hidden space-y-4 p-4">
+            {/* ─── Mobile Cards ─── */}
+            <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
               {displayedMenuItems.map((item, i) => (
-                <Paper key={item.id} elevation={2} sx={{ borderRadius: "16px", p: 3 }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                    <Box flex={1}>
-                      <Typography variant="caption" color="text.secondary">{(pagination.page - 1) * pagination.limit + i + 1}</Typography>
-                      <Typography variant="h6" color="#FF5252" fontWeight="bold">{item.name}</Typography>
-                      <Box display="flex" flexWrap="wrap" gap={1} mt={1}>
-                        <Chip label={getCategoryName(item.category_id)} size="small" />
-                        <Chip label={item.food_type} size="small" sx={{ bgcolor: item.food_type === "VEG" ? "#10b981" : "#ef4444", color: "white" }} />
-                        <Chip label={item.is_available ? "Available" : "Unavailable"} size="small" color={item.is_available ? "success" : "default"} />
-                        {item.preparation_time && <Chip icon={<AccessTimeIcon sx={{ fontSize: 14 }} />} label={`${item.preparation_time} min`} size="small" sx={{ bgcolor: "#fbbf24", color: "white" }} />}
-                      </Box>
-                    </Box>
-                    <Box display="flex" gap={0.2} ml={1} flexWrap="wrap" justifyContent="flex-end">
-                      <IconButton size="small" title="View" onClick={() => handleViewDetail(item)} sx={{ color: "#FF5252" }}><MdVisibility size={18} /></IconButton>
-                      <IconButton size="small" title="Status" onClick={() => handleOpenStatusModal(item)} sx={{ color: "#8b5cf6" }}><TuneIcon fontSize="small" /></IconButton>
-                      <IconButton size="small" onClick={() => handleEdit(item)}><EditIcon fontSize="small" /></IconButton>
-                      <IconButton size="small" onClick={() => handleDelete(item.id)} color="error"><DeleteIcon fontSize="small" /></IconButton>
-                    </Box>
-                  </Box>
-                  {item.description && <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{item.description}</Typography>}
-                  <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ bgcolor: "grey.50", p: 2, borderRadius: 2, mb: 2 }}>
-                    <Box>
-                      {item.price && <Typography fontWeight={700}>₹{item.price}</Typography>}
-                      {item.offer_price && <Typography variant="body2" color="green">Offer: ₹{item.offer_price}</Typography>}
-                    </Box>
-                    <Box display="flex" flexWrap="wrap" gap={0.5} justifyContent="flex-end">
-                      {item.is_bestseller && <Chip label="⭐" size="small" sx={{ bgcolor: "#fbbf24", color: "white" }} />}
-                      {item.is_spicy && <Chip label="🌶️" size="small" color="error" />}
-                      {item.is_recommended && <Chip label="Rec" size="small" sx={{ bgcolor: "#8b5cf6", color: "white" }} />}
-                      {item.is_fast_delivery && <Chip label="⚡" size="small" sx={{ bgcolor: "#06b6d4", color: "white" }} />}
-                    </Box>
-                  </Box>
-                  {item.image && <img src={item.image} alt={item.name} style={{ width: "100%", height: 200, objectFit: "cover", borderRadius: 12 }} onError={e => e.target.src = "https://via.placeholder.com/300x200?text=No+Image"} />}
-                </Paper>
+                <MenuCard key={item.id} item={item} index={i} pagination={pagination}
+                  getCategoryName={getCategoryName} handleViewDetail={handleViewDetail}
+                  handleOpenStatusModal={handleOpenStatusModal} handleEdit={handleEdit} handleDelete={handleDelete} />
               ))}
             </div>
 
-            {/* Pagination */}
+            {/* ─── Pagination ─── */}
             {pagination.totalPages > 1 && (
-              <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: "center", justifyContent: "space-between", px: 3, py: 2, borderTop: "1px solid #f0f0f0", gap: 1 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Showing <strong>{(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)}</strong> of <strong>{pagination.total}</strong> menu items
-                </Typography>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p className="text-[12.5px] font-semibold text-gray-500">
+                  Showing <span className="font-black text-gray-800">{(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="font-black text-gray-800">{pagination.total}</span> items
+                </p>
                 <Stack spacing={2}>
                   <Pagination count={pagination.totalPages} page={pagination.page} onChange={handlePageChange} shape="rounded"
-                    sx={{ "& .MuiPaginationItem-root.Mui-selected": { bgcolor: "#FF5252", color: "white", "&:hover": { bgcolor: "#e03e3e" } } }} />
+                    sx={{ "& .MuiPaginationItem-root.Mui-selected": { bgcolor: "#E53935", color: "white", "&:hover": { bgcolor: "#c62828" } } }} />
                 </Stack>
-              </Box>
+              </div>
             )}
-          </Paper>
+          </>
         )}
       </div>
 
-      {/* ═══════════════════════════════════════
-          STATUS MODAL  (PATCH /menuitems/:id/statuses)
-      ═══════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════════
+          STATUS MODAL
+      ══════════════════════════════════════════════════════ */}
       <Dialog open={openStatusModal} onClose={closeStatusModal} maxWidth="xs" fullWidth
-        PaperProps={{ sx: { borderRadius: "20px", overflow: "hidden" } }}>
-        <DialogTitle sx={{ p: 0 }}>
-          <Box sx={{ background: "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)", px: 3, py: 2.5, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Box display="flex" alignItems="center" gap={1.5}>
-              <TuneIcon sx={{ color: "white" }} />
-              <Box>
-                <Typography variant="h6" fontWeight={700} color="white">Manage Status</Typography>
-                {statusItem && <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)" }}>{statusItem.name}</Typography>}
-              </Box>
-            </Box>
-            <IconButton onClick={closeStatusModal} size="small" sx={{ color: "white", "&:hover": { bgcolor: "rgba(255,255,255,0.15)" } }}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
+        PaperProps={{ sx: { borderRadius: "20px", overflow: "hidden", fontFamily: "'Plus Jakarta Sans',sans-serif" } }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-violet-600 to-purple-500">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <TuneIcon style={{ color: "white", fontSize: 20 }} />
+            </div>
+            <div>
+              <p className="text-[15px] font-black text-white">Manage Status</p>
+              {statusItem && <p className="text-[11.5px] text-white/70 font-medium">{statusItem.name}</p>}
+            </div>
+          </div>
+          <button onClick={closeStatusModal} className="w-8 h-8 rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center text-white">
+            <X size={15} />
+          </button>
+        </div>
 
-        <DialogContent sx={{ px: 2.5, py: 2.5 }}>
+        <div className="px-5 py-5" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
           {statusLoading ? (
-            <Box display="flex" justifyContent="center" py={5}><CircularProgress sx={{ color: "#8b5cf6" }} size={44} /></Box>
+            <div className="flex justify-center py-10">
+              <div className="relative w-14 h-14">
+                <div className="absolute inset-0 rounded-full border-[3px] border-purple-100 border-t-purple-500 animate-spin" />
+              </div>
+            </div>
           ) : (
-            <Box display="flex" flexDirection="column" gap={1.5}>
-              <StatusRow field="is_active" label="Active" description="Item is visible on the platform" color="#10b981" />
-              <StatusRow field="is_available" label="Available" description="Can be ordered right now" color="#FF5252" />
-              <StatusRow field="is_recommended" label="Recommended" description="Show in recommended section" color="#8b5cf6" />
-              <StatusRow field="is_bestseller" label="Bestseller" description="Mark as a bestselling item" color="#f59e0b" />
-              <StatusRow field="is_fast_delivery" label="Fast Delivery" description="Eligible for fast delivery" color="#06b6d4" />
-            </Box>
+            <div className="space-y-2.5">
+              <StatusRow field="is_active"       label="Active"         description="Visible on the platform"       color="#10b981" value={statusForm.is_active}       onToggle={handleStatusToggle} />
+              <StatusRow field="is_available"    label="Available"      description="Can be ordered right now"      color="#E53935" value={statusForm.is_available}    onToggle={handleStatusToggle} />
+              <StatusRow field="is_recommended"  label="Recommended"    description="Show in recommended section"   color="#8b5cf6" value={statusForm.is_recommended}  onToggle={handleStatusToggle} />
+              <StatusRow field="is_bestseller"   label="Bestseller"     description="Mark as a bestselling item"    color="#f59e0b" value={statusForm.is_bestseller}   onToggle={handleStatusToggle} />
+              <StatusRow field="is_fast_delivery" label="Fast Delivery" description="Eligible for fast delivery"   color="#06b6d4" value={statusForm.is_fast_delivery} onToggle={handleStatusToggle} />
+            </div>
           )}
-        </DialogContent>
+        </div>
 
-        <DialogActions sx={{ px: 2.5, py: 2, borderTop: "1px solid #eee", bgcolor: "white", gap: 1 }}>
-          <Button onClick={closeStatusModal} disabled={isSavingStatus} sx={{ borderRadius: "10px", fontWeight: 600 }}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveStatus} disabled={isSavingStatus || statusLoading}
-            startIcon={isSavingStatus ? <CircularProgress size={16} color="inherit" /> : null}
-            sx={{ bgcolor: "#8b5cf6", "&:hover": { bgcolor: "#7c3aed" }, borderRadius: "10px", fontWeight: 600, px: 3 }}>
-            {isSavingStatus ? "Saving..." : "Save Status"}
-          </Button>
-        </DialogActions>
+        <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-2.5" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+          <button onClick={closeStatusModal} disabled={isSavingStatus}
+            className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 text-[13px] font-bold hover:bg-gray-50 transition-all disabled:opacity-50">
+            Cancel
+          </button>
+          <button onClick={handleSaveStatus} disabled={isSavingStatus || statusLoading}
+            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-purple-500 text-white text-[13px] font-black rounded-xl shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-60">
+            {isSavingStatus && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+            {isSavingStatus ? "Saving…" : "Save Status"}
+          </button>
+        </div>
       </Dialog>
 
-      {/* ═══════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════
           VIEW DETAIL MODAL
-      ═══════════════════════════════════════ */}
+      ══════════════════════════════════════════════════════ */}
       <Dialog open={openViewModal} onClose={closeViewModal} maxWidth="sm" fullWidth
-        PaperProps={{ sx: { borderRadius: "20px", overflow: "hidden" } }}>
-        <DialogTitle sx={{ p: 0 }}>
-          <Box sx={{ background: "linear-gradient(135deg, #FF5252 0%, #ff8080 100%)", px: 3, py: 2.5, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Box display="flex" alignItems="center" gap={1.5}>
-              <MdVisibility size={22} color="white" />
-              <Typography variant="h6" fontWeight={700} color="white">Menu Item Details</Typography>
-            </Box>
-            <IconButton onClick={closeViewModal} size="small" sx={{ color: "white", "&:hover": { bgcolor: "rgba(255,255,255,0.15)" } }}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
+        PaperProps={{ sx: { borderRadius: "20px", overflow: "hidden", fontFamily: "'Plus Jakarta Sans',sans-serif" } }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#E53935] to-[#FF7043]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <MdVisibility size={20} color="white" />
+            </div>
+            <p className="text-[15px] font-black text-white">Menu Item Details</p>
+          </div>
+          <button onClick={closeViewModal} className="w-8 h-8 rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center text-white">
+            <X size={15} />
+          </button>
+        </div>
 
-        <DialogContent sx={{ p: 0 }}>
+        <DialogContent sx={{ p: 0, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
           {viewLoading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" py={8}>
-              <CircularProgress sx={{ color: "#FF5252" }} size={48} />
-            </Box>
+            <div className="flex items-center justify-center py-16">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-[3px] border-red-100 border-t-[#E53935] animate-spin" />
+                <div className="absolute inset-3 rounded-full bg-gradient-to-br from-[#E53935] to-[#FF7043] flex items-center justify-center">
+                  <ChefHat size={14} className="text-white" />
+                </div>
+              </div>
+            </div>
           ) : viewItem ? (
-            <>
-              {/* Image */}
+            <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+              {/* Banner image */}
               {viewItem.image ? (
-                <Box sx={{ position: "relative", width: "100%", height: 240, overflow: "hidden" }}>
-                  <img src={viewItem.image} alt={viewItem.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                <div className="relative h-56 overflow-hidden">
+                  <img src={viewItem.image} alt={viewItem.name} className="w-full h-full object-cover"
                     onError={e => e.target.src = "https://via.placeholder.com/400x240?text=No+Image"} />
-                  <Box sx={{ position: "absolute", top: 12, left: 12 }}>
-                    <Chip
-                      icon={viewItem.food_type === "VEG" ? <FaLeaf style={{ color: "white", fontSize: 12 }} /> : <FaDrumstickBite style={{ color: "white", fontSize: 12 }} />}
-                      label={viewItem.food_type} size="small"
-                      sx={{ bgcolor: viewItem.food_type === "VEG" ? "#10b981" : "#ef4444", color: "white", fontWeight: 700 }} />
-                  </Box>
-                  <Box sx={{ position: "absolute", top: 12, right: 12, display: "flex", flexDirection: "column", gap: 0.5, alignItems: "flex-end" }}>
-                    {viewItem.is_bestseller && <Chip label="⭐ Bestseller" size="small" sx={{ bgcolor: "#fbbf24", color: "white", fontWeight: 700 }} />}
-                    {viewItem.is_recommended && <Chip label="Recommended" size="small" sx={{ bgcolor: "#8b5cf6", color: "white", fontWeight: 700 }} />}
-                    {viewItem.is_fast_delivery && <Chip label="⚡ Fast" size="small" sx={{ bgcolor: "#06b6d4", color: "white", fontWeight: 700 }} />}
-                  </Box>
-                </Box>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
+                    <TagChip label={viewItem.food_type} color={viewItem.food_type === "VEG" ? "#10b981" : "#ef4444"}
+                      icon={viewItem.food_type === "VEG" ? <FaLeaf size={9} /> : <FaDrumstickBite size={9} />} />
+                    {viewItem.is_bestseller && <TagChip label="Bestseller" color="#f59e0b" icon="⭐" />}
+                    {viewItem.is_recommended && <TagChip label="Recommended" color="#8b5cf6" />}
+                    {viewItem.is_fast_delivery && <TagChip label="Fast" color="#06b6d4" icon={<Zap size={9}/>} />}
+                  </div>
+                  <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+                    <span className={`text-[10.5px] font-black px-2.5 py-1 rounded-xl text-white ${viewItem.is_available ? "bg-emerald-500" : "bg-gray-500"}`}>
+                      {viewItem.is_available ? "✓ Available" : "Unavailable"}
+                    </span>
+                  </div>
+                </div>
               ) : (
-                <Box sx={{ width: "100%", height: 140, bgcolor: "#fff5f5", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 1 }}>
-                  <IoMdRestaurant size={52} color="#FF525240" />
-                  <Typography variant="body2" color="text.disabled">No image available</Typography>
-                </Box>
+                <div className="h-28 bg-gradient-to-r from-[#E53935]/10 to-[#FF7043]/10 flex items-center justify-center">
+                  <IoMdRestaurant size={48} color="#E5393560" />
+                </div>
               )}
 
-              <Box sx={{ px: 3, pt: 2.5, pb: 1 }}>
-                {/* Name & availability */}
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                  <Typography variant="h5" fontWeight={800} color="#FF5252" sx={{ lineHeight: 1.3, flex: 1, mr: 1 }}>{viewItem.name}</Typography>
-                  <Box display="flex" flexDirection="column" gap={0.5} alignItems="flex-end">
-                    <Chip label={viewItem.is_available ? "Available" : "Unavailable"} size="small"
-                      color={viewItem.is_available ? "success" : "default"} sx={{ fontWeight: 700 }} />
-                    {viewItem.is_active === false && <Chip label="Inactive" size="small" color="error" sx={{ fontWeight: 700 }} />}
-                  </Box>
-                </Box>
+              <div className="px-5 py-5 space-y-4" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+                {/* Name + price */}
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-[22px] font-black text-gray-900 leading-tight">{viewItem.name}</h2>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[22px] font-black text-[#E53935]">₹{viewItem.price}</p>
+                    {viewItem.offer_price && <p className="text-[12px] text-emerald-600 font-bold">₹{viewItem.offer_price} offer</p>}
+                  </div>
+                </div>
 
-                {/* Tags */}
-                <Box display="flex" flexWrap="wrap" gap={0.8} mb={2}>
-                  {viewItem.is_spicy && <Chip icon={<FaPepperHot style={{ color: "white", fontSize: 11 }} />} label="Spicy" size="small" color="error" sx={{ fontWeight: 600 }} />}
-                  {viewItem.is_customizable && <Chip label="Customizable" size="small" color="info" sx={{ fontWeight: 600 }} />}
-                  {viewItem.preparation_time && <Chip icon={<AccessTimeIcon sx={{ fontSize: 13 }} />} label={`${viewItem.preparation_time} min`} size="small" sx={{ bgcolor: "#fbbf24", color: "white", fontWeight: 600 }} />}
-                  {viewItem.calories && <Chip label={`🔥 ${viewItem.calories} cal`} size="small" sx={{ bgcolor: "#f97316", color: "white", fontWeight: 600 }} />}
-                  {viewItem.stock_quantity != null && <Chip label={`Stock: ${viewItem.stock_quantity}`} size="small" sx={{ bgcolor: "#64748b", color: "white", fontWeight: 600 }} />}
-                </Box>
+                {/* Tag chips */}
+                <div className="flex flex-wrap gap-1.5">
+                  {viewItem.is_spicy && <TagChip label="Spicy" color="#ef4444" icon="🌶️" />}
+                  {viewItem.is_customizable && <TagChip label="Customizable" color="#3b82f6" />}
+                  {viewItem.preparation_time && <TagChip label={`${viewItem.preparation_time} min`} color="#f59e0b" icon={<Clock size={9}/>} />}
+                  {viewItem.calories && <TagChip label={`${viewItem.calories} cal`} color="#f97316" icon={<Flame size={9}/>} />}
+                  {viewItem.stock_quantity != null && <TagChip label={`Stock: ${viewItem.stock_quantity}`} color="#64748b" />}
+                </div>
 
                 {/* Description */}
                 {viewItem.description && (
-                  <Box sx={{ bgcolor: "#fff8f8", border: "1px solid #ffe0e0", borderRadius: 2, px: 2, py: 1.5, mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" fontWeight={500} mb={0.5}>Description</Typography>
-                    <Typography variant="body2" color="text.primary" sx={{ lineHeight: 1.7 }}>{viewItem.description}</Typography>
-                  </Box>
+                  <div className="bg-red-50/60 border border-red-100 rounded-xl px-4 py-3">
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Description</p>
+                    <p className="text-[13px] text-gray-700 leading-relaxed">{viewItem.description}</p>
+                  </div>
                 )}
 
-                <Divider sx={{ mb: 2 }} />
-
-                {/* Pricing */}
-                <Box sx={{ bgcolor: "#f9fafb", borderRadius: 2, px: 2, py: 1.5, mb: 2 }}>
-                  <Typography variant="subtitle2" fontWeight={700} color="#FF5252" sx={{ mb: 1, textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.72rem" }}>Pricing</Typography>
-                  <Grid container spacing={1}>
-                    <Grid item xs={6}>
-                      <Box sx={{ bgcolor: "white", borderRadius: 1.5, p: 1.5, border: "1px solid #f0f0f0", textAlign: "center" }}>
-                        <Typography variant="caption" color="text.secondary" display="block">Price</Typography>
-                        <Typography variant="h6" fontWeight={800}>{viewItem.price ? `₹${viewItem.price}` : "—"}</Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Box sx={{ bgcolor: "white", borderRadius: 1.5, p: 1.5, border: "1px solid #f0f0f0", textAlign: "center" }}>
-                        <Typography variant="caption" color="text.secondary" display="block">Offer Price</Typography>
-                        <Typography variant="h6" fontWeight={800} color="green">{viewItem.offer_price ? `₹${viewItem.offer_price}` : "—"}</Typography>
-                      </Box>
-                    </Grid>
-                    {viewItem.tax_percent && (
-                      <Grid item xs={6}>
-                        <Box sx={{ bgcolor: "white", borderRadius: 1.5, p: 1.5, border: "1px solid #f0f0f0", textAlign: "center" }}>
-                          <Typography variant="caption" color="text.secondary" display="block">Tax</Typography>
-                          <Typography variant="body1" fontWeight={700}>{viewItem.tax_percent}%</Typography>
-                        </Box>
-                      </Grid>
-                    )}
-                    {viewItem.packaging_charge && (
-                      <Grid item xs={6}>
-                        <Box sx={{ bgcolor: "white", borderRadius: 1.5, p: 1.5, border: "1px solid #f0f0f0", textAlign: "center" }}>
-                          <Typography variant="caption" color="text.secondary" display="block">Packaging</Typography>
-                          <Typography variant="body1" fontWeight={700}>₹{viewItem.packaging_charge}</Typography>
-                        </Box>
-                      </Grid>
-                    )}
-                  </Grid>
-                </Box>
-
-                <Divider sx={{ mb: 2 }} />
+                {/* Pricing grid */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <SectionTitle icon={Tag}>Pricing</SectionTitle>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: "Price", value: viewItem.price ? `₹${viewItem.price}` : "—" },
+                      { label: "Offer Price", value: viewItem.offer_price ? `₹${viewItem.offer_price}` : "—" },
+                      viewItem.tax_percent && { label: "Tax", value: `${viewItem.tax_percent}%` },
+                      viewItem.packaging_charge && { label: "Packaging", value: `₹${viewItem.packaging_charge}` },
+                    ].filter(Boolean).map(({ label, value }) => (
+                      <div key={label} className="bg-white rounded-xl px-3 py-2.5 border border-gray-100 text-center">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{label}</p>
+                        <p className="text-[15px] font-black text-gray-800 mt-0.5">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Details */}
-                <Box sx={{ bgcolor: "#f9fafb", borderRadius: 2, px: 2, py: 1.5, mb: 2 }}>
-                  <Typography variant="subtitle2" fontWeight={700} color="#FF5252" sx={{ mb: 0.5, textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.72rem" }}>Details</Typography>
-                  <DetailRow label="Category" value={getCategoryName(viewItem.category_id)} />
-                  <Divider sx={{ opacity: 0.4 }} />
-                  <DetailRow label="Food Type" value={viewItem.food_type} />
-                  {viewItem.stock_quantity != null && <><Divider sx={{ opacity: 0.4 }} /><DetailRow label="Stock Quantity" value={viewItem.stock_quantity} /></>}
-                  {viewItem.calories && <><Divider sx={{ opacity: 0.4 }} /><DetailRow label="Calories" value={`${viewItem.calories} kcal`} /></>}
-                  {(viewItem.available_from || viewItem.available_to) && <><Divider sx={{ opacity: 0.4 }} /><DetailRow label="Available Hours" value={`${formatTime(viewItem.available_from)} – ${formatTime(viewItem.available_to)}`} /></>}
-                  {viewItem.preparation_time && <><Divider sx={{ opacity: 0.4 }} /><DetailRow label="Prep Time" value={`${viewItem.preparation_time} min`} /></>}
-                </Box>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <SectionTitle icon={Package}>Details</SectionTitle>
+                  <div className="space-y-0">
+                    {[
+                      { label: "Category", value: getCategoryName(viewItem.category_id) },
+                      { label: "Food Type", value: viewItem.food_type },
+                      viewItem.stock_quantity != null && { label: "Stock", value: viewItem.stock_quantity },
+                      viewItem.calories && { label: "Calories", value: `${viewItem.calories} kcal` },
+                      (viewItem.available_from || viewItem.available_to) && { label: "Available Hours", value: `${formatTime(viewItem.available_from)} – ${formatTime(viewItem.available_to)}` },
+                      viewItem.preparation_time && { label: "Prep Time", value: `${viewItem.preparation_time} min` },
+                    ].filter(Boolean).map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                        <span className="text-[12px] text-gray-400 font-semibold">{label}</span>
+                        <span className="text-[12.5px] font-bold text-gray-800">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Status flags */}
-                <Box sx={{ bgcolor: "#f9fafb", borderRadius: 2, px: 2, py: 1.5, mb: 1 }}>
-                  <Typography variant="subtitle2" fontWeight={700} color="#FF5252" sx={{ mb: 1, textTransform: "uppercase", letterSpacing: 0.5, fontSize: "0.72rem" }}>Status Flags</Typography>
-                  <Box display="flex" flexWrap="wrap" gap={1}>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <SectionTitle icon={BadgeCheck}>Status Flags</SectionTitle>
+                  <div className="flex flex-wrap gap-2">
                     {[
                       { label: "Active", val: viewItem.is_active, color: "#10b981" },
-                      { label: "Available", val: viewItem.is_available, color: "#FF5252" },
+                      { label: "Available", val: viewItem.is_available, color: "#E53935" },
                       { label: "Recommended", val: viewItem.is_recommended, color: "#8b5cf6" },
                       { label: "Bestseller", val: viewItem.is_bestseller, color: "#f59e0b" },
                       { label: "Fast Delivery", val: viewItem.is_fast_delivery, color: "#06b6d4" },
                       { label: "Spicy", val: viewItem.is_spicy, color: "#ef4444" },
                       { label: "Customizable", val: viewItem.is_customizable, color: "#3b82f6" },
                     ].map(({ label, val, color }) => (
-                      <Chip key={label} label={label} size="small"
-                        sx={{ bgcolor: val ? color : "#e5e7eb", color: val ? "white" : "#9ca3af", fontWeight: 600, fontSize: "0.7rem" }} />
+                      <span key={label}
+                        className="text-[11px] font-black px-2.5 py-1 rounded-xl text-white"
+                        style={{ backgroundColor: val ? color : "#e5e7eb", color: val ? "white" : "#9ca3af" }}>
+                        {label}
+                      </span>
                     ))}
-                  </Box>
-                </Box>
-              </Box>
-            </>
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : null}
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid #eee", bgcolor: "white", gap: 1 }}>
-          <Button onClick={() => { closeViewModal(); if (viewItem) handleEdit(viewItem); }}
-            startIcon={<EditIcon />} variant="outlined"
-            sx={{ borderColor: "#FF5252", color: "#FF5252", "&:hover": { borderColor: "#e03e3e", bgcolor: "#FF525208" }, borderRadius: "10px", fontWeight: 600 }}>
-            Edit Item
-          </Button>
-          <Button onClick={closeViewModal} variant="contained"
-            sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" }, borderRadius: "10px", fontWeight: 600, px: 3 }}>
+        <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-2.5" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+          <button
+            onClick={() => { closeViewModal(); if (viewItem) handleEdit(viewItem); }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-[#E53935]/40 text-[#E53935] text-[13px] font-bold hover:bg-red-50 transition-all"
+          >
+            <EditIcon style={{ fontSize: 16 }} />Edit Item
+          </button>
+          <button onClick={closeViewModal}
+            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#E53935] to-[#FF7043] text-white text-[13px] font-black rounded-xl shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all">
             Close
-          </Button>
-        </DialogActions>
+          </button>
+        </div>
       </Dialog>
 
-      {/* ═══════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════
           ADD / EDIT MODAL
-      ═══════════════════════════════════════ */}
+      ══════════════════════════════════════════════════════ */}
       <Dialog open={openModal} onClose={closeModal} maxWidth="md" fullWidth scroll="paper" keepMounted
-        PaperProps={{ sx: { borderRadius: "16px", overflow: "hidden" } }}>
-        <DialogTitle sx={{ bgcolor: "#FF5252", color: "white", position: "sticky", top: 0, zIndex: 1 }}>
-          <Box display="flex" alignItems="center" gap={2}>
-            <RestaurantIcon />
-            <span>{mode === "add" ? "Add New Menu Item" : "Edit Menu Item"}</span>
-          </Box>
-        </DialogTitle>
+        PaperProps={{ sx: { borderRadius: "20px", overflow: "hidden", fontFamily: "'Plus Jakarta Sans',sans-serif" } }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#E53935] to-[#FF7043] sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <ChefHat size={20} className="text-white" />
+            </div>
+            <p className="text-[15px] font-black text-white">
+              {mode === "add" ? "Add New Menu Item" : "Edit Menu Item"}
+            </p>
+          </div>
+          <button onClick={closeModal} className="w-8 h-8 rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center text-white">
+            <X size={15} />
+          </button>
+        </div>
 
-        <DialogContent sx={{ p: 0, overflow: "hidden" }}>
-          <Box component="form" onSubmit={handleSubmit}
-            sx={{ px: 3, pt: 3, pb: 2, display: "flex", flexDirection: "column", gap: 3,
-              maxHeight: "65vh", overflowY: "auto", scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}>
+        <DialogContent sx={{ p: 0 }}>
+          <div
+            className="px-5 py-5 space-y-5 overflow-y-auto"
+            style={{ maxHeight: "65vh", scrollbarWidth: "none", fontFamily: "'Plus Jakarta Sans',sans-serif" }}
+          >
 
             {/* Category & Sub-Category */}
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth error={!!errors.category}>
-                  <InputLabel>Select Category *</InputLabel>
-                  <Select value={selectedCategory} label="Select Category *"
+            <div>
+              <SectionTitle icon={Tag}>Category</SectionTitle>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Category *</label>
+                  <select
+                    value={selectedCategory}
                     onChange={e => { setSelectedCategory(e.target.value); setSelectedSubCategory(""); if (errors.category) setErrors(p => ({ ...p, category: "" })); }}
-                    MenuProps={{ disablePortal: false, container: document.body, PaperProps: { sx: { maxHeight: 260, zIndex: 2000 } } }}>
-                    {modalCategories.map(cat => <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>)}
-                  </Select>
-                  {errors.category && <Typography color="error" variant="caption">{errors.category}</Typography>}
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth error={!!errors.subCategory}>
-                  <InputLabel>Select Sub-Category *</InputLabel>
-                  <Select value={selectedSubCategory} label="Select Sub-Category *"
+                    className={selectCls + (errors.category ? " border-red-400" : "")}
+                  >
+                    <option value="">Select Category</option>
+                    {modalCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                  </select>
+                  {errors.category && <p className="text-[11.5px] text-red-500 font-semibold mt-1">{errors.category}</p>}
+                </div>
+                <div>
+                  <label className={labelCls}>Sub-Category *</label>
+                  <select
+                    value={selectedSubCategory}
                     onChange={e => { setSelectedSubCategory(e.target.value); if (errors.subCategory) setErrors(p => ({ ...p, subCategory: "" })); }}
                     disabled={!selectedCategory}
-                    MenuProps={{ disablePortal: false, container: document.body, PaperProps: { sx: { maxHeight: 260, zIndex: 2000 } } }}>
-                    {subCategories.map(sc => <MenuItem key={sc.id} value={sc.id}>{sc.name}</MenuItem>)}
-                  </Select>
-                  {errors.subCategory && <Typography color="error" variant="caption">{errors.subCategory}</Typography>}
-                </FormControl>
-              </Grid>
-            </Grid>
+                    className={selectCls + (errors.subCategory ? " border-red-400" : "") + (!selectedCategory ? " opacity-50 cursor-not-allowed" : "")}
+                  >
+                    <option value="">Select Sub-Category</option>
+                    {subCategories.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
+                  </select>
+                  {errors.subCategory && <p className="text-[11.5px] text-red-500 font-semibold mt-1">{errors.subCategory}</p>}
+                </div>
+              </div>
+            </div>
 
             {/* Name & Food Type */}
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField label="Food Name *" value={name} fullWidth
-                  onChange={e => { setName(e.target.value); if (errors.name) setErrors(p => ({ ...p, name: "" })); }}
-                  error={!!errors.name} helperText={errors.name} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Food Type</InputLabel>
-                  <Select value={foodType} label="Food Type" onChange={e => setFoodType(e.target.value)}
-                    MenuProps={{ disablePortal: false, container: document.body, PaperProps: { sx: { maxHeight: 260, zIndex: 2000 } } }}>
-                    <MenuItem value="VEG">Veg</MenuItem>
-                    <MenuItem value="NON_VEG">Non-Veg</MenuItem>
-                    <MenuItem value="(veg,non-veg) BOTH">Both</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-
-            {/* Description */}
-            <TextField label="Description" value={description} onChange={e => setDescription(e.target.value)}
-              multiline rows={3} fullWidth placeholder="Describe your delicious dish..." />
+            <div>
+              <SectionTitle icon={UtensilsCrossed}>Basic Info</SectionTitle>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Food Name *</label>
+                  <input
+                    type="text" value={name} placeholder="e.g. Paneer Butter Masala"
+                    onChange={e => { setName(e.target.value); if (errors.name) setErrors(p => ({ ...p, name: "" })); }}
+                    className={inputCls + (errors.name ? " border-red-400" : "")}
+                  />
+                  {errors.name && <p className="text-[11.5px] text-red-500 font-semibold mt-1">{errors.name}</p>}
+                </div>
+                <div>
+                  <label className={labelCls}>Food Type</label>
+                  <select value={foodType} onChange={e => setFoodType(e.target.value)} className={selectCls}>
+                    <option value="VEG">Veg</option>
+                    <option value="NON_VEG">Non-Veg</option>
+                    <option value="(veg,non-veg) BOTH">Both</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className={labelCls}>Description</label>
+                <textarea
+                  value={description} rows={3}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Describe your delicious dish…"
+                  className={inputCls + " resize-none"}
+                />
+              </div>
+            </div>
 
             {/* Pricing */}
-            <Box>
-              <Typography variant="subtitle2" fontWeight={700} color="text.secondary" mb={1} sx={{ textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: 0.5 }}>Pricing</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
-                  <TextField label="Price (₹) *" type="number" value={price} fullWidth
-                    onChange={e => { setPrice(e.target.value); if (errors.price) setErrors(p => ({ ...p, price: "" })); }}
-                    error={!!errors.price} helperText={errors.price} inputProps={{ min: 0, step: "0.01" }} />
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <TextField label="Offer Price (₹)" type="number" value={offerPrice} onChange={e => setOfferPrice(e.target.value)} fullWidth inputProps={{ min: 0, step: "0.01" }} />
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <TextField label="Tax %" type="number" value={taxPercent} onChange={e => setTaxPercent(e.target.value)} fullWidth inputProps={{ min: 0, max: 100, step: "0.01" }} />
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <TextField label="Packaging (₹)" type="number" value={packagingCharge} onChange={e => setPackagingCharge(e.target.value)} fullWidth inputProps={{ min: 0, step: "0.01" }} />
-                </Grid>
-              </Grid>
-            </Box>
+            <div>
+              <SectionTitle icon={Tag}>Pricing</SectionTitle>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: "Price (₹) *", key: "price", val: price, set: setPrice, err: errors.price },
+                  { label: "Offer Price (₹)", key: "offerPrice", val: offerPrice, set: setOfferPrice },
+                  { label: "Tax %", key: "tax", val: taxPercent, set: setTaxPercent },
+                  { label: "Packaging (₹)", key: "pack", val: packagingCharge, set: setPackagingCharge },
+                ].map(({ label, key, val, set, err }) => (
+                  <div key={key}>
+                    <label className={labelCls}>{label}</label>
+                    <input type="number" value={val} min={0} step="0.01" placeholder="0.00"
+                      onChange={e => { set(e.target.value); if (key === "price" && errors.price) setErrors(p => ({ ...p, price: "" })); }}
+                      className={inputCls + (err ? " border-red-400" : "")} />
+                    {err && <p className="text-[11.5px] text-red-500 font-semibold mt-1">{err}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Timing & Inventory */}
-            <Box>
-              <Typography variant="subtitle2" fontWeight={700} color="text.secondary" mb={1} sx={{ textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: 0.5 }}>Timing & Inventory</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6} sm={4}>
-                  <TextField label="Available From" type="time" value={availableFrom} onChange={e => setAvailableFrom(e.target.value)} fullWidth InputLabelProps={{ shrink: true }} />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <TextField label="Available To" type="time" value={availableTo} onChange={e => setAvailableTo(e.target.value)} fullWidth InputLabelProps={{ shrink: true }} />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <TextField label="Prep Time (min)" type="number" value={preparationTime} onChange={e => setPreparationTime(e.target.value)} fullWidth inputProps={{ min: 0 }} />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <TextField label="Stock Quantity" type="number" value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} fullWidth inputProps={{ min: 0 }} />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <TextField label="Calories (kcal)" type="number" value={calories} onChange={e => setCalories(e.target.value)} fullWidth inputProps={{ min: 0 }} />
-                </Grid>
-              </Grid>
-            </Box>
+            <div>
+              <SectionTitle icon={Clock}>Timing & Inventory</SectionTitle>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Available From", type: "time", val: availableFrom, set: setAvailableFrom },
+                  { label: "Available To", type: "time", val: availableTo, set: setAvailableTo },
+                  { label: "Prep Time (min)", type: "number", val: preparationTime, set: setPreparationTime, placeholder: "e.g. 20" },
+                  { label: "Stock Quantity", type: "number", val: stockQuantity, set: setStockQuantity, placeholder: "e.g. 50" },
+                  { label: "Calories (kcal)", type: "number", val: calories, set: setCalories, placeholder: "e.g. 350" },
+                ].map(({ label, type, val, set, placeholder }) => (
+                  <div key={label}>
+                    <label className={labelCls}>{label}</label>
+                    <input type={type} value={val} placeholder={placeholder || ""}
+                      onChange={e => set(e.target.value)}
+                      className={inputCls} />
+                  </div>
+                ))}
+              </div>
+            </div>
 
-            {/* Item Properties (Toggles) */}
-            <Box>
-              <Typography variant="subtitle2" fontWeight={700} color="text.secondary" mb={1.5} sx={{ textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: 0.5 }}>Item Properties</Typography>
-              <Grid container spacing={1}>
+            {/* Toggles */}
+            <div>
+              <SectionTitle icon={Sparkles}>Item Properties</SectionTitle>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {[
                   { label: "Active", state: isActive, setter: setIsActive, color: "#10b981" },
-                  { label: "Available", state: isAvailable, setter: setIsAvailable, color: "#FF5252" },
-                  {
-                    label: <Box display="flex" alignItems="center" gap={0.5}><FaRegStar style={{ color: "#fbbf24" }} /><span>Bestseller</span></Box>,
-                    state: isBestseller, setter: setIsBestseller, color: "#f59e0b"
-                  },
-                  {
-                    label: <Box display="flex" alignItems="center" gap={0.5}><span style={{ color: "#8b5cf6" }}>★</span><span>Recommended</span></Box>,
-                    state: isRecommended, setter: setIsRecommended, color: "#8b5cf6"
-                  },
+                  { label: "Available", state: isAvailable, setter: setIsAvailable, color: "#E53935" },
+                  { label: "Bestseller", state: isBestseller, setter: setIsBestseller, color: "#f59e0b" },
+                  { label: "Recommended", state: isRecommended, setter: setIsRecommended, color: "#8b5cf6" },
                   { label: "Customizable", state: isCustomizable, setter: setIsCustomizable, color: "#3b82f6" },
-                  {
-                    label: <Box display="flex" alignItems="center" gap={0.5}><FaPepperHot style={{ color: "#ef4444" }} /><span>Spicy</span></Box>,
-                    state: isSpicy, setter: setIsSpicy, color: "#ef4444"
-                  },
-                  {
-                    label: <Box display="flex" alignItems="center" gap={0.5}><FaBolt style={{ color: "#06b6d4" }} /><span>Fast Delivery</span></Box>,
-                    state: isFastDelivery, setter: setIsFastDelivery, color: "#06b6d4"
-                  },
-                ].map((item, idx) => (
-                  <Grid item xs={6} sm={4} md={3} key={idx}>
-                    <FormControlLabel
-                      control={
-                        <Switch checked={item.state} onChange={e => item.setter(e.target.checked)}
-                          sx={{
-                            "& .MuiSwitch-switchBase.Mui-checked": { color: item.color || "#FF5252" },
-                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: item.color || "#FF5252" }
-                          }} />
-                      }
-                      label={<Typography variant="body2" fontWeight={500}>{item.label}</Typography>}
-                    />
-                  </Grid>
+                  { label: "Spicy", state: isSpicy, setter: setIsSpicy, color: "#ef4444" },
+                  { label: "Fast Delivery", state: isFastDelivery, setter: setIsFastDelivery, color: "#06b6d4" },
+                ].map(({ label, state, setter, color }) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 select-none"
+                    style={{ borderColor: state ? `${color}50` : "#e5e7eb", backgroundColor: state ? `${color}0D` : "#f9fafb" }}
+                    onClick={() => setter(!state)}
+                  >
+                    <span className="text-[12px] font-bold" style={{ color: state ? color : "#6b7280" }}>{label}</span>
+                    <div style={{ color: state ? color : "#d1d5db" }}>
+                      {state ? <MdToggleOn size={26} /> : <MdToggleOff size={26} />}
+                    </div>
+                  </div>
                 ))}
-              </Grid>
-            </Box>
+              </div>
+            </div>
 
             {/* Image Upload */}
-            <Box>
-              <Typography variant="subtitle2" fontWeight={700} color="text.secondary" mb={1} sx={{ textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: 0.5 }}>Food Image</Typography>
-              <input type="file" accept="image/*" onChange={handleImageChange} id="food-image-upload" style={{ display: "none" }} />
+            <div>
+              <SectionTitle icon={IoMdCamera}>Food Image</SectionTitle>
+              <input type="file" accept="image/*" onChange={handleImageChange} id="food-image-upload" className="hidden" />
               <label htmlFor="food-image-upload">
-                <Box sx={{
-                  border: `2px dashed ${errors.image ? "#ef4444" : "#d1d5db"}`, borderRadius: "12px", height: 180,
-                  display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
-                  textAlign: "center", cursor: "pointer", bgcolor: "grey.50", transition: "all 0.2s ease",
-                  "&:hover": { borderColor: "#FF5252", bgcolor: "grey.100" }
-                }}>
-                  <IoMdCamera size={48} style={{ color: "#9ca3af", marginBottom: 8 }} />
-                  <Typography fontWeight={500} color="text.secondary">
+                <div className={`relative border-2 border-dashed rounded-2xl h-40 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:border-[#E53935]/60 hover:bg-red-50/30 ${errors.image ? "border-red-400 bg-red-50/20" : "border-gray-200 bg-gray-50/60"}`}>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#E53935]/10 to-[#FF7043]/10 border border-[#E53935]/20 flex items-center justify-center mb-2">
+                    <IoMdCamera size={24} color="#E53935" opacity={0.6} />
+                  </div>
+                  <p className="text-[13px] font-bold text-gray-500">
                     {image ? "Change image" : currentImage ? "Update image" : "Click to upload food image"}
-                  </Typography>
-                </Box>
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">PNG, JPG up to 5MB</p>
+                </div>
               </label>
-              {errors.image && <Typography color="error" variant="caption" sx={{ mt: 1, display: "block" }}>{errors.image}</Typography>}
+              {errors.image && <p className="text-[11.5px] text-red-500 font-semibold mt-1.5">{errors.image}</p>}
               {currentImage && (
-                <Box sx={{ mt: 2, position: "relative", display: "inline-block" }}>
-                  <img src={currentImage} alt="preview"
-                    style={{ maxHeight: 180, maxWidth: "100%", borderRadius: 10, boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }} />
-                  <IconButton size="small" color="error"
-                    sx={{ position: "absolute", top: 6, right: 6, bgcolor: "white", boxShadow: 1 }}
-                    onClick={() => { setImage(null); setCurrentImage(""); }}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
+                <div className="mt-3 relative inline-block">
+                  <img src={currentImage} alt="preview" className="max-h-44 max-w-full rounded-2xl object-cover shadow-md border border-gray-100" />
+                  <button
+                    onClick={() => { setImage(null); setCurrentImage(""); }}
+                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-xl shadow-md flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
               )}
-            </Box>
-          </Box>
+            </div>
+          </div>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, py: 2, position: "sticky", bottom: 0, bgcolor: "white", borderTop: "1px solid #eee" }}>
-          <Button onClick={closeModal} disabled={isSaving}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={isSaving}
-            sx={{ bgcolor: "#FF5252", "&:hover": { bgcolor: "#e03e3e" }, borderRadius: "10px", fontWeight: 600 }}
-            startIcon={isSaving ? <CircularProgress size={18} color="inherit" /> : null}>
-            {isSaving ? (mode === "add" ? "Creating..." : "Updating...") : (mode === "add" ? "Create Item" : "Update Item")}
-          </Button>
-        </DialogActions>
+        <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-2.5 sticky bottom-0 bg-white" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+          <button onClick={closeModal} disabled={isSaving}
+            className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 text-[13px] font-bold hover:bg-gray-50 transition-all disabled:opacity-50">
+            Cancel
+          </button>
+          <button onClick={handleSubmit} disabled={isSaving}
+            className="flex items-center gap-2 px-7 py-2.5 bg-gradient-to-r from-[#E53935] to-[#FF7043] text-white text-[13.5px] font-black rounded-xl shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.97] transition-all disabled:opacity-60"
+          >
+            {isSaving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+            {isSaving
+              ? (mode === "add" ? "Creating…" : "Updating…")
+              : (mode === "add" ? "Create Item" : "Update Item")}
+          </button>
+        </div>
       </Dialog>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+        * { -webkit-font-smoothing: antialiased; }
+        @keyframes slideRight { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
+        .line-clamp-2 { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+      `}</style>
     </div>
   );
 };

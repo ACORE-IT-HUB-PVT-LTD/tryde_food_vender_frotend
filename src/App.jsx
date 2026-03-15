@@ -30,6 +30,7 @@ import Reviews from "./pages/Reviews";
 import Offers from "./pages/Offers";
 import Notifications from "./pages/Notifications";
 import Support from "./pages/Support";
+import Announcement from "./pages/Announcement";
 
 // Menu sub pages
 import AddCategory from "./components/AddCategory";
@@ -154,6 +155,8 @@ function App() {
 
           {/* Notifications */}
           <Route path="notifications" element={<Notifications />} />
+           <Route path="announcement" element={<Announcement />} />
+           
 
           {/* Support */}
           <Route path="support" element={<Support />} />
