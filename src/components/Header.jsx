@@ -1,7 +1,6 @@
 // src/components/Header.jsx
 import React, { useState, useEffect, useRef } from "react";
-import BellIcon from "@heroicons/react/24/outline/BellIcon";
-import logo from "../assets/app_icon.png";
+import { BellIcon } from "@heroicons/react/24/outline";
 import { FiSearch, FiX } from "react-icons/fi";
 import { HiOutlineGlobeAlt } from "react-icons/hi";
 import { LuLogOut } from "react-icons/lu";
@@ -13,30 +12,32 @@ const Header = () => {
   const [vendor, setVendor] = useState(null);
   const [popupOpen, setPopupOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [notifPulse, setNotifPulse] = useState(true);
+  const [hasNewNotif] = useState(true); // you can make dynamic later
+
   const popupRef = useRef();
 
   useEffect(() => {
     const fetchVendor = async () => {
       try {
         const token = localStorage.getItem("token");
+        if (!token) return;
+
         const res = await axiosInstance.get("/restaurants/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const vendorData = Array.isArray(res.data.vendor)
-          ? res.data.vendor[0]
-          : res.data.vendor;
-        setVendor(vendorData);
+
+        const data = res.data?.vendor;
+        setVendor(Array.isArray(data) ? data[0] : data);
       } catch (err) {
-        console.error("Failed to fetch vendor profile:", err);
+        console.error("Profile fetch failed:", err);
       }
     };
     fetchVendor();
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target)) {
+    const handleClickOutside = (e) => {
+      if (popupRef.current && !popupRef.current.contains(e.target)) {
         setPopupOpen(false);
       }
     };
@@ -44,214 +45,164 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const avatarLetter = (vendor?.name?.[0] || "V").toUpperCase();
+  const firstLetter = (vendor?.name?.[0] || "V").toUpperCase();
+  const displayName = vendor?.name || "My Restaurant";
 
   return (
     <>
+      <style jsx global>{`
+        .vendor-header {
+          font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        }
+
+        .gradient-red {
+          background: linear-gradient(135deg, #e11d48 0%, #f97316 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .btn-icon {
+          @apply h-10 w-10 flex items-center justify-center rounded-xl text-gray-700 transition-all duration-200;
+        }
+
+        .btn-icon:hover {
+          @apply bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-md -translate-y-0.5;
+        }
+      `}</style>
+
       <header
-        className="sticky top-0 z-30 bg-white"
-        style={{ height: "60px", display: "flex", flexDirection: "column", justifyContent: "center", borderBottom: "0.5px solid #e5e7eb", borderLeft: "3px solid #E53935" }}
+        className="vendor-header sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm"
+        style={{ height: "74px" }}
       >
+        <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-screen-2xl mx-auto md:pl-[260px] transition-all duration-300">
+          {/* Left - can be empty or logo */}
+          <div className="flex-1 min-w-0" />
 
-
-        <div className="flex items-center justify-between px-4 md:px-6 flex-1 max-w-screen-2xl mx-auto w-full">
-
-          {/* ── LOGO ── */}
-          <div className="flex items-center gap-2.5 flex-shrink-0">
+          {/* Center - Desktop Search */}
+          <div className="hidden md:block flex-1 max-w-2xl mx-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#E53935] to-[#FF7043] rounded-xl opacity-10 blur-sm scale-110" />
-              <img
-                src={logo}
-                alt="App Logo"
-                className="relative h-9 w-9 md:h-10 md:w-10 object-contain rounded-xl"
-              />
-            </div>
-            {/* ── FIX: both name + subtitle now always visible on sm+ ── */}
-            
-          </div>
-
-          {/* ── DESKTOP SEARCH ── */}
-          <div className="hidden md:flex items-center flex-grow max-w-lg mx-6">
-            <div
-              className="w-full flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-2 gap-2.5
-                focus-within:bg-white focus-within:border-[#E53935]/50 focus-within:shadow-[0_0_0_3px_rgba(229,57,53,0.08)] transition-all duration-200"
-            >
-              <FiSearch className="text-gray-400 text-[15px] flex-shrink-0" />
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <FiSearch className="h-5 w-5 text-gray-400" />
+              </div>
               <input
                 type="text"
-                placeholder="Search orders, menu items, customers…"
-                className="flex-grow bg-transparent outline-none text-gray-800 placeholder-gray-400 text-[13px]"
+                placeholder="Search orders, menu, customers..."
+                className="w-full pl-11 pr-20 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition"
               />
-              <kbd className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-200/70 text-gray-400 text-[10px] font-mono flex-shrink-0">
-                ⌘K
-              </kbd>
+              <div className="absolute inset-y-0 right-4 flex items-center hidden lg:flex">
+                <kbd className="px-2.5 py-1 text-xs font-mono bg-gray-200/70 rounded text-gray-500">
+                  ⌘K
+                </kbd>
+              </div>
             </div>
           </div>
 
-          {/* ── RIGHT ACTIONS ── */}
-          <div className="flex items-center gap-1.5 md:gap-2">
-
-            {/* Mobile search toggle */}
+          {/* Right side actions */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Mobile search button */}
             <button
               onClick={() => setMobileSearch(!mobileSearch)}
-              className="md:hidden h-9 w-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
+              className="btn-icon md:hidden"
+              aria-label="Search"
             >
-              {mobileSearch
-                ? <FiX className="text-gray-600 text-[17px]" />
-                : <FiSearch className="text-gray-600 text-[17px]" />
-              }
+              {mobileSearch ? <FiX size={20} /> : <FiSearch size={20} />}
             </button>
 
-            {/* Website icon */}
-            <a
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Visit Website"
-              className="h-9 w-9 flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-[#E53935] text-gray-500 transition-all duration-200 group"
-            >
-              <HiOutlineGlobeAlt className="text-[19px] group-hover:scale-110 transition-transform" />
-            </a>
+            {/* Website link */}
+            <button className="btn-icon hidden sm:flex" title="View Store">
+              <HiOutlineGlobeAlt size={20} />
+            </button>
 
-            {/* Notification bell */}
-            <button
-              onClick={() => setNotifPulse(false)}
-              className="relative h-9 w-9 flex items-center justify-center rounded-xl hover:bg-red-50 text-gray-500 hover:text-[#E53935] transition-all duration-200 group"
-            >
-              <BellIcon className="h-[19px] w-[19px] group-hover:scale-110 transition-transform" />
-              {notifPulse && (
-                <>
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#E53935]" />
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#E53935] animate-ping opacity-75" />
-                </>
+            {/* Notifications */}
+            <button className="btn-icon relative" title="Notifications">
+              <BellIcon className="h-5 w-5" />
+              {hasNewNotif && (
+                <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
               )}
             </button>
 
-            {/* Divider */}
-            <div className="h-6 w-px bg-gray-200 mx-1 hidden md:block" />
-
-            {/* ── PROFILE AVATAR + POPUP ── */}
+            {/* Profile trigger */}
             <div className="relative" ref={popupRef}>
               <button
                 onClick={() => setPopupOpen(!popupOpen)}
-                className={`flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-full border transition-all duration-200 hover:shadow-sm
-                  ${popupOpen
-                    ? "border-[#E53935]/40 bg-red-50 shadow-[0_0_0_3px_rgba(229,57,53,0.08)]"
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                  }`}
+                className={`flex items-center gap-2.5 sm:gap-3 pl-2 pr-3 sm:pr-5 py-2 rounded-full transition-all duration-200 border ${
+                  popupOpen
+                    ? "border-rose-400 bg-rose-50/50 shadow-sm"
+                    : "border-transparent hover:bg-gray-50"
+                }`}
+                title={displayName}
               >
+                {/* Avatar */}
                 {vendor?.profile_image ? (
                   <img
                     src={vendor.profile_image}
-                    alt={vendor.name || "Vendor"}
-                    className="h-7 w-7 rounded-full object-cover ring-2 ring-white"
+                    alt={displayName}
+                    className="h-9 w-9 rounded-full object-cover ring-2 ring-white shadow-sm"
                   />
                 ) : (
-                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-[#E53935] to-[#FF7043] text-white flex items-center justify-center font-bold text-[13px] ring-2 ring-white flex-shrink-0">
-                    {avatarLetter}
+                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                    {firstLetter}
                   </div>
                 )}
 
-                <div className="hidden md:flex flex-col items-start leading-none">
-                  <span className="text-[12.5px] font-semibold text-gray-800 max-w-[90px] truncate">
-                    {vendor?.name || "Vendor"}
+                {/* Name - always visible on desktop, tooltip on mobile */}
+                <div className="flex flex-col items-start leading-tight hidden sm:flex">
+                  <span className="text-sm font-semibold gradient-red max-w-[160px] truncate">
+                    {displayName}
                   </span>
-                  <span className="text-[10px] text-gray-400 font-medium capitalize">
-                    {(vendor?.role || "vendor").toLowerCase()}
+                  <span className="text-xs text-gray-500">
+                    {vendor?.status || "Vendor"}
                   </span>
                 </div>
 
                 <svg
-                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 hidden md:block ${popupOpen ? "rotate-180" : ""}`}
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  className={`w-4 h-4 text-rose-500 transition-transform hidden sm:block ${
+                    popupOpen ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
-              {/* ── DROPDOWN POPUP ── */}
+              {/* Dropdown */}
               {popupOpen && (
                 <div
-                  className="absolute right-0 mt-2.5 w-72 bg-white rounded-2xl border border-gray-100 z-50 overflow-hidden"
-                  style={{
-                    boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(229,57,53,0.08)",
-                    animation: "dropIn 0.18s cubic-bezier(0.16,1,0.3,1)"
-                  }}
+                  className="absolute right-0 mt-3 w-80 bg-white rounded-xl border border-gray-200 shadow-2xl overflow-hidden z-50"
+                  style={{ animation: "dropdown 0.18s ease-out" }}
                 >
-                  {/* Profile header */}
-                  <div className="relative px-5 pt-6 pb-5 bg-gradient-to-br from-[#fff5f5] via-white to-white">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#E53935]/8 to-transparent rounded-bl-full" />
-
+                  <div className="p-5 bg-gradient-to-b from-rose-50/70 to-white">
                     <div className="flex items-center gap-4">
                       {vendor?.profile_image ? (
                         <img
                           src={vendor.profile_image}
-                          alt={vendor.name}
-                          className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md"
+                          alt=""
+                          className="w-14 h-14 rounded-xl object-cover ring-4 ring-white shadow"
                         />
                       ) : (
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#E53935] to-[#FF7043] text-white flex items-center justify-center font-bold text-2xl shadow-md border-2 border-white flex-shrink-0">
-                          {avatarLetter}
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white text-2xl font-bold ring-4 ring-white shadow">
+                          {firstLetter}
                         </div>
                       )}
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="text-[14px] font-bold text-gray-900 truncate">
-                            {vendor?.name || "Vendor"}
-                          </h3>
-                          {vendor?.status === "APPROVED" && (
-                            <MdVerified className="text-[#E53935] text-[15px] flex-shrink-0" />
-                          )}
-                        </div>
-                        <p className="text-[11.5px] text-gray-500 truncate mt-0.5">
-                          {vendor?.email || "—"}
-                        </p>
-
-                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E53935]/10 text-[#E53935] uppercase tracking-wide">
-                            {vendor?.role || "VENDOR"}
-                          </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide
-                            ${vendor?.status === "APPROVED" ? "bg-emerald-50 text-emerald-600"
-                              : vendor?.status === "PENDING" ? "bg-amber-50 text-amber-600"
-                              : "bg-red-50 text-red-600"}`}>
-                            {vendor?.status || "—"}
-                          </span>
-                        </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-900">{displayName}</h3>
+                        <p className="text-sm text-gray-600 mt-0.5">{vendor?.email || "—"}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="h-px bg-gray-100 mx-4" />
-
-                  {/* Quick stats */}
-                  <div className="grid grid-cols-3 divide-x divide-gray-100 px-2 py-3">
-                    {[
-                      { label: "Orders", value: "—" },
-                      { label: "Rating", value: "—" },
-                      { label: "Revenue", value: "—" },
-                    ].map((s) => (
-                      <div key={s.label} className="flex flex-col items-center py-1">
-                        <span className="text-[13px] font-bold text-gray-800">{s.value}</span>
-                        <span className="text-[10px] text-gray-400 mt-0.5">{s.label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="h-px bg-gray-100 mx-4" />
-
-                  {/* Logout */}
-                  <div className="p-3">
+                  <div className="p-2 border-t">
                     <button
-                      onClick={() => { setPopupOpen(false); setShowLogoutConfirm(true); }}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold
-                        text-[#E53935] border border-[#E53935]/20 bg-red-50/50
-                        hover:bg-gradient-to-r hover:from-[#E53935] hover:to-[#EF5350] hover:text-white hover:border-transparent
-                        transition-all duration-200 group"
+                      onClick={() => {
+                        setPopupOpen(false);
+                        setShowLogoutConfirm(true);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-rose-600 hover:bg-rose-50 rounded-lg transition"
                     >
-                      <LuLogOut size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                      Sign Out
+                      <LuLogOut size={18} />
+                      <span className="font-medium">Sign Out</span>
                     </button>
                   </div>
                 </div>
@@ -260,96 +211,53 @@ const Header = () => {
           </div>
         </div>
 
-        {/* ── MOBILE SEARCH BAR ── */}
-        <div className={`md:hidden overflow-hidden transition-all duration-300 ${mobileSearch ? "max-h-16 opacity-100" : "max-h-0 opacity-0"}`}>
-          <div className="px-4 pb-3">
-            <div
-              className="flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-2.5 gap-2.5
-                focus-within:bg-white focus-within:border-[#E53935]/50 focus-within:shadow-[0_0_0_3px_rgba(229,57,53,0.08)] transition-all duration-200"
-            >
-              <FiSearch className="text-gray-400 text-[15px] flex-shrink-0" />
+        {/* Mobile search */}
+        <div
+          className={`md:hidden transition-all duration-300 overflow-hidden ${
+            mobileSearch ? "max-h-20 py-3" : "max-h-0"
+          }`}
+        >
+          <div className="px-4">
+            <div className="flex items-center bg-gray-50 border rounded-xl px-4 py-3 gap-3">
+              <FiSearch className="text-rose-500 text-xl" />
               <input
-                type="text"
                 autoFocus
-                placeholder="Search orders, menu items…"
-                className="flex-grow bg-transparent outline-none text-gray-800 placeholder-gray-400 text-[13px]"
+                placeholder="Search..."
+                className="flex-1 bg-transparent outline-none text-sm"
               />
             </div>
           </div>
         </div>
       </header>
 
-      {/* ── LOGOUT CONFIRMATION MODAL ── */}
+      {/* Logout modal - same as before or simplify */}
       {showLogoutConfirm && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
-            style={{ animation: "fadeIn 0.2s ease" }}
-            onClick={() => setShowLogoutConfirm(false)}
-          />
-          <div
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] w-[90%] max-w-sm"
-            style={{ animation: "scaleUp 0.25s cubic-bezier(0.16,1,0.3,1)" }}
-          >
-            <div
-              className="bg-white rounded-2xl overflow-hidden border border-gray-100"
-              style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.14)" }}
-            >
-              <div className="bg-gradient-to-br from-[#E53935] to-[#FF7043] px-6 py-6 text-center relative overflow-hidden">
-                <div
-                  className="absolute inset-0 opacity-10"
-                  style={{ backgroundImage: "radial-gradient(circle at 20% 80%, white 0%, transparent 50%), radial-gradient(circle at 80% 20%, white 0%, transparent 50%)" }}
-                />
-                <div className="relative w-14 h-14 mx-auto mb-3 bg-white/20 rounded-2xl flex items-center justify-center">
-                  <LuLogOut className="text-white w-6 h-6" />
-                </div>
-                <h3 className="relative text-lg font-bold text-white">Sign Out</h3>
-                <p className="relative text-white/70 text-[12.5px] mt-1">You'll need to sign in again to continue</p>
-              </div>
-
-              <div className="p-5">
-                <p className="text-gray-600 text-[13.5px] text-center mb-5">
-                  Are you sure you want to logout from your vendor account?
-                </p>
-                <div className="flex gap-2.5">
-                  <button
-                    onClick={() => setShowLogoutConfirm(false)}
-                    className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-[13px] font-semibold rounded-xl transition-all duration-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      localStorage.removeItem("token");
-                      localStorage.removeItem("vendor");
-                      window.location.href = "/login";
-                    }}
-                    className="flex-1 py-2.5 bg-gradient-to-r from-[#E53935] to-[#EF5350] text-white text-[13px] font-semibold rounded-xl
-                      hover:shadow-lg hover:shadow-red-500/30 active:scale-95 transition-all duration-200"
-                  >
-                    Yes, Logout
-                  </button>
-                </div>
-              </div>
+        // ... your existing modal code ...
+        // or use a simple confirm if you want lighter version
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-bold">Logout?</h3>
+            <p className="text-gray-600 mt-2">Are you sure?</p>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-3 bg-gray-100 rounded-lg font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  window.location.href = "/login";
+                }}
+                className="flex-1 py-3 bg-rose-600 text-white rounded-lg font-medium"
+              >
+                Yes, Logout
+              </button>
             </div>
           </div>
-        </>
+        </div>
       )}
-
-      <style>{`
-        @keyframes dropIn {
-          from { opacity: 0; transform: translateY(-8px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        @keyframes scaleUp {
-          from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
-          to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-      `}</style>
     </>
   );
 };

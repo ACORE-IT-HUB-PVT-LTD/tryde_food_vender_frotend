@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { ArrowRight, ArrowLeft, Check, Store, User, FileText, Clock, MapPin, Upload, X } from 'lucide-react';
 import axiosInstance from '../api/axiosInstance';
 
@@ -65,6 +66,7 @@ export default function Register() {
     cancelled_cheque_image: null
 
   });
+
 
   const steps = [
     { id: 1, title: 'Owner Details', icon: User },
@@ -317,6 +319,26 @@ export default function Register() {
     }
   };
 
+
+  useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const res = await axiosInstance.get('/restaurants/vendor/profile');
+
+      const data = res.data.data;
+
+      setFormData((prev) => ({
+        ...prev,
+        ...data
+      }));
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  fetchProfile();
+}, []);
+
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -394,23 +416,38 @@ export default function Register() {
 
       console.log("Sending registration data...");
 
-      const result = await axiosInstance.post('/restaurants/register', formDataToSend, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+    let result;
+const config = {
+  headers: {
+    'Content-Type': 'multipart/form-data'
+  }
+};
+
+if (formData.rejection_reason && formData.rejection_reason !== "") {
+  result = await axiosInstance.put(
+    '/restaurants/vendor/update-profile',
+    formDataToSend,
+    config
+  );
+} else {
+  result = await axiosInstance.post(
+    '/restaurants/register',
+    formDataToSend,
+    config
+  );
+}
 
       console.log("Registration Response:", result.data);
 
       // alert('Registration Successful! Redirecting to login...');
 
-      alert('Registration submitted successfully! Please wait for admin approval.');
+if (formData.rejection_reason && formData.rejection_reason !== "") {
+  alert('Profile updated successfully! Waiting for admin approval.');
+} else {
+  alert('Registration submitted successfully! Please wait for admin approval.');
+}
 
-
-      setTimeout(() => {
-        navigate('/');
-      }, 1200);
+     
     } catch (error) {
       // console.error("Registration Error:", error);
 
@@ -440,6 +477,7 @@ export default function Register() {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 py-8 px-4 sm:px-6 lg:px-8 font-['Poppins']">
@@ -1332,26 +1370,4 @@ export default function Register() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

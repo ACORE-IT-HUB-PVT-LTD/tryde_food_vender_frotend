@@ -515,7 +515,7 @@ const prepareAvailabilityChartData = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {Array.isArray(items) && items.length > 0 ? (
-            items.map((item) => (
+         items.slice(0, 4).map((item) => (
               <div key={item.id}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5
                   transition-all duration-350 overflow-hidden group cursor-pointer"

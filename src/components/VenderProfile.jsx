@@ -225,10 +225,7 @@ function VendorProfile() {
 
               {/* Right: ID + Member Since — sit at top right BELOW banner */}
               <div className="flex gap-2.5 mt-3 sm:mt-3 self-start">
-                <div className="bg-red-50 border-2 border-red-100 rounded-xl px-3.5 py-2 text-center min-w-[80px]">
-                  <p className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider">Vendor ID</p>
-                  <p className="text-[14px] font-black text-[#E53935] font-mono leading-tight mt-0.5">#{vendor.id}</p>
-                </div>
+               
                 <div className="bg-gray-50 border-2 border-gray-100 rounded-xl px-3.5 py-2 text-center min-w-[90px]">
                   <p className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider">Member Since</p>
                   <p className="text-[12px] font-black text-gray-700 leading-tight mt-0.5">{fmt(vendor.created_at)}</p>

@@ -692,6 +692,233 @@ const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
     </ModalShell>
   );
 };
+/* ══ Chat Modal ══ */
+/* Paste BEFORE: export default function Orders() */
+
+const CHAT_SENDER = {
+  user: {
+    label:      "Customer",
+    initials:   "C",
+    side:       "left",             // ← left side
+    bubbleBg:   "#eff6ff",
+    bubbleBdr:  "#bfdbfe",
+    bubbleText: "#1d4ed8",
+    avatarBg:   "#dbeafe",
+    avatarText: "#1d4ed8",
+    borderRadius: "4px 12px 12px 12px",
+  },
+  driver: {
+    label:      "Driver",
+    initials:   "D",
+    side:       "right",            // ← right side
+    bubbleBg:   "#fffbeb",
+    bubbleBdr:  "#fde68a",
+    bubbleText: "#92400e",
+    avatarBg:   "#fef3c7",
+    avatarText: "#92400e",
+    borderRadius: "12px 4px 12px 12px",
+  },
+  vendor: {
+    label:      "You (Vendor)",
+    initials:   "V",
+    side:       "right",
+    bubbleBg:   "#ecfdf5",
+    bubbleBdr:  "#a7f3d0",
+    bubbleText: "#065f46",
+    avatarBg:   "#d1fae5",
+    avatarText: "#065f46",
+    borderRadius: "12px 4px 12px 12px",
+  },
+};
+
+const ChatModal = ({ orderId, chatData, onClose }) => {
+  const open     = Boolean(orderId);
+  const messages = chatData?.messages || [];
+
+  /* Group by date */
+  const grouped = messages.reduce((acc, msg) => {
+    const date = msg.created_at
+      ? new Date(msg.created_at).toLocaleDateString("en-IN", {
+          day: "numeric", month: "short", year: "numeric",
+        })
+      : "Today";
+    if (!acc.length || acc[acc.length - 1].date !== date)
+      acc.push({ date, msgs: [msg] });
+    else
+      acc[acc.length - 1].msgs.push(msg);
+    return acc;
+  }, []);
+
+  /* Which senders are actually present — for legend */
+  const presentTypes = [...new Set(messages.map((m) => m.sender_type?.toLowerCase()))];
+
+  if (!open) return null;
+
+  return (
+    <ModalShell
+      open={open}
+      onClose={onClose}
+      headerBg="bg-gradient-to-r from-emerald-500 to-teal-500"
+      headerIcon={<span style={{ fontSize: 16 }}>💬</span>}
+      title="Order Chat"
+      subtitle={orderId}
+      maxW="max-w-lg"
+      extra={
+        <span style={{
+          background: chatData?.status === "active" ? "#d1fae5" : "#f3f4f6",
+          color:      chatData?.status === "active" ? "#065f46" : "#6b7280",
+          fontSize: 10, fontWeight: 700, padding: "3px 10px",
+          borderRadius: 20, letterSpacing: "0.05em",
+        }}>
+          ● {chatData?.status || "—"}
+        </span>
+      }
+      footer={
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          {presentTypes.map((type) => {
+            const s = CHAT_SENDER[type];
+            if (!s) return null;
+            return (
+              <span key={type} style={{
+                display: "flex", alignItems: "center", gap: 6,
+                fontSize: 11, color: "#6b7280", fontWeight: 600,
+              }}>
+                <span style={{
+                  width: 10, height: 10, borderRadius: "50%",
+                  background: s.avatarBg, border: "1.5px solid " + s.bubbleBdr,
+                  display: "inline-block",
+                }} />
+                {s.label}
+                <span style={{
+                  fontSize: 10, color: "#9ca3af",
+                  marginLeft: 2,
+                }}>
+                  ({s.side === "left" ? "← left" : "right →"})
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      }
+    >
+      {/* Empty state */}
+      {messages.length === 0 && (
+        <div style={{
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: "64px 0", gap: 12,
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 16,
+            background: "#ecfdf5",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 24,
+          }}>💬</div>
+          <p style={{ fontWeight: 700, color: "#374151", fontSize: 14, margin: 0 }}>
+            No messages yet
+          </p>
+          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
+            No conversation for this order
+          </p>
+        </div>
+      )}
+
+      {/* Messages */}
+      {grouped.map(({ date, msgs }) => (
+        <div key={date} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+          {/* Date divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "4px 0" }}>
+            <div style={{ flex: 1, height: 1, background: "#f3f4f6" }} />
+            <span style={{
+              fontSize: 10, fontWeight: 700, color: "#9ca3af",
+              letterSpacing: "0.08em", textTransform: "uppercase",
+            }}>
+              {date}
+            </span>
+            <div style={{ flex: 1, height: 1, background: "#f3f4f6" }} />
+          </div>
+
+          {msgs.map((msg) => {
+            const type    = msg.sender_type?.toLowerCase() || "user";
+            const s       = CHAT_SENDER[type] || CHAT_SENDER.user;
+            const isRight = s.side === "right";
+
+            return (
+              <div key={msg.id} style={{
+                display: "flex", gap: 10, alignItems: "flex-start",
+                flexDirection: isRight ? "row-reverse" : "row",
+              }}>
+
+                {/* Avatar circle */}
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: s.avatarBg,
+                  border: "1.5px solid " + s.bubbleBdr,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 12, fontWeight: 700, color: s.avatarText,
+                  flexShrink: 0,
+                }}>
+                  {s.initials}
+                </div>
+
+                {/* Content */}
+                <div style={{
+                  flex: 1, display: "flex", flexDirection: "column",
+                  alignItems: isRight ? "flex-end" : "flex-start",
+                  gap: 4,
+                }}>
+                  {/* Sender name */}
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, color: "#9ca3af",
+                    letterSpacing: "0.06em", textTransform: "uppercase",
+                  }}>
+                    {s.label}
+                  </span>
+
+                  {/* Bubble */}
+                  <div style={{
+                    maxWidth: "80%",
+                    background: s.bubbleBg,
+                    border: "1px solid " + s.bubbleBdr,
+                    borderRadius: s.borderRadius,
+                    padding: "9px 14px",
+                    fontSize: 13,
+                    color: s.bubbleText,
+                    lineHeight: 1.55,
+                    wordBreak: "break-word",
+                  }}>
+                    {msg.message}
+                  </div>
+
+                  {/* Time + read */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    fontSize: 10, color: "#9ca3af",
+                  }}>
+                    <span>
+                      {msg.created_at
+                        ? new Date(msg.created_at).toLocaleTimeString("en-IN", {
+                            hour: "2-digit", minute: "2-digit",
+                          })
+                        : ""}
+                    </span>
+                    <span style={{
+                      fontWeight: 700, fontSize: 11,
+                      color: msg.is_read ? "#10b981" : "#d1d5db",
+                    }}>
+                      {msg.is_read ? "✓✓" : "✓"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </ModalShell>
+  );
+};
 
 /* ══════════════════════════════════════════ MAIN ORDERS ══ */
 export default function Orders() {
@@ -711,6 +938,8 @@ export default function Orders() {
   const [search, setSearch]                 = useState("");
   const [trackOrderId, setTrackOrderId]     = useState(null);
   const [trackOrderData, setTrackOrderData] = useState(null);
+  const [chatOrderId, setChatOrderId] = useState(null);
+const [chatData, setChatData] = useState(null);
   const prevIds = useRef(new Set());
   const LIMIT = 10;
   const totalPages = Math.ceil(totalOrders / LIMIT);
@@ -770,6 +999,8 @@ export default function Orders() {
 
   const openDetailModal = (order) => { setDetailOrderId(order.order_id); setDetailOrderData(order); };
   const openTrackModal  = (order) => { setTrackOrderId(order.order_id); setTrackOrderData(order); };
+  const openChat = (order) => {setChatOrderId(order.order_id);setChatData(order.chat);
+};
 
   const activeKey = TAB_CONFIG[activeTab].key;
   const searchedOrders = activeKey === "ALL" && search.trim()
@@ -980,6 +1211,13 @@ export default function Orders() {
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11.5px] font-bold border border-sky-200 text-sky-600 hover:bg-sky-50 hover:border-sky-400 transition-all">
                               <MapPin size={12} /> Track
                             </button>
+                            <button
+  onClick={() => openChat(order)}
+  title="Chat"
+  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11.5px] font-bold border border-green-200 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all"
+>
+  💬 Chat
+</button>
                             <ActionButtons order={order} updatingId={updatingId} onAction={handleAction} />
                           </div>
                         </td>
@@ -990,6 +1228,7 @@ export default function Orders() {
               </tbody>
             </table>
           </div>
+          
 
           {/* Pagination */}
           {activeKey === "ALL" && totalPages > 1 && (
@@ -1024,11 +1263,23 @@ export default function Orders() {
       {newOrderPopup && <NewOrderPopup order={newOrderPopup} onClose={() => setNewOrderPopup(null)} onAction={handleAction} updatingId={updatingId} />}
       <OrderDetailModal orderId={detailOrderId} orderData={detailOrderData} open={Boolean(detailOrderId)} onClose={() => { setDetailOrderId(null); setDetailOrderData(null); }} />
       <TrackOrderModal orderId={trackOrderId} orderData={trackOrderData} open={Boolean(trackOrderId)} onClose={() => { setTrackOrderId(null); setTrackOrderData(null); }} />
+      <ChatModal
+    orderId={chatOrderId}
+    chatData={chatData}
+    onClose={() => {
+      setChatOrderId(null);
+      setChatData(null);
+    }}
+  />
+
+      
+      
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes menuIn { from { opacity:0; transform:translateY(-6px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
       `}</style>
     </div>
+    
   );
 }

@@ -98,6 +98,7 @@ const Reviews = () => {
     try {
       const result = await axiosInstance.get(`/restaurants/restaurant/${restaurant.id}`, { withCredentials: true });
       if (result.data.success) setRestaurantReviews(result.data.data);
+      console.log
     } catch (error) { console.error("Error fetching restaurant reviews:", error); }
   };
 
