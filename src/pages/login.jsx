@@ -8,6 +8,7 @@ import {
   VisibilityOff,
 } from "@mui/icons-material";
 import axiosInstance from "../api/axiosInstance";
+import toast, { Toaster } from "react-hot-toast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -55,64 +56,99 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Validate form
     if (!validate()) return;
 
     setIsLoggingIn(true);
     setErrors({});
 
     try {
-      // API Call
-      const response = await axiosInstance.post("/restaurants/login",
-        {
-          identifier: form.email.trim(),
-          password: form.password.trim(),
-        }
-      );
+      const response = await axiosInstance.post("/restaurants/login", {
+        identifier: form.email.trim(),
+        password: form.password.trim(),
+      });
 
       console.log("Login Response:", response.data);
 
-      // Check if login was successful
       if (response.data.token && response.data.vendor) {
-        // Store token in localStorage
         localStorage.setItem("token", response.data.token);
-
-        // Store vendor info in localStorage
         localStorage.setItem("vendor", JSON.stringify(response.data.vendor));
 
-        // Show success message
-        alert(response.data.message || "Login successful!");
+        // Beautiful success toast
+        toast.success(response.data.message || "Login successful!", {
+          duration: 4000,
+          position: "top-center",
+          style: {
+            background: "rgba(255, 255, 255, 0.98)",
+            color: "#1f2937",
+            border: "1px solid #FF5252",
+            borderRadius: "16px",
+            padding: "16px 24px",
+            boxShadow: "0 10px 25px -5px rgba(255, 82, 82, 0.2)",
+            fontWeight: "500",
+            fontSize: "1.05rem",
+          },
+          iconTheme: {
+            primary: "#FF5252",
+            secondary: "#fff",
+          },
+        });
 
-        // Redirect to dashboard
         setTimeout(() => {
           navigate("/dashboard", { replace: true });
-        }, 500);
+        }, 1200);
       } else {
-        setErrors({ submit: "Login failed. Please try again." });
+        toast.error("Login failed. Invalid response from server.", {
+          duration: 5000,
+          position: "top-center",
+          style: {
+            background: "#fef2f2",
+            color: "#991b1b",
+            border: "1px solid #fecaca",
+            borderRadius: "16px",
+            padding: "16px 24px",
+            boxShadow: "0 10px 25px -5px rgba(239, 68, 68, 0.2)",
+          },
+        });
       }
     } catch (error) {
       console.error("Login Error:", error);
 
-      // Handle backend validation errors
+      let errorMessage = "Login failed. Please try again.";
+
       if (error.response?.data?.errors) {
-        // If backend returns field-specific errors
         const backendErrors = {};
         Object.keys(error.response.data.errors).forEach((key) => {
           const errorValue = error.response.data.errors[key];
           backendErrors[key] = Array.isArray(errorValue)
             ? errorValue[0]
             : errorValue;
+          // Show field-specific errors as toasts too (optional)
+          toast.error(backendErrors[key], {
+            duration: 4500,
+            position: "top-center",
+          });
         });
         setErrors(backendErrors);
       } else if (error.response?.data?.message) {
-        // If backend returns a general message
-        setErrors({ submit: error.response.data.message });
+        errorMessage = error.response.data.message;
       } else if (error.message) {
-        // Network or other errors
-        setErrors({ submit: error.message });
-      } else {
-        setErrors({ submit: "Login failed. Please try again." });
+        errorMessage = error.message;
       }
+
+      // Main error toast
+      toast.error(errorMessage, {
+        duration: 5500,
+        position: "top-center",
+        style: {
+          background: "#fef2f2",
+          color: "#991b1b",
+          border: "1px solid #fecaca",
+          borderRadius: "16px",
+          padding: "16px 24px",
+          boxShadow: "0 10px 25px -5px rgba(239, 68, 68, 0.2)",
+          maxWidth: "380px",
+        },
+      });
     } finally {
       setIsLoggingIn(false);
     }
@@ -120,6 +156,9 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex font-['Poppins']">
+      {/* ← Add Toaster here (can be placed in App.jsx too) */}
+      <Toaster />
+
       {/* LEFT IMAGE - visible on medium+ screens */}
       <div className="hidden md:flex w-1/2 relative">
         <img
@@ -140,8 +179,6 @@ const Login = () => {
 
       {/* RIGHT SIDE - LOGIN FORM */}
       <div className="w-full bg-black z-50 md:w-1/2 flex items-center justify-center bg-gradient-to-br from-[#fff5f5] to-[#ffecec] px-5 sm:px-6 py-8 md:py-0 relative">
-
-
         <form
           onSubmit={handleLogin}
           className="w-full max-w-md backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl px-8 sm:px-10 py-10 sm:py-12"
@@ -156,14 +193,8 @@ const Login = () => {
             </p>
           </div>
 
-          {/* General Error Message */}
-          {errors.submit && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
-              <p className="text-sm text-red-700 text-center">
-                {errors.submit}
-              </p>
-            </div>
-          )}
+          {/* We removed the old error box — now using toasts instead */}
+          {/* You can keep it if you prefer both */}
 
           {/* EMAIL FIELD */}
           <div className="mb-6">
@@ -222,8 +253,6 @@ const Login = () => {
             )}
           </div>
 
-
-
           {/* SUBMIT BUTTON */}
           <button
             type="submit"
@@ -244,17 +273,16 @@ const Login = () => {
             )}
           </button>
 
-<div className="mt-1.5 pr-1 text-right ">
-  <button
-    type="button"
-    onClick={() => navigate("/forgot-password")}
-    className="text-sm text-[#FF5252] hover:text-[#c62828] 
-               font-medium hover:underline transition cursor-pointer"
-  >
-    Forgot password?
-  </button>
-</div>
-        
+          <div className="mt-1.5 pr-1 text-right ">
+            <button
+              type="button"
+              onClick={() => navigate("/forgot-password")}
+              className="text-sm text-[#FF5252] hover:text-[#c62828] font-medium hover:underline transition cursor-pointer"
+            >
+              Forgot password?
+            </button>
+          </div>
+
           {/* LINK TO REGISTER */}
           <div className="text-center mt-8 text-gray-600 text-sm">
             Don't have an account?{" "}

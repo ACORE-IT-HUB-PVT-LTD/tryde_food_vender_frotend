@@ -43,6 +43,7 @@ import AboutUs from "./pages/About";
 import Contact from "./pages/Contact";
 import GetRestaurant from "./context/getRestaurant";
 import GetAllCategories from "./context/GetAllCategories";
+import Otp from "./pages/Otp";
 
 // Public Layout
 function PublicLayout() {
@@ -101,12 +102,13 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+           <Route path="/otp-verification" element={<Otp/>} />
         </Route>
       </Route>
 
       {/* ==================== RESET PASSWORD (PUBLIC) ==================== */}
       <Route element={<AuthLayout />}>
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
       {/* ==================== PROTECTED DASHBOARD ROUTES ==================== */}

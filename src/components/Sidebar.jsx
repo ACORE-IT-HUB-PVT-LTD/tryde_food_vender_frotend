@@ -190,7 +190,7 @@ const Sidebar = ({ onHoverChange }) => {
 
           {[
             { to: "/dashboard/orders",       Icon: ShoppingBagIcon,    label: "Orders"       },
-            { to: "/dashboard/earnings",      Icon: CurrencyDollarIcon, label: "Earnings"     },
+           // { to: "/dashboard/earnings",      Icon: CurrencyDollarIcon, label: "Earnings"     },
             { to: "/dashboard/reviews",       Icon: StarIcon,           label: "Reviews"      },
             { to: "/dashboard/announcement",  Icon: MegaphoneIcon,      label: "Announcement" },
             { to: "/dashboard/support",       Icon: LifebuoyIcon,       label: "Support"      },

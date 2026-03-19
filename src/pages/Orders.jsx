@@ -20,11 +20,11 @@ const KITCHEN_ALLOWED_FLOW = {
 };
 
 const TAB_CONFIG = [
-  { key: "ALL",       label: "All",        icon: <Activity size={13} /> },
-  { key: "CREATED",   label: "New",        icon: <ShoppingBag size={13} /> },
-  { key: "PREPARING", label: "Preparing",  icon: <UtensilsCrossed size={13} /> },
-  { key: "READY",     label: "Ready",      icon: <CheckCircle2 size={13} /> },
-  { key: "REJECTED",  label: "Cancelled",  icon: <XCircle size={13} /> },
+  { key: "ALL",       label: "All",       icon: <Activity size={13} /> },
+  { key: "CREATED",   label: "New",       icon: <ShoppingBag size={13} /> },
+  { key: "PREPARING", label: "Preparing", icon: <UtensilsCrossed size={13} /> },
+  { key: "READY",     label: "Ready",     icon: <CheckCircle2 size={13} /> },
+  { key: "REJECTED",  label: "Cancelled", icon: <XCircle size={13} /> },
 ];
 
 const STATUS_META = {
@@ -51,10 +51,10 @@ const TRACKING_STEPS = [
   { key: "DELIVERED", label: "Delivered", emoji: "🎉" },
 ];
 
-const apiGetOrders  = (page = 1) => axiosInstance.get(`/orders/vendor/orders?page=${page}&limit=50`, { withCredentials: true });
-const apiGetOrderById = (orderId) => axiosInstance.get(`/orders/vendor/orders/${orderId}`, { withCredentials: true });
-const apiAcceptOrder  = (orderId) => axiosInstance.post(`/orders/${orderId}/accept`, {}, { withCredentials: true });
-const apiMarkReady    = (orderId) => axiosInstance.patch(`/orders/${orderId}/statusready`, { status: "READY" }, { withCredentials: true });
+const apiGetOrders    = (page = 1) => axiosInstance.get(`/orders/vendor/orders?page=${page}&limit=50`, { withCredentials: true });
+const apiGetOrderById = (orderId)  => axiosInstance.get(`/orders/vendor/orders/${orderId}`, { withCredentials: true });
+const apiAcceptOrder  = (orderId)  => axiosInstance.post(`/orders/${orderId}/accept`, {}, { withCredentials: true });
+const apiMarkReady    = (orderId)  => axiosInstance.patch(`/orders/${orderId}/statusready`, { status: "READY" }, { withCredentials: true });
 
 const formatTime = (iso) => {
   if (!iso) return "—";
@@ -130,7 +130,7 @@ const NewOrderPopup = ({ order, onClose, onAction, updatingId }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ boxShadow: "0 24px 80px rgba(0,0,0,0.2)" }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-[slideUp_0.3s_ease]" style={{ boxShadow: "0 24px 80px rgba(0,0,0,0.2)" }}>
         <div className="bg-gradient-to-r from-amber-500 to-orange-400 px-5 py-4 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-0.5">
@@ -304,7 +304,6 @@ const OrderDetailModal = ({ orderId, orderData, open, onClose }) => {
 
           {showOtp && detail.pickup_otp && <OtpBanner otp={detail.pickup_otp} verified={detail.otp_verified} />}
 
-          {/* Customer */}
           <InfoCard title="Customer" accent="#E53935">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E53935] to-[#FF7043] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
@@ -330,7 +329,6 @@ const OrderDetailModal = ({ orderId, orderData, open, onClose }) => {
             </InfoCard>
           )}
 
-          {/* Items */}
           {detail.items?.length > 0 && (
             <div>
               <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-widest mb-2">Items</p>
@@ -351,7 +349,6 @@ const OrderDetailModal = ({ orderId, orderData, open, onClose }) => {
             </div>
           )}
 
-          {/* Payment */}
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: "Mode", val: detail.payment_mode, cls: detail.payment_mode === "ONLINE" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600" },
@@ -366,7 +363,6 @@ const OrderDetailModal = ({ orderId, orderData, open, onClose }) => {
             ))}
           </div>
 
-          {/* Driver */}
           {driver ? (
             <InfoCard title="Delivery Partner" accent="#3b82f6">
               <div className="flex items-center gap-3">
@@ -405,7 +401,6 @@ const OrderDetailModal = ({ orderId, orderData, open, onClose }) => {
             <OtpBanner otp={detail.delivery_otp} verified={detail.delivery_otp_verified} label="Delivery OTP" />
           )}
 
-          {/* Price Breakdown */}
           <InfoCard title="Price Breakdown" accent="#8b5cf6">
             <div className="space-y-2">
               {[
@@ -433,9 +428,9 @@ const OrderDetailModal = ({ orderId, orderData, open, onClose }) => {
 
 /* ══ Track Order Modal ══ */
 const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
-  const [trackData, setTrackData] = useState(null);
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState(null);
+  const [trackData, setTrackData]   = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -464,10 +459,10 @@ const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
 
   useNats(["order.details.response", "order.status.updated", "driver.location.updated"], handleNats);
 
-  const order      = trackData?.order;
-  const driver     = trackData?.driver || order?.driver;
-  const addr       = order?.delivery_address || {};
-  const user       = order?.user || {};
+  const order       = trackData?.order;
+  const driver      = trackData?.driver || order?.driver;
+  const addr        = order?.delivery_address || {};
+  const user        = order?.user || {};
   const isRejected  = order?.order_status === "REJECTED";
   const isDelivered = order?.order_status === "DELIVERED";
   const stepIdx     = TRACKING_STEPS.findIndex((s) => s.key === order?.order_status);
@@ -514,7 +509,6 @@ const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
 
           {showOtp && order.pickup_otp && <OtpBanner otp={order.pickup_otp} verified={order.otp_verified} />}
 
-          {/* Customer */}
           <InfoCard title="Customer" accent="#E53935">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E53935] to-[#FF7043] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
@@ -535,7 +529,6 @@ const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
             </div>
           </InfoCard>
 
-          {/* Tracking Timeline */}
           {!isRejected && (
             <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl p-5 border border-sky-100">
               <p className="text-[10px] font-bold uppercase tracking-widest text-sky-500 mb-5">Order Journey</p>
@@ -572,7 +565,6 @@ const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
             </div>
           )}
 
-          {/* Route */}
           {(order.pickup_latitude || order.delivery_latitude) && (
             <div className="rounded-2xl border border-gray-100 overflow-hidden">
               <div className="bg-gray-50 px-4 py-3 flex items-center gap-3">
@@ -612,7 +604,6 @@ const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
             </div>
           )}
 
-          {/* Driver */}
           {driver ? (
             <InfoCard title="Delivery Partner" accent="#3b82f6">
               <div className="flex items-center gap-3">
@@ -653,7 +644,6 @@ const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
             </div>
           )}
 
-          {/* OTPs */}
           <div className="flex gap-3 flex-wrap">
             {order.pickup_otp && (
               <div className="flex-1 min-w-[140px] p-3.5 rounded-2xl bg-amber-50 border border-amber-200">
@@ -671,7 +661,6 @@ const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
             )}
           </div>
 
-          {/* Payment Summary */}
           <div className="rounded-2xl border border-gray-100 overflow-hidden">
             <div className="grid grid-cols-4 divide-x divide-gray-100">
               {[
@@ -692,223 +681,79 @@ const TrackOrderModal = ({ orderId, orderData, open, onClose }) => {
     </ModalShell>
   );
 };
-/* ══ Chat Modal ══ */
-/* Paste BEFORE: export default function Orders() */
 
+/* ══ Chat Modal ══ */
 const CHAT_SENDER = {
-  user: {
-    label:      "Customer",
-    initials:   "C",
-    side:       "left",             // ← left side
-    bubbleBg:   "#eff6ff",
-    bubbleBdr:  "#bfdbfe",
-    bubbleText: "#1d4ed8",
-    avatarBg:   "#dbeafe",
-    avatarText: "#1d4ed8",
-    borderRadius: "4px 12px 12px 12px",
-  },
-  driver: {
-    label:      "Driver",
-    initials:   "D",
-    side:       "right",            // ← right side
-    bubbleBg:   "#fffbeb",
-    bubbleBdr:  "#fde68a",
-    bubbleText: "#92400e",
-    avatarBg:   "#fef3c7",
-    avatarText: "#92400e",
-    borderRadius: "12px 4px 12px 12px",
-  },
-  vendor: {
-    label:      "You (Vendor)",
-    initials:   "V",
-    side:       "right",
-    bubbleBg:   "#ecfdf5",
-    bubbleBdr:  "#a7f3d0",
-    bubbleText: "#065f46",
-    avatarBg:   "#d1fae5",
-    avatarText: "#065f46",
-    borderRadius: "12px 4px 12px 12px",
-  },
+  user:   { label: "Customer",    initials: "C", side: "left",  bubbleBg: "#eff6ff", bubbleBdr: "#bfdbfe", bubbleText: "#1d4ed8", avatarBg: "#dbeafe", avatarText: "#1d4ed8", borderRadius: "4px 12px 12px 12px" },
+  driver: { label: "Driver",      initials: "D", side: "right", bubbleBg: "#fffbeb", bubbleBdr: "#fde68a", bubbleText: "#92400e", avatarBg: "#fef3c7", avatarText: "#92400e", borderRadius: "12px 4px 12px 12px" },
+  vendor: { label: "You (Vendor)",initials: "V", side: "right", bubbleBg: "#ecfdf5", bubbleBdr: "#a7f3d0", bubbleText: "#065f46", avatarBg: "#d1fae5", avatarText: "#065f46", borderRadius: "12px 4px 12px 12px" },
 };
 
 const ChatModal = ({ orderId, chatData, onClose }) => {
   const open     = Boolean(orderId);
   const messages = chatData?.messages || [];
 
-  /* Group by date */
   const grouped = messages.reduce((acc, msg) => {
-    const date = msg.created_at
-      ? new Date(msg.created_at).toLocaleDateString("en-IN", {
-          day: "numeric", month: "short", year: "numeric",
-        })
-      : "Today";
-    if (!acc.length || acc[acc.length - 1].date !== date)
-      acc.push({ date, msgs: [msg] });
-    else
-      acc[acc.length - 1].msgs.push(msg);
+    const date = msg.created_at ? new Date(msg.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Today";
+    if (!acc.length || acc[acc.length - 1].date !== date) acc.push({ date, msgs: [msg] });
+    else acc[acc.length - 1].msgs.push(msg);
     return acc;
   }, []);
 
-  /* Which senders are actually present — for legend */
   const presentTypes = [...new Set(messages.map((m) => m.sender_type?.toLowerCase()))];
 
   if (!open) return null;
 
   return (
-    <ModalShell
-      open={open}
-      onClose={onClose}
+    <ModalShell open={open} onClose={onClose}
       headerBg="bg-gradient-to-r from-emerald-500 to-teal-500"
       headerIcon={<span style={{ fontSize: 16 }}>💬</span>}
-      title="Order Chat"
-      subtitle={orderId}
-      maxW="max-w-lg"
-      extra={
-        <span style={{
-          background: chatData?.status === "active" ? "#d1fae5" : "#f3f4f6",
-          color:      chatData?.status === "active" ? "#065f46" : "#6b7280",
-          fontSize: 10, fontWeight: 700, padding: "3px 10px",
-          borderRadius: 20, letterSpacing: "0.05em",
-        }}>
-          ● {chatData?.status || "—"}
-        </span>
-      }
+      title="Order Chat" subtitle={orderId} maxW="max-w-lg"
+      extra={<span style={{ background: chatData?.status === "active" ? "#d1fae5" : "#f3f4f6", color: chatData?.status === "active" ? "#065f46" : "#6b7280", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.05em" }}>● {chatData?.status || "—"}</span>}
       footer={
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
           {presentTypes.map((type) => {
             const s = CHAT_SENDER[type];
             if (!s) return null;
             return (
-              <span key={type} style={{
-                display: "flex", alignItems: "center", gap: 6,
-                fontSize: 11, color: "#6b7280", fontWeight: 600,
-              }}>
-                <span style={{
-                  width: 10, height: 10, borderRadius: "50%",
-                  background: s.avatarBg, border: "1.5px solid " + s.bubbleBdr,
-                  display: "inline-block",
-                }} />
+              <span key={type} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#6b7280", fontWeight: 600 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: s.avatarBg, border: "1.5px solid " + s.bubbleBdr, display: "inline-block" }} />
                 {s.label}
-                <span style={{
-                  fontSize: 10, color: "#9ca3af",
-                  marginLeft: 2,
-                }}>
-                  ({s.side === "left" ? "← left" : "right →"})
-                </span>
+                <span style={{ fontSize: 10, color: "#9ca3af", marginLeft: 2 }}>({s.side === "left" ? "← left" : "right →"})</span>
               </span>
             );
           })}
         </div>
       }
     >
-      {/* Empty state */}
       {messages.length === 0 && (
-        <div style={{
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
-          padding: "64px 0", gap: 12,
-        }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: 16,
-            background: "#ecfdf5",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 24,
-          }}>💬</div>
-          <p style={{ fontWeight: 700, color: "#374151", fontSize: 14, margin: 0 }}>
-            No messages yet
-          </p>
-          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
-            No conversation for this order
-          </p>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 0", gap: 12 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>💬</div>
+          <p style={{ fontWeight: 700, color: "#374151", fontSize: 14, margin: 0 }}>No messages yet</p>
+          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>No conversation for this order</p>
         </div>
       )}
 
-      {/* Messages */}
       {grouped.map(({ date, msgs }) => (
         <div key={date} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-
-          {/* Date divider */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "4px 0" }}>
             <div style={{ flex: 1, height: 1, background: "#f3f4f6" }} />
-            <span style={{
-              fontSize: 10, fontWeight: 700, color: "#9ca3af",
-              letterSpacing: "0.08em", textTransform: "uppercase",
-            }}>
-              {date}
-            </span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", letterSpacing: "0.08em", textTransform: "uppercase" }}>{date}</span>
             <div style={{ flex: 1, height: 1, background: "#f3f4f6" }} />
           </div>
-
           {msgs.map((msg) => {
             const type    = msg.sender_type?.toLowerCase() || "user";
             const s       = CHAT_SENDER[type] || CHAT_SENDER.user;
             const isRight = s.side === "right";
-
             return (
-              <div key={msg.id} style={{
-                display: "flex", gap: 10, alignItems: "flex-start",
-                flexDirection: isRight ? "row-reverse" : "row",
-              }}>
-
-                {/* Avatar circle */}
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  background: s.avatarBg,
-                  border: "1.5px solid " + s.bubbleBdr,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, fontWeight: 700, color: s.avatarText,
-                  flexShrink: 0,
-                }}>
-                  {s.initials}
-                </div>
-
-                {/* Content */}
-                <div style={{
-                  flex: 1, display: "flex", flexDirection: "column",
-                  alignItems: isRight ? "flex-end" : "flex-start",
-                  gap: 4,
-                }}>
-                  {/* Sender name */}
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, color: "#9ca3af",
-                    letterSpacing: "0.06em", textTransform: "uppercase",
-                  }}>
-                    {s.label}
-                  </span>
-
-                  {/* Bubble */}
-                  <div style={{
-                    maxWidth: "80%",
-                    background: s.bubbleBg,
-                    border: "1px solid " + s.bubbleBdr,
-                    borderRadius: s.borderRadius,
-                    padding: "9px 14px",
-                    fontSize: 13,
-                    color: s.bubbleText,
-                    lineHeight: 1.55,
-                    wordBreak: "break-word",
-                  }}>
-                    {msg.message}
-                  </div>
-
-                  {/* Time + read */}
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    fontSize: 10, color: "#9ca3af",
-                  }}>
-                    <span>
-                      {msg.created_at
-                        ? new Date(msg.created_at).toLocaleTimeString("en-IN", {
-                            hour: "2-digit", minute: "2-digit",
-                          })
-                        : ""}
-                    </span>
-                    <span style={{
-                      fontWeight: 700, fontSize: 11,
-                      color: msg.is_read ? "#10b981" : "#d1d5db",
-                    }}>
-                      {msg.is_read ? "✓✓" : "✓"}
-                    </span>
+              <div key={msg.id} style={{ display: "flex", gap: 10, alignItems: "flex-start", flexDirection: isRight ? "row-reverse" : "row" }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: s.avatarBg, border: "1.5px solid " + s.bubbleBdr, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: s.avatarText, flexShrink: 0 }}>{s.initials}</div>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: isRight ? "flex-end" : "flex-start", gap: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", letterSpacing: "0.06em", textTransform: "uppercase" }}>{s.label}</span>
+                  <div style={{ maxWidth: "80%", background: s.bubbleBg, border: "1px solid " + s.bubbleBdr, borderRadius: s.borderRadius, padding: "9px 14px", fontSize: 13, color: s.bubbleText, lineHeight: 1.55, wordBreak: "break-word" }}>{msg.message}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "#9ca3af" }}>
+                    <span>{msg.created_at ? new Date(msg.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                    <span style={{ fontWeight: 700, fontSize: 11, color: msg.is_read ? "#10b981" : "#d1d5db" }}>{msg.is_read ? "✓✓" : "✓"}</span>
                   </div>
                 </div>
               </div>
@@ -924,34 +769,34 @@ const ChatModal = ({ orderId, chatData, onClose }) => {
 export default function Orders() {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab]           = useState(0);
-  const [orders, setOrders]                 = useState([]);
-  const [loading, setLoading]               = useState(false);
-  const [error, setError]                   = useState(null);
-  const [actionError, setActionError]       = useState(null);
-  const [updatingId, setUpdatingId]         = useState(null);
-  const [detailOrderId, setDetailOrderId]   = useState(null);
-  const [detailOrderData, setDetailOrderData] = useState(null);
-  const [newOrderPopup, setNewOrderPopup]   = useState(null);
-  const [page, setPage]                     = useState(1);
-  const [totalOrders, setTotalOrders]       = useState(0);
-  const [search, setSearch]                 = useState("");
-  const [trackOrderId, setTrackOrderId]     = useState(null);
-  const [trackOrderData, setTrackOrderData] = useState(null);
-  const [chatOrderId, setChatOrderId] = useState(null);
-const [chatData, setChatData] = useState(null);
-  const prevIds = useRef(new Set());
-  const LIMIT = 10;
+  const [activeTab, setActiveTab]               = useState(0);
+  const [orders, setOrders]                     = useState([]);
+  const [loading, setLoading]                   = useState(false);
+  const [error, setError]                       = useState(null);
+  const [actionError, setActionError]           = useState(null);
+  const [updatingId, setUpdatingId]             = useState(null);
+  const [detailOrderId, setDetailOrderId]       = useState(null);
+  const [detailOrderData, setDetailOrderData]   = useState(null);
+  const [newOrderPopup, setNewOrderPopup]       = useState(null);
+  const [page, setPage]                         = useState(1);
+  const [totalOrders, setTotalOrders]           = useState(0);
+  const [search, setSearch]                     = useState("");
+  const [trackOrderId, setTrackOrderId]         = useState(null);
+  const [trackOrderData, setTrackOrderData]     = useState(null);
+  const [chatOrderId, setChatOrderId]           = useState(null);
+  const [chatData, setChatData]                 = useState(null);
+  const prevIds   = useRef(new Set());
+  const LIMIT     = 10;
   const totalPages = Math.ceil(totalOrders / LIMIT);
 
   const fetchOrders = useCallback(async (pg = 1) => {
     if (pg === 1) setLoading(true);
     setError(null);
     try {
-      const res = await apiGetOrders(pg);
+      const res     = await apiGetOrders(pg);
       const payload = res.data;
-      const list = Array.isArray(payload.data) ? payload.data : Array.isArray(payload) ? payload : [];
-      const total = payload.total_orders ?? list.length;
+      const list    = Array.isArray(payload.data) ? payload.data : Array.isArray(payload) ? payload : [];
+      const total   = payload.total_orders ?? list.length;
       if (pg === 1 && prevIds.current.size > 0) {
         const newOnes = list.filter((o) => o.order_status === "CREATED" && !prevIds.current.has(o.id));
         if (newOnes.length > 0) setNewOrderPopup(newOnes[0]);
@@ -999,74 +844,55 @@ const [chatData, setChatData] = useState(null);
 
   const openDetailModal = (order) => { setDetailOrderId(order.order_id); setDetailOrderData(order); };
   const openTrackModal  = (order) => { setTrackOrderId(order.order_id); setTrackOrderData(order); };
-  const openChat = (order) => {setChatOrderId(order.order_id);setChatData(order.chat);
-};
+  const openChat        = (order) => { setChatOrderId(order.order_id); setChatData(order.chat); };
 
-  const activeKey = TAB_CONFIG[activeTab].key;
+  const activeKey      = TAB_CONFIG[activeTab].key;
   const searchedOrders = activeKey === "ALL" && search.trim()
     ? orders.filter((o) =>
         o.order_id?.toLowerCase().includes(search.toLowerCase()) ||
         o.delivery_address?.name?.toLowerCase().includes(search.toLowerCase()) ||
         o.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        o.delivery_address?.phone?.includes(search)
-      )
+        o.delivery_address?.phone?.includes(search))
     : orders;
   const filteredOrders = activeKey === "ALL" ? searchedOrders : orders.filter((o) => o.order_status === activeKey);
-  const getCount = (key) => key === "ALL" ? orders.length : orders.filter((o) => o.order_status === key).length;
+  const getCount       = (key) => key === "ALL" ? orders.length : orders.filter((o) => o.order_status === key).length;
+
+  /* ─── Stat cards for quick overview ─── */
+  const statsConfig = [
+    { key: "ALL",       label: "Total",     color: "#E53935", lightBg: "#fff5f5",  icon: <Activity size={16}/> },
+    { key: "CREATED",   label: "New",       color: "#f59e0b", lightBg: "#fffbeb",  icon: <ShoppingBag size={16}/> },
+    { key: "PREPARING", label: "Preparing", color: "#8b5cf6", lightBg: "#f5f3ff",  icon: <UtensilsCrossed size={16}/> },
+    { key: "READY",     label: "Ready",     color: "#10b981", lightBg: "#ecfdf5",  icon: <CheckCircle2 size={16}/> },
+    { key: "REJECTED",  label: "Cancelled", color: "#ef4444", lightBg: "#fef2f2",  icon: <XCircle size={16}/> },
+  ];
 
   return (
-    <div className="min-h-screen p-4 sm:p-6" style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}>
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#f8f8f9] p-4 sm:p-5" style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}>
+      <div className="max-w-[1400px] mx-auto space-y-5">
 
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* ── Header ── */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#E53935] to-[#FF7043] flex items-center justify-center shadow-md shadow-red-500/25">
-              <ShoppingBag size={20} className="text-white" strokeWidth={2} />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#E53935] to-[#FF7043] flex items-center justify-center shadow-lg shadow-red-500/25">
+              <ShoppingBag size={19} className="text-white" strokeWidth={2.5} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-5 rounded-full bg-gradient-to-b from-[#E53935] to-[#FF7043]" />
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">Orders Dashboard</h1>
-              </div>
-              <p className="text-[12.5px] text-gray-400 ml-3">{loading ? "Loading…" : `${totalOrders} total order${totalOrders !== 1 ? "s" : ""}`}</p>
+              <h1 className="text-[18px] font-extrabold text-gray-900 tracking-tight leading-none">Orders</h1>
+              <p className="text-[12px] text-gray-400 mt-0.5 font-medium">
+                {loading ? "Syncing…" : <><span className="text-[#E53935] font-bold">{totalOrders}</span> total orders</>}
+              </p>
             </div>
           </div>
           <button onClick={() => fetchOrders(page)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-600 hover:border-[#E53935]/30 hover:text-[#E53935] transition-all shadow-sm">
-            <RefreshCw size={14} /> Refresh
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[12.5px] font-semibold text-gray-600 hover:border-[#E53935]/40 hover:text-[#E53935] transition-all shadow-sm hover:shadow-md">
+            <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> Refresh
           </button>
         </div>
 
-        {/* Stats 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {TAB_CONFIG.map((tab) => {
-            const count = getCount(tab.key);
-            const meta = STATUS_META[tab.key] || { dot: "#E53935", bg: "#fff5f5", text: "#E53935" };
-            const isAll = tab.key === "ALL";
-            return (
-              <button key={tab.key}
-                onClick={() => { setActiveTab(TAB_CONFIG.indexOf(tab)); setPage(1); setSearch(""); }}
-                className={`bg-white rounded-2xl border p-3.5 text-left transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
-                  ${activeTab === TAB_CONFIG.indexOf(tab) ? "border-[#E53935]/30 shadow-sm ring-2 ring-[#E53935]/10" : "border-gray-100 shadow-sm"}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: isAll ? "rgba(229,57,53,0.1)" : meta.bg, color: isAll ? "#E53935" : meta.text }}>
-                    {tab.icon}
-                  </div>
-                  {count > 0 && tab.key === "CREATED" && (
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  )}
-                </div>
-                <p className="text-xl font-extrabold text-gray-900">{count}</p>
-                <p className="text-[11px] text-gray-400 font-medium mt-0.5">{tab.label}</p>
-              </button>
-            );
-          })}
-        </div>
-        */}
+        {/* ── Stats Row ── */}
+    
 
-        {/* Errors */}
+        {/* ── Errors ── */}
         {error && (
           <div className="flex items-center justify-between bg-red-50 border border-red-200 text-red-700 text-[13px] rounded-xl px-4 py-3">
             <span>{error}</span>
@@ -1080,144 +906,166 @@ const [chatData, setChatData] = useState(null);
           </div>
         )}
 
-        {/* Tabs + Search */}
+        {/* ── Main Table Card ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          {/* Tab bar */}
-          <div className="flex border-b border-gray-100 overflow-x-auto">
-            {TAB_CONFIG.map((tab, idx) => {
-              const count  = getCount(tab.key);
-              const active = activeTab === idx;
-              return (
-                <button key={tab.key}
-                  onClick={() => { setActiveTab(idx); setPage(1); setSearch(""); }}
-                  className={`flex items-center gap-2 px-5 py-3.5 text-[13px] font-bold whitespace-nowrap border-b-2 transition-all duration-200 flex-shrink-0
-                    ${active ? "border-[#E53935] text-[#E53935] bg-red-50/50" : "border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}>
-                  {tab.icon}
-                  {tab.label}
-                  {count > 0 && (
-                    <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${active ? "bg-[#E53935] text-white" : "bg-gray-100 text-gray-500"}`}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+
+          {/* Tab bar + Search */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 gap-0">
+            {/* Tabs */}
+            <div className="flex overflow-x-auto flex-shrink-0" style={{ scrollbarWidth: "none" }}>
+              {TAB_CONFIG.map((tab, idx) => {
+                const count  = getCount(tab.key);
+                const active = activeTab === idx;
+                return (
+                  <button key={tab.key}
+                    onClick={() => { setActiveTab(idx); setPage(1); setSearch(""); }}
+                    className={`flex items-center gap-1.5 px-4 py-3.5 text-[12.5px] font-bold whitespace-nowrap border-b-2 transition-all duration-200 flex-shrink-0
+                      ${active ? "border-[#E53935] text-[#E53935] bg-red-50/60" : "border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}>
+                    {tab.icon}
+                    {tab.label}
+                    {count > 0 && (
+                      <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md min-w-[18px] text-center ${active ? "bg-[#E53935] text-white" : "bg-gray-100 text-gray-500"}`}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search */}
+            {activeKey === "ALL" && (
+              <div className="px-3 py-2.5 sm:border-l border-t sm:border-t-0 border-gray-100">
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 w-full sm:w-72 focus-within:bg-white focus-within:border-[#E53935]/40 focus-within:shadow-[0_0_0_3px_rgba(229,57,53,0.07)] transition-all">
+                  <Search size={13} className="text-gray-400 flex-shrink-0" />
+                  <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search orders…"
+                    className="flex-1 bg-transparent outline-none text-[12.5px] text-gray-700 placeholder-gray-400 min-w-0" />
+                  {search && <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={12} /></button>}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Search */}
-          {activeKey === "ALL" && (
-            <div className="p-4 border-b border-gray-50">
-              <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus-within:bg-white focus-within:border-[#E53935]/40 focus-within:shadow-[0_0_0_3px_rgba(229,57,53,0.08)] transition-all duration-200">
-                <Search size={15} className="text-gray-400 flex-shrink-0" />
-                <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by order ID, customer name, phone…"
-                  className="flex-1 bg-transparent outline-none text-[13.5px] text-gray-700 placeholder-gray-400" />
-                {search && <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>}
-              </div>
-            </div>
-          )}
-
           {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto w-full" style={{ overflowX: "auto" }}>
+            <table className="w-full min-w-[860px]" style={{ tableLayout: "fixed" }}>
+              <colgroup>
+                <col style={{ width: "13%" }} />
+                <col style={{ width: "16%" }} />
+                <col style={{ width: "17%" }} />
+                <col style={{ width: "11%" }} />
+                <col style={{ width: "8%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "9%" }} />
+                <col style={{ width: "16%" }} />
+              </colgroup>
               <thead>
-                <tr className="bg-gradient-to-r from-[#E53935] to-[#FF7043]">
-                  {["Order ID", "Customer", "Items", "Payment", "Total", "Status", "Time", "Actions"].map((h) => (
-                    <th key={h} className={`py-3.5 px-4 text-[11.5px] font-bold uppercase tracking-wider text-white ${h === "Actions" ? "text-right" : "text-left"}`}>{h}</th>
+                <tr style={{ background: "linear-gradient(90deg,#E53935,#FF7043)" }}>
+                  {["Order ID", "Customer", "Items", "Payment", "Total", "Status", "Time", "Actions"].map((h, i) => (
+                    <th key={h} className={`py-3 px-3 text-[10.5px] font-bold uppercase tracking-wider text-white ${i === 7 ? "text-right" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   [...Array(6)].map((_, i) => (
-                    <tr key={i} className="border-b border-gray-50">
+                    <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50/40"}>
                       {[...Array(8)].map((_, j) => (
-                        <td key={j} className="py-4 px-4"><div className="h-4 bg-gray-100 rounded-lg animate-pulse" style={{ width: (45 + Math.floor(Math.random() * 40)) + "%" }} /></td>
+                        <td key={j} className="py-3.5 px-3"><div className="h-3.5 bg-gray-100 rounded-lg animate-pulse" /></td>
                       ))}
                     </tr>
                   ))
                 ) : filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-20 text-center">
+                    <td colSpan={8} className="py-16 text-center">
                       <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center">
-                          <ShoppingBag size={28} className="text-[#E53935] opacity-60" />
+                        <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center">
+                          <ShoppingBag size={26} className="text-[#E53935] opacity-50" />
                         </div>
-                        <p className="font-bold text-gray-700">{search ? `No results for "${search}"` : `No ${TAB_CONFIG[activeTab].label} orders`}</p>
-                        <p className="text-[13px] text-gray-400">{search ? "Try a different search term" : "Orders will appear here once customers place them"}</p>
+                        <p className="font-bold text-gray-600 text-[14px]">{search ? `No results for "${search}"` : `No ${TAB_CONFIG[activeTab].label} orders`}</p>
+                        <p className="text-[12px] text-gray-400">{search ? "Try a different search term" : "Orders will appear here once customers place them"}</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  filteredOrders.map((order) => {
+                  filteredOrders.map((order, rowIdx) => {
                     const m    = STATUS_META[order.order_status] || STATUS_META.CREATED;
                     const addr = order.delivery_address || {};
                     const isNew = order.order_status === "CREATED";
                     return (
-                      <tr key={order.id} className="border-b border-gray-50 hover:bg-red-50/10 transition-colors group"
-                        style={{ borderLeft: "3px solid " + m.dot, background: isNew ? "rgba(245,158,11,0.03)" : undefined }}>
+                      <tr key={order.id}
+                        className={`border-b border-gray-50 hover:bg-red-50/20 transition-colors ${rowIdx % 2 === 1 ? "bg-gray-50/30" : "bg-white"}`}
+                        style={{ borderLeft: `3px solid ${m.dot}` }}>
 
-                        <td className="py-3.5 px-4">
-                          <span className="font-mono text-[12px] font-bold text-gray-700 block">{order.order_id}</span>
-                          {isNew && <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-lg mt-1 inline-block">🆕 NEW</span>}
+                        {/* Order ID */}
+                        <td className="py-3 px-3">
+                          <span className="font-mono text-[11.5px] font-bold text-gray-700 block truncate">{order.order_id}</span>
+                          {isNew && <span className="text-[9.5px] font-extrabold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-md mt-1 inline-block tracking-wide">NEW</span>}
                         </td>
 
-                        <td className="py-3.5 px-4">
-                          <span className="text-[13px] font-bold text-gray-800 group-hover:text-[#E53935] transition-colors block">{addr.name || order.user?.name || `User #${order.user_id}`}</span>
-                          <span className="text-[11.5px] text-gray-400">{addr.phone || order.user?.phone || "—"}</span>
-                          {addr.city && <span className="text-[11px] text-gray-400 block">{addr.city}{addr.state ? `, ${addr.state}` : ""}</span>}
+                        {/* Customer */}
+                        <td className="py-3 px-3">
+                          <span className="text-[12.5px] font-bold text-gray-800 block truncate hover:text-[#E53935] transition-colors">{addr.name || order.user?.name || `User #${order.user_id}`}</span>
+                          <span className="text-[11px] text-gray-400 block truncate">{addr.phone || order.user?.phone || "—"}</span>
+                          {addr.city && <span className="text-[10.5px] text-gray-400 block truncate">{addr.city}{addr.state ? `, ${addr.state}` : ""}</span>}
                         </td>
 
-                        <td className="py-3.5 px-4" style={{ maxWidth: 180 }}>
+                        {/* Items */}
+                        <td className="py-3 px-3">
                           {order.items?.length > 0 ? (
                             <div className="space-y-0.5">
                               {order.items.slice(0, 2).map((item) => (
-                                <p key={item.id} className="text-[12px] text-gray-600 truncate">
+                                <p key={item.id} className="text-[11.5px] text-gray-600 truncate">
                                   <span className="font-bold text-gray-800">{item.quantity}×</span> {item.dish?.name || item.dish_name || `Item #${item.id}`}
                                 </p>
                               ))}
-                              {order.items.length > 2 && <p className="text-[11px] text-gray-400">+{order.items.length - 2} more</p>}
+                              {order.items.length > 2 && <p className="text-[10.5px] text-gray-400 font-semibold">+{order.items.length - 2} more</p>}
                             </div>
                           ) : <span className="text-[12px] text-gray-400">—</span>}
                         </td>
 
-                        <td className="py-3.5 px-4">
+                        {/* Payment */}
+                        <td className="py-3 px-3">
                           <div className="flex flex-col gap-1">
-                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg w-fit ${order.payment_mode === "ONLINE" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>{order.payment_mode || "COD"}</span>
-                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg w-fit ${order.payment_status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{order.payment_status || "PENDING"}</span>
+                            <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-md w-fit ${order.payment_mode === "ONLINE" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>{order.payment_mode || "COD"}</span>
+                            <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-md w-fit ${order.payment_status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{order.payment_status || "PENDING"}</span>
                           </div>
                         </td>
 
-                        <td className="py-3.5 px-4">
-                          <span className="text-[15px] font-extrabold text-[#E53935]">₹{fmt(order.total_amount)}</span>
+                        {/* Total */}
+                        <td className="py-3 px-3">
+                          <span className="text-[14px] font-extrabold text-[#E53935]">₹{fmt(order.total_amount)}</span>
                         </td>
 
-                        <td className="py-3.5 px-4">
+                        {/* Status */}
+                        <td className="py-3 px-3">
                           <StatusBadge status={order.order_status} />
-                          <p className="text-[10px] text-gray-400 mt-1">{order.pickup_otp || "no otp"}</p>
+                          {order.pickup_otp && (
+                            <p className="text-[10px] text-gray-400 mt-1 font-mono">OTP: {order.pickup_otp}</p>
+                          )}
                         </td>
 
-                        <td className="py-3.5 px-4">
-                          <span className="text-[12px] text-gray-400 whitespace-nowrap">{formatTime(order.created_at)}</span>
+                        {/* Time */}
+                        <td className="py-3 px-3">
+                          <span className="text-[11.5px] text-gray-400 whitespace-nowrap">{formatTime(order.created_at)}</span>
                         </td>
 
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                            <button onClick={() => openDetailModal(order)} title="View Details"
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11.5px] font-bold border border-gray-200 text-gray-600 hover:border-[#E53935]/30 hover:text-[#E53935] hover:bg-red-50 transition-all">
-                              <Eye size={12} /> View
+                        {/* Actions */}
+                        <td className="py-3 px-3">
+                          <div className="flex items-center justify-end gap-1 flex-wrap">
+                            <button onClick={() => openDetailModal(order)} title="View"
+                              className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-[#E53935]/40 hover:text-[#E53935] hover:bg-red-50 transition-all" >
+                              <Eye size={13} />
                             </button>
-                            <button onClick={() => openTrackModal(order)} title="Track Order"
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11.5px] font-bold border border-sky-200 text-sky-600 hover:bg-sky-50 hover:border-sky-400 transition-all">
-                              <MapPin size={12} /> Track
+                            <button onClick={() => openTrackModal(order)} title="Track"
+                              className="p-1.5 rounded-lg border border-sky-200 text-sky-500 hover:bg-sky-50 hover:border-sky-400 transition-all">
+                              <MapPin size={13} />
                             </button>
-                            <button
-  onClick={() => openChat(order)}
-  title="Chat"
-  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11.5px] font-bold border border-green-200 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all"
->
-  💬 Chat
-</button>
+                            <button onClick={() => openChat(order)} title="Chat"
+                              className="p-1.5 rounded-lg border border-green-200 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all text-[12px]">
+                              💬
+                            </button>
                             <ActionButtons order={order} updatingId={updatingId} onAction={handleAction} />
                           </div>
                         </td>
@@ -1228,31 +1076,32 @@ const [chatData, setChatData] = useState(null);
               </tbody>
             </table>
           </div>
-          
 
           {/* Pagination */}
           {activeKey === "ALL" && totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-4 border-t border-gray-50 bg-gray-50/30">
-              <p className="text-[12.5px] text-gray-400">
-                Page <span className="font-bold text-gray-700">{page}</span> of <span className="font-bold text-gray-700">{totalPages}</span> · {totalOrders} total
+            <div className="flex items-center justify-between px-4 py-3.5 border-t border-gray-100 bg-gray-50/40">
+              <p className="text-[11.5px] text-gray-400">
+                Page <span className="font-bold text-gray-700">{page}</span> / <span className="font-bold text-gray-700">{totalPages}</span>
+                <span className="ml-2 text-gray-300">·</span>
+                <span className="ml-2">{totalOrders} orders</span>
               </p>
               <div className="flex items-center gap-1">
                 <button disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}
-                  className="p-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                  <ChevronLeft size={15} />
+                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                  <ChevronLeft size={14} />
                 </button>
                 {[...Array(Math.min(totalPages, 7))].map((_, i) => {
                   const pg = i + 1;
                   return (
                     <button key={pg} onClick={() => setPage(pg)}
-                      className={`w-8 h-8 rounded-xl text-[12.5px] font-bold border transition-all ${page === pg ? "bg-gradient-to-br from-[#E53935] to-[#FF7043] border-[#E53935] text-white shadow-sm shadow-red-500/25" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
+                      className={`w-7 h-7 rounded-lg text-[12px] font-bold border transition-all ${page === pg ? "bg-gradient-to-br from-[#E53935] to-[#FF7043] border-transparent text-white shadow-sm shadow-red-500/25" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
                       {pg}
                     </button>
                   );
                 })}
                 <button disabled={page >= totalPages || loading} onClick={() => setPage((p) => p + 1)}
-                  className="p-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                  <ChevronRight size={15} />
+                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                  <ChevronRight size={14} />
                 </button>
               </div>
             </div>
@@ -1260,26 +1109,19 @@ const [chatData, setChatData] = useState(null);
         </div>
       </div>
 
+      {/* ── Modals ── */}
       {newOrderPopup && <NewOrderPopup order={newOrderPopup} onClose={() => setNewOrderPopup(null)} onAction={handleAction} updatingId={updatingId} />}
       <OrderDetailModal orderId={detailOrderId} orderData={detailOrderData} open={Boolean(detailOrderId)} onClose={() => { setDetailOrderId(null); setDetailOrderData(null); }} />
-      <TrackOrderModal orderId={trackOrderId} orderData={trackOrderData} open={Boolean(trackOrderId)} onClose={() => { setTrackOrderId(null); setTrackOrderData(null); }} />
-      <ChatModal
-    orderId={chatOrderId}
-    chatData={chatData}
-    onClose={() => {
-      setChatOrderId(null);
-      setChatData(null);
-    }}
-  />
-
-      
-      
+      <TrackOrderModal  orderId={trackOrderId}  orderData={trackOrderData}  open={Boolean(trackOrderId)}  onClose={() => { setTrackOrderId(null);  setTrackOrderData(null);  }} />
+      <ChatModal orderId={chatOrderId} chatData={chatData} onClose={() => { setChatOrderId(null); setChatData(null); }} />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        @keyframes menuIn { from { opacity:0; transform:translateY(-6px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+        @keyframes slideUp { from { opacity:0; transform:translateY(16px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+        .animate-\\[slideUp_0\\.3s_ease\\] { animation: slideUp 0.3s ease; }
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
-    
   );
 }

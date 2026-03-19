@@ -1,34 +1,60 @@
-import axios from "axios";
 import React, { useState } from "react";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../api/axiosInstance";
-import { Email } from "@mui/icons-material";
 
 function ForgotPassword() {
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSendLink = async () => {
+    // ✅ Validation
+    if (!phone) {
+      setErr("Please enter phone number");
+      return;
+    }
+
+    if (phone.length !== 10) {
+      setErr("Enter valid 10 digit phone number");
+      return;
+    }
+
     setLoading(true);
     setErr("");
     setMsg("");
 
     try {
-
-      const res = await axiosInstance.post(
-        `/restaurants/forgot-password`,
-        { email }
+      const response = await fetch(
+        "https://api.tryde.in/kitchen/restaurants/forgot-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ phone }),
+        }
       );
-      console.log(res);
-      setMsg(res.data.message);
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMsg(data.message || "OTP sent successfully");
+
+        setLoading(false); // ✅ fix loader before redirect
+
+        // ✅ Navigate to OTP page
+        setTimeout(() => {
+          navigate("/otp-verification", { state: { phone } });
+        }, 1000);
+
+      } else {
+        setErr(data.message || "Failed to send OTP");
+        setLoading(false);
+      }
     } catch (error) {
-      // console.log(error);
       setErr("Something went wrong. Try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -36,6 +62,7 @@ function ForgotPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center font-['Poppins'] bg-gradient-to-br from-[#fff5f5] to-[#ffecec] px-5 py-10">
       <div className="w-full max-w-md backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl p-8 sm:p-10">
+        
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <button
@@ -45,22 +72,23 @@ function ForgotPassword() {
           >
             <IoMdArrowRoundBack size={28} />
           </button>
-          <h1 className="text-3xl font-bold text-[#FF5252]">Forgot Password</h1>
+          <h1 className="text-3xl font-bold text-[#FF5252]">
+            Forgot Password
+          </h1>
         </div>
 
         <p className="text-gray-600 text-center mb-8 text-base">
-          Enter your email and we'll send you a password reset link.
+          Enter your phone number and we'll send you an OTP.
         </p>
 
-        {/* Email Input */}
+        {/* Phone Input */}
         <div className="relative mb-8">
-          <Email className="absolute left-4 top-1/2 -translate-y-1/2 text-[#FF5252]" />
           <input
-            type="email"
-            placeholder="vendor@example.com"
-            className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252]/40 focus:border-[#FF5252] outline-none transition-all duration-200"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="tel"
+            placeholder="Enter phone number"
+            className="w-full pl-4 pr-4 py-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#FF5252]/40 focus:border-[#FF5252] outline-none transition-all duration-200"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
         </div>
 
@@ -77,24 +105,25 @@ function ForgotPassword() {
               Sending...
             </>
           ) : (
-            "Send Reset Link"
+            "Send OTP"
           )}
         </button>
 
-        {/* Messages */}
+        {/* Success Message */}
         {msg && (
           <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4 text-center">
             <p className="text-green-700 text-sm font-medium">{msg}</p>
           </div>
         )}
 
+        {/* Error Message */}
         {err && (
           <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4 text-center">
             <p className="text-red-700 text-sm font-medium">{err}</p>
           </div>
         )}
 
-        {/* Back to login link */}
+        {/* Back to login */}
         <div className="text-center mt-8 text-gray-600 text-sm">
           Remember your password?{" "}
           <span
